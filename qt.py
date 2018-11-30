@@ -52,7 +52,6 @@ class TextEdit(QTextEdit):
             self.moveCursor(x.EndOfLine,x.KeepAnchor)
             zzz = self.textCursor().selectedText()
 
-
             res = zzz.split('|')
             if len(res) == 2:
                 if res[0] == 'file':
@@ -959,6 +958,8 @@ class Mainwindow(QMainWindow):
         self.set_shortcut('save','Ctrl+S',self.save_text)
         self.set_shortcut('embark','alt+q',self.exec_test)
         self.set_shortcut('embark2','alt+e',self.embark_shortcut )
+        self.set_shortcut('writetime','Ctrl+T',self.shortcut_writetime )
+        self.set_shortcut('writetime','alt+T',self.shortcut_writetime )
 
         self.show()
         self.show_labels()
@@ -993,6 +994,12 @@ class Mainwindow(QMainWindow):
 
         res = (res1,res2)
         return res
+
+    def shortcut_writetime(self):
+        print(111)
+        time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
+        self.textEdit.insertPlainText(time_now_str)
+
 
     def exec_test(self):
         print(1111111)
