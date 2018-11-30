@@ -1,0 +1,167 @@
+
+
+CURRENTURL = os.path.dirname(__file__)
+paths = [r'F:\my',]
+for path in paths:
+    if os.path.exists(path):
+        sys.path.insert(1,path)
+        break
+else:
+    print('not find my model in ',paths)
+
+from F00_myfn.h09_get_bios import get_computer_info
+
+bios = get_computer_info
+if bios[0] == 0:
+    file_exe = r'F:\sublime\SublimeText_XP85\sublime_text.exe'
+elif bios[0] == 1:
+    file_exe = r'"C:\Program Files\Sublime Text 3\sublime_text.exe"'
+
+
+import pyperclip
+try:
+    x = self.textCursor()
+    self.moveCursor(x.StartOfLine,x.MoveAnchor)
+    self.moveCursor(x.EndOfLine,x.KeepAnchor)
+    zzz = self.textCursor().selectedText()
+
+
+    res = zzz.split('|')
+    if len(res) == 2:
+        if res[0] == 'file':
+            file_name = res[1]
+            os.startfile(file_name)
+
+        elif res[0] == 'sublime':
+
+            file_name = res[1]
+            # print('start /b '+ file_exe + " " + file_name)
+            os.system(file_exe + " " + file_name) #'start /b '+ 
+
+        elif res[0] == 'python':
+
+            exeFile = "C:\\Windows\\System32\\cmd"
+            old_path = r'F:\my\P028_knowledge_system\knowqt'
+            # exeFile = 'F:\\my\\P028_knowledge_system\\knowqt\\main.py'
+            exePath = "F:\\my\\P028_knowledge_system\\knowqt\\"
+
+            file_name = res[1]
+            os.chdir(file_name)
+            # os.startfile(exeFile)
+            os.system('start /b '+ exeFile)
+            os.chdir(old_path)
+
+            if len(res)>2:
+                pyperclip.copy(res[2])
+                print(res[2][:-1])
+            if len(res)>3 and res[3]=='g':
+                pyperclip.copy(res[2]+'\r\n')
+                print(3)
+
+
+        elif res[0] == 'django':
+
+
+            exeFile = "C:\\Windows\\System32\\cmd.exe"
+            exeFile = 'F:\\my\\P028_knowledge_system\\knowqt\\main.py'
+            exePath = "F:\\my\\P028_knowledge_system\\knowqt\\"
+            # os.chdir(exePath)
+            # os.startfile(exeFile)
+            # help(os.startfile)
+            file_name = res[1]
+
+
+
+            filename = r'F:\my\P028_knowledge_system\knowqt\myfn\h10_try_command_file.txt'
+            with open(filename,'w',encoding='utf-8') as f:
+                f.write(file_name)
+            os.chdir(os.path.dirname(file_name))
+            os.startfile(r'F:\my\P028_knowledge_system\knowqt\myfn\h10_try_command.py')
+
+
+
+
+
+
+            # file_name = res[1]
+            # file_name = "C:\\Windows\\System32\\cmd"
+
+            # filename = 'F:\\my\\F00_myfn\\h10_try_command_file.txt'
+            # with open(filename,'w',encoding='utf-8') as f:
+            #     f.write(file_name)
+            # os.chdir(os.path.dirname(file_name))
+            # os.startfile('F:\\my\\F00_myfn\\h10_try_command.py')
+
+
+
+
+except:
+    traceback.print_exc()
+
+
+
+
+# pprint(dir(x))
+# pprint(str(x.block.__text_signature__))
+
+
+#----------------快捷键设置--------------------#
+#----------------快捷键设置--------------------#
+#----------------快捷键设置--------------------#
+
+# import re
+# cobj = models.Content.objects.get(name='know快捷键')
+# res1 = re.findall(r'\<sublime\>([\w\W]+)\<sublimeend\>',cobj.text)[0].strip()
+# res1 = [   s.split('|')          for s in res1.split('\n')]
+# res1 = dict(res1)
+
+# res2 = re.findall(r'\<python\>([\w\W]+)\<pythonend\>',cobj.text)[0].strip()
+# res2 = [   s.split('|')          for s in res2.split('\n')]
+# res2 = dict(res2)
+
+# res = (res1,res2)
+# pprint(res)
+
+
+
+# 
+
+# import os
+# import sys
+
+# from pprint import pprint
+# os.startfile('F:\\my\\F00_myfn\\h10_try_command.py')
+# file_name = r'F:\my\P028_knowledge_system\knowqt\qt.py'
+# file_name = r'cmd'
+
+
+# filename = 'F:\\my\\P028_knowledge_system\\knowqt\\myfn\\h10_try_command_file.txt'
+# with open(filename,'w',encoding='utf-8') as f:
+#     f.write(file_name)
+# # os.chdir(os.path.dirname(r'F:\my\P028_knowledge_system\knowqt\myfn\mybat.bat'))
+# # os.startfile('F:\\my\\P028_knowledge_system\\knowqt\\myfn\\h10_try_command.py')
+# # os.startfile(r'F:\mygit\python\evaluate\manage.py')
+# # os.system(r'cmd')
+
+# print(333)
+
+
+# import subprocess
+# subprocess.call("cmd", shell=True)
+
+
+# from subprocess import *  
+# from subprocess import  STARTUPINFO #对于python2.7需要单独引用STARTUPINFO
+ 
+# import os
+# startupinfo = STARTUPINFO()
+# startupinfo.dwFlags |=  STARTF_USESHOWWINDOW
+# # startupinfo.wShowWindow =  SW_HIDE
+ 
+# x = Popen(["cmd",'python'],stdin = PIPE, stdout = PIPE,stderr=PIPE,startupinfo=startupinfo).stdin
+# x.write(b'python F:\\my\\P028_knowledge_system\\knowqt\\main.py')
+
+
+#----------------快捷键设置--------------------#
+#----------------快捷键设置--------------------#
+#----------------快捷键设置--------------------#

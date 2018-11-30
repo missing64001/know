@@ -1,0 +1,1 @@
+python F:\mygit\python\evaluate\manage.py
