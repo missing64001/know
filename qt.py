@@ -45,11 +45,12 @@ class TextEdit(QTextEdit):
     def __init__(self, *arg, **kw):
         super().__init__(*arg, **kw)
 
+
     def mouseDoubleClickEvent(self, event):
         try:
             x = self.textCursor()
-            self.moveCursor(x.StartOfLine,x.MoveAnchor)
-            self.moveCursor(x.EndOfLine,x.KeepAnchor)
+            self.moveCursor(x.StartOfBlock,x.MoveAnchor)
+            self.moveCursor(x.EndOfBlock,x.KeepAnchor)
             zzz = self.textCursor().selectedText()
 
             res = zzz.split('|')
@@ -118,14 +119,48 @@ class TextEdit(QTextEdit):
                     # os.chdir(os.path.dirname(file_name))
                     # os.startfile('F:\\my\\F00_myfn\\h10_try_command.py')
 
-
-
-
         except:
             traceback.print_exc()
         super().mouseDoubleClickEvent(event)
 
-    def exec_test(self):
+
+    def keyPressEvent(self, event):
+        # print('event',event.key())
+        if (event.key() == Qt.Key_Tab and QApplication.keyboardModifiers()!=Qt.ShiftModifier and QApplication.keyboardModifiers()!=Qt.ControlModifier):
+            self.insertPlainText('    ')
+        elif event.key() == Qt.Key_Backspace:
+
+            x = self.textCursor()
+            self.moveCursor(x.PreviousWord,x.KeepAnchor)
+            zzz = self.textCursor().selectedText()
+            self.setTextCursor(x)
+            if zzz.endswith('    '):
+                self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
+                self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
+                self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
+                self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
+            super().keyPressEvent(event)
+        elif event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            cursor = self.textCursor()
+            self.moveCursor(cursor.StartOfBlock,cursor.KeepAnchor)
+            zzz = self.textCursor().selectedText()
+            x = re.search(r'^\s+',zzz)
+            i = 0
+            if x:
+                i = x.end() -x.start()
+                i = i - i % 4
+            self.setTextCursor(cursor)
+            super().keyPressEvent(event)
+            self.insertPlainText(' '*i)
+
+
+        else:
+            super().keyPressEvent(event)
+
+
+
+
+    def exec_test(self,**kw):
         print('run_exec_test')
 
         old_path = r'F:\my\P028_knowledge_system\knowqt'
@@ -982,7 +1017,7 @@ class Mainwindow(QMainWindow):
         self.show_labels_pre()
 
     def embark_shortcut(self):
-        print(11)
+        # print(11)
         cobj = models.Content.objects.get(name='know快捷键')
         res1 = re.findall(r'\<sublime\>([\w\W]+)\<sublimeend\>',cobj.text)[0].strip()
         res1 = [   s.split('|')          for s in res1.split('\n')]
@@ -996,13 +1031,13 @@ class Mainwindow(QMainWindow):
         return res
 
     def shortcut_writetime(self):
-        print(111)
+        # print(111)
         time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
         self.textEdit.insertPlainText(time_now_str)
 
 
     def exec_test(self):
-        print(1111111)
+        print('exec_test')
         filename = 'myexec.py'
         with open(filename,'r',encoding='utf-8') as f:
             data = f.read()
