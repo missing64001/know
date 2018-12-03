@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFrame,QSplitter,
 from PyQt5.QtWidgets import QTreeWidget, QTextEdit, QMainWindow, QTreeWidgetItem, QLineEdit,QPushButton, QLabel
 from PyQt5.QtWidgets import QDialog, QShortcut, QAbstractItemView, QAction ,QMessageBox
 from PyQt5.QtCore import Qt, QTimer 
-from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont
+from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat
 from pprint import pprint
 import sip
 from hmysql import models,Q,timezone
@@ -32,6 +32,8 @@ if bios[0] == 0:
     file_exe = r'start /b F:\sublime\SublimeText_XP85\sublime_text.exe'
 elif bios[0] == 1:
     file_exe = r'"C:\Program Files\Sublime Text 3\sublime_text.exe"'
+elif bios[0] == 2:
+    file_exe = r'"H:\Desktop\lj\sublime text build 3143\sublime_text"'
 
 # from main import models
 
@@ -190,6 +192,11 @@ class MyTree(QTreeWidget):
         self.setColumnWidth(0,200)
         self.setColumnWidth(1,30)
 
+        self.setDragEnabled(True)
+        self.setAcceptDrops(True)
+        self.setDropIndicatorShown(True)
+        self.setDragDropMode(QAbstractItemView.InternalMove) 
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection) 
 
 
         self.setHeaderHidden(True)
@@ -209,6 +216,90 @@ class MyTree(QTreeWidget):
                 self.add_child_tem()
             else:
                 pass
+
+
+    def dragMoveEvent(self, event):
+        self.sitems = self.selectedItems()
+        super().dragMoveEvent(event)
+        # event.accept()
+
+    def dropEvent(self, event):
+        for item in self.sitems:
+            item.oldparent = item.parent()
+        super().dropEvent(event)
+        for item in self.sitems:
+            if item.parent():
+                pobj = item.parent().model_data['object']
+                if item.oldparent.model_data['object'].id != pobj.id:
+                    # print(1,item.model_data['name'],item.parent().model_data['name'])
+                    obj = item.model_data['object']
+                    obj.pid = pobj.id
+                    obj.save()
+
+                label_queue = []
+                content_queue = []
+                for i in range(item.parent().childCount()):
+                    if isinstance(item.parent().child(i).model_data['object'], models.Label):
+                        label_queue.append(str(item.parent().child(i).model_data['object'].id))
+                    else:
+                        content_queue.append(str(item.parent().child(i).model_data['object'].id))
+
+
+
+                queue = (','.join(label_queue),','.join(content_queue))
+
+                queue = '|'.join(queue)
+                pobj.queue = queue
+                # print(pobj.name,pobj.id,pobj.queue)
+                pobj.save()
+
+
+    def h_sort(self):
+        def _sort(item):
+            #首项的顺序先不排序
+            label_id_dict = {}
+            content_id_dict = {}
+            for i in range(item.childCount()):
+                citem = item.child(i)
+                if isinstance(citem.model_data['object'], models.Label):
+                    _sort(citem)
+                    label_id_dict[citem.model_data['object'].id] = citem
+                else:
+                    content_id_dict[citem.model_data['object'].id] = citem
+
+            queue = item.model_data['object'].queue
+            label_queue = []
+            content_queue = []
+            if queue:
+                if queue.split('|')[0]:
+                    label_queue = queue.split('|')[0].split(',')
+                if queue.split('|')[1]:
+                    content_queue = queue.split('|')[1].split(',')
+
+
+            for j in reversed(label_queue):
+                j = int(j)
+                citem = label_id_dict.get(j)
+                if not citem:
+                    continue
+                item.removeChild(citem)
+                item.insertChild(0,citem)
+
+            for j in content_queue:
+                j = int(j)
+                citem = content_id_dict.get(j)
+                if not citem:
+                    continue
+                item.removeChild(citem)
+                item.insertChild(item.childCount(),citem)
+
+                
+        for i in range(self.topLevelItemCount()):
+            item = self.topLevelItem(i)
+            if isinstance(item.model_data['object'], models.Label):
+                _sort(item)
+
+
 
     def set_mself(self,mself):
         self.mself = mself
@@ -804,6 +895,8 @@ class LabelTree(QTreeWidget):
             queue = item.model_data['object'].queue
             if queue and queue.split('|')[0]:
                 queue = queue.split('|')[0].split(',')
+            else:
+                queue = []
             for j in reversed(queue):
                 j = int(j)
                 citem = iddict.get(j)
@@ -1075,7 +1168,7 @@ class Mainwindow(QMainWindow):
                 obj.text = text
             if change:
                 obj.save()
-                print('数据保存完成')
+                print('数据保存完成',end='\r')
 
 
     def show_labels(self):
@@ -1084,10 +1177,32 @@ class Mainwindow(QMainWindow):
             sip.delete(bt)
         self.show_label_lst = []
 
+
+
+
+
         if self.content_layout_current_id:
             obj = models.Content.objects.get(id = self.content_layout_current_id)
             self.cl_bt_le.setText(obj.name)
-            self.textEdit.setText(obj.text)
+            letextlst = self.le1.text().split()
+            text = obj.text
+            self.textEdit.setText(text)
+            # self.textEdit.setFocus()
+            for to_find_text in letextlst:
+
+                x = self.textEdit.textCursor()
+                self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+
+                while self.textEdit.find(to_find_text):
+                    find_cursor = self.textEdit.textCursor()
+                    plainFormat = QTextCharFormat(find_cursor.charFormat())
+                    colorFormat = plainFormat
+                    colorFormat.setForeground(Qt.red)
+                    self.textEdit.mergeCurrentCharFormat(colorFormat)
+                
+                self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+
+
             createddate = obj.create_date + datetime.timedelta(hours=8)
             createddate = createddate.strftime('%Y-%m-%d %H:%M:%S')
             self.statusBar().showMessage(str(obj.id) + ' ' + createddate)
@@ -1482,8 +1597,8 @@ class Mainwindow(QMainWindow):
         # label_id_set = get_labels_by_content_id_set(content_id_set_by_label)
 
         self.tree.set_label_treeitems(label_id_set,self)
-
         self.tree.setcontent(label_id_set,content_id_set_by_text,self)
+        self.tree.h_sort()
         # self.tree.setcontent(set(),content_id_set_by_true_text,self,False)
 
 

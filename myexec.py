@@ -40,8 +40,17 @@
 #     win32api.keybd_event(s,0,0,0)  #v键位码是86
 #     win32api.keybd_event(s,0,win32con.KEYEVENTF_KEYUP,0) #释放按键
 
+x = self.textEdit.find('eva')
+print(x)
 
-help(Qt)
+# find_cursor = self.textEdit.textCursor()
+# plainFormat = QTextCharFormat(find_cursor.charFormat())
+# colorFormat = plainFormat
+# colorFormat.setForeground(Qt.red)
+# self.textEdit.mergeCurrentCharFormat(colorFormat)
+
+
+
 # self.moveCursor(x.EndOfLine,x.KeepAnchor)
 
 # 
