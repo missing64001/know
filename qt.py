@@ -15,6 +15,7 @@ import re
 import traceback
 import pyperclip
 import datetime
+import pickle
 
 CURRENTURL = os.path.dirname(__file__)
 paths = [r'F:\my',]
@@ -261,6 +262,8 @@ class MyTree(QTreeWidget):
             content_id_dict = {}
             for i in range(item.childCount()):
                 citem = item.child(i)
+
+
                 if isinstance(citem.model_data['object'], models.Label):
                     _sort(citem)
                     label_id_dict[citem.model_data['object'].id] = citem
@@ -293,9 +296,18 @@ class MyTree(QTreeWidget):
                 item.removeChild(citem)
                 item.insertChild(item.childCount(),citem)
 
+
+            for i in range(item.childCount()):
+                citem = item.child(i)
+                cobj = citem.model_data['object']
+                if isinstance(cobj, models.Label):
+                    citem.setExpanded(bool(self.mself.expanddict.get(cobj.id)))
+                    citem.setExpanded(bool(self.mself.expanddict.get(cobj.id)))
                 
         for i in range(self.topLevelItemCount()):
             item = self.topLevelItem(i)
+            cobj = item.model_data['object']
+            item.setExpanded(bool(self.mself.expanddict.get(cobj.id)))
             if isinstance(item.model_data['object'], models.Label):
                 _sort(item)
 
@@ -381,8 +393,13 @@ class MyTree(QTreeWidget):
 
     def mytree_item_clicked(self):
         item = self.currentItem()
-        if item.typelc == 'c':
-            self.mysender(item.model_data['id'])
+        obj = item.model_data['object']
+        if isinstance(obj, models.Label):
+            createddate = obj.create_date + datetime.timedelta(hours=8)
+            createddate = createddate.strftime('%Y-%m-%d %H:%M:%S')
+            self.mself.statusBar().showMessage(str(obj.id) + ' ' + createddate)
+        else:
+            self.mysender(obj.id)
 
     def set_mysender(self,mysender):
         self.mysender = mysender
@@ -482,6 +499,8 @@ class MyTree(QTreeWidget):
                     l = self.label_item_dict.get(cobj.id)
                 l.append(item)
 
+                # item.setExpanded(bool(self.mself.expanddict.get(cobj.id)))
+
         for fchild in queue_queue['children'].values():
             item = TreeWidgetItem(self)
 
@@ -501,6 +520,9 @@ class MyTree(QTreeWidget):
                 self.label_item_dict[cobj.id] = []
                 l = self.label_item_dict.get(cobj.id)
             l.append(item)
+
+
+            # item.setExpanded(bool(self.mself.expanddict.get(cobj.id)))
 
 
     def setcontent(self,labels,contents,Mself):
@@ -692,6 +714,9 @@ class MyTree(QTreeWidget):
         # print(item.text(column))
         # print(item.isExpanded())
         item.setExpanded( item.isExpanded())
+        id_ = item.model_data['object'].id
+        self.mself.expanddict[id_] = not(item.isExpanded())
+        # print(self.mself.expanddict)
 
 
 
@@ -845,7 +870,7 @@ class LabelTree(QTreeWidget):
                 queue_child_dict[id] = rest[pid]['children'][id]['children']
             else:
                 rest[id] = {'data':labels_values[i],'children':{}}
-        print('rest 是否可以取消字典改为 set')
+        print('rest 是否可以取消字典改为 set',end='\r')
 
 
         while rest:
@@ -876,6 +901,8 @@ class LabelTree(QTreeWidget):
                 item.model_data = child['data']
                 add_tree_child_item(item,child)
 
+                # item.setExpanded(bool(self.mself.expanddict.get(item.model_data['object'].id)))
+
         for fchild in queue_queue['children'].values():
             item = TreeWidgetItem(self)
             item.setText(0,fchild['data']['name'])
@@ -883,6 +910,8 @@ class LabelTree(QTreeWidget):
             # 1 字典 2 model
             item.model_data = fchild['data']
             add_tree_child_item(item,fchild)
+
+            # item.setExpanded(bool(self.mself.expanddict.get(item.model_data['object'].id)))
 
     def h_sort(self):
         def _sort(item):
@@ -979,13 +1008,25 @@ class PushButton(QPushButton):
 class Mainwindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
         self.show_label_lst = []
+        self.expanddict = {}
+        self.load_Expanded()
+
+
+
         self.initUI()
+
+
         self.lineedit_textchanged_time = None
         self.timer = QTimer(self)
         self.timer.setSingleShot(False)
         self.timer.timeout.connect(self.connect_db) 
         self.timer.start(1000 * 60 * 30)
+
+
+
+
 
     def connect_db(self):
         print('每半小时连接一次服务器',end='\r')
@@ -1108,6 +1149,19 @@ class Mainwindow(QMainWindow):
 
     def save_text(self):
         self.show_labels_pre()
+        self.save_Expanded()
+
+    def save_Expanded(self):
+        filename = 'expand.dat'
+        with open(filename,'wb') as f:
+            pickle.dump(self.expanddict,f)
+
+    def load_Expanded(self):
+        filename = 'expand.dat'
+
+        if os.path.isfile(filename):
+            with open(filename,'rb') as f:
+                self.expanddict = pickle.load(f)
 
     def embark_shortcut(self):
         # print(11)
