@@ -40,8 +40,8 @@
 #     win32api.keybd_event(s,0,0,0)  #v键位码是86
 #     win32api.keybd_event(s,0,win32con.KEYEVENTF_KEYUP,0) #释放按键
 
-x = self.textEdit.find('eva')
-print(x)
+# x = self.textEdit.find('eva')
+# print(x)
 
 # find_cursor = self.textEdit.textCursor()
 # plainFormat = QTextCharFormat(find_cursor.charFormat())
@@ -54,3 +54,33 @@ print(x)
 # self.moveCursor(x.EndOfLine,x.KeepAnchor)
 
 # 
+# 
+# 
+
+
+
+print(111)
+
+sitems = self.selectedItems()
+        
+for item in sitems:
+    pitem = item.parent()
+    item.oldparent = (pitem, self.indexItem(item), item)
+
+QTreeWidget.dropEvent(self,event)
+
+
+for item in sitems:
+    obj = item.model_data['object']
+    pobj = item.parent().model_data['object']
+    oldpobj = item.oldparent[0].model_data['object']
+    if not item.parent() or not isinstance(pobj, models.Label):
+        pitem = item.parent()
+        self.removeItem(pitem,item)
+        self.insertItem(*item.oldparent)
+    elif isinstance(obj, models.Content):
+        if oldpobj != pobj:
+            print('budeng')
+            obj.labels.remove(oldpobj)
+            obj.labels.add(pobj)
+            obj.save()

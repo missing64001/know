@@ -32,7 +32,7 @@ bios = get_computer_info
 if bios[0] == 0:
     file_exe = r'start /b F:\sublime\SublimeText_XP85\sublime_text.exe'
 elif bios[0] == 1:
-    file_exe = r'"C:\Program Files\Sublime Text 3\sublime_text.exe"'
+    file_exe = r'start /b E:\Desktop\SublimeText3\sublime_text.exe'
 elif bios[0] == 2:
     file_exe = r'"H:\Desktop\lj\sublime text build 3143\sublime_text"'
 
@@ -43,11 +43,15 @@ elif bios[0] == 2:
 GTIMES = time.time()
 
 
+class PushButton(QPushButton):
+    def __init__(self, *arg, **kw):
+        super().__init__(*arg, **kw)
+        self.model_data = None
+
 
 class TextEdit(QTextEdit):
     def __init__(self, *arg, **kw):
         super().__init__(*arg, **kw)
-
 
     def mouseDoubleClickEvent(self, event):
         try:
@@ -100,18 +104,11 @@ class TextEdit(QTextEdit):
                     # help(os.startfile)
                     file_name = res[1]
 
-
-
                     filename = r'F:\my\P028_knowledge_system\knowqt\myfn\h10_try_command_file.txt'
                     with open(filename,'w',encoding='utf-8') as f:
                         f.write(file_name)
                     os.chdir(os.path.dirname(file_name))
                     os.startfile(r'F:\my\P028_knowledge_system\knowqt\myfn\h10_try_command.py')
-
-
-
-
-
 
                     # file_name = res[1]
                     # file_name = "C:\\Windows\\System32\\cmd"
@@ -125,7 +122,6 @@ class TextEdit(QTextEdit):
         except:
             traceback.print_exc()
         super().mouseDoubleClickEvent(event)
-
 
     def keyPressEvent(self, event):
         # print('event',event.key())
@@ -160,9 +156,6 @@ class TextEdit(QTextEdit):
         else:
             super().keyPressEvent(event)
 
-
-
-
     def exec_test(self,**kw):
         print('run_exec_test')
 
@@ -178,18 +171,17 @@ class TextEdit(QTextEdit):
         except Exception:
             traceback.print_exc()
 
+
 class TreeWidgetItem(QTreeWidgetItem):
     def __init__(self, *arg, **kw):
         super().__init__(*arg, **kw)
         self.setFlags(self.flags() | Qt.ItemIsEditable | Qt.ItemIsEnabled)
 
 
-
 class MyTree(QTreeWidget):
     def __init__(self):
         super().__init__()
-        # self.setColumnCount(1)
-        self.setColumnCount(2)
+        self.setColumnCount(1)
         self.setColumnWidth(0,200)
         self.setColumnWidth(1,30)
 
@@ -199,14 +191,12 @@ class MyTree(QTreeWidget):
         self.setDragDropMode(QAbstractItemView.InternalMove) 
         self.setSelectionMode(QAbstractItemView.ExtendedSelection) 
 
-
         self.setHeaderHidden(True)
-        # self.setitem()
+
         self.clicked.connect(self.mytree_item_clicked)
         self.itemDoubleClicked.connect(self.itemDoubleClicked_connect)
         self.label_item_dict = {}
         self.content_item_dict = {}
-
 
     def keyPressEvent(self, event):
         if (event.key() == Qt.Key_Insert):
@@ -218,20 +208,41 @@ class MyTree(QTreeWidget):
             else:
                 pass
 
-
     def dragMoveEvent(self, event):
-        self.sitems = self.selectedItems()
+        # self.sitems = self.selectedItems()
         super().dragMoveEvent(event)
         # event.accept()
 
     def dropEvent(self, event):
-        for item in self.sitems:
-            item.oldparent = item.parent()
-        super().dropEvent(event)
-        for item in self.sitems:
+
+        sitems = self.selectedItems()
+                
+        for item in sitems:
+            pitem = item.parent()
+            item.oldparent = (pitem, self.indexItem(item), item)
+
+        QTreeWidget.dropEvent(self,event)
+
+
+        for item in sitems:
+            obj = item.model_data['object']
+            pobj = item.parent().model_data['object']
+            oldpobj = item.oldparent[0].model_data['object']
+            if not item.parent() or not isinstance(pobj, models.Label):
+                pitem = item.parent()
+                self.removeItem(pitem,item)
+                self.insertItem(*item.oldparent)
+            elif isinstance(obj, models.Content):
+                if oldpobj != pobj:
+                    print('budeng')
+                    obj.labels.remove(oldpobj)
+                    obj.labels.add(pobj)
+                    obj.save()
+
+        for item in sitems:
             if item.parent():
                 pobj = item.parent().model_data['object']
-                if item.oldparent.model_data['object'].id != pobj.id:
+                if item.oldparent[0].model_data['object'].id != pobj.id:
                     # print(1,item.model_data['name'],item.parent().model_data['name'])
                     obj = item.model_data['object']
                     obj.pid = pobj.id
@@ -253,6 +264,33 @@ class MyTree(QTreeWidget):
                 pobj.queue = queue
                 # print(pobj.name,pobj.id,pobj.queue)
                 pobj.save()
+
+    def indexItem(self,item):
+        pitem = item.parent()
+        if pitem:
+            pitem.indexOfChild(item)
+        else:
+            self.indexOfTopLevelItem(item)
+
+    def insertItem(self, pitem, index, item):
+        if pitem:
+            pitem.insertChild(index, item)
+        else:
+            self.insertTopLevelItem(index, item)
+
+    def removeItem(self, pitem, item):
+        if pitem:
+            pitem.removeChild(item)
+        else:
+            self.takeTopLevelItem(self.indexOfTopLevelItem(item))
+
+
+    def addItem(self, pitem, item):
+        if pitem:
+            pitem.addChild(item)
+        else:
+            self.addTopLevelItem(item)
+
 
 
     def h_sort(self):
@@ -311,8 +349,6 @@ class MyTree(QTreeWidget):
             if isinstance(item.model_data['object'], models.Label):
                 _sort(item)
 
-
-
     def set_mself(self,mself):
         self.mself = mself
 
@@ -360,37 +396,6 @@ class MyTree(QTreeWidget):
 
         self.setCurrentItem(nitem)
 
-
-
-
-    def setitem_old(self,cobjs=None):
-        for i in range(self.topLevelItemCount()):
-            sip.delete(self.topLevelItem(0))
-
-        if cobjs == None:
-            cobjs = list(models.Content.objects.all())
-        else:
-            cobjs = list(cobjs)
-
-        for cobj in cobjs:
-            item = TreeWidgetItem(self)
-            item.setText(0,cobj.name)
-            item.model_data = {
-                                'id':cobj.id,
-                                'name':cobj.name,
-                                'text':cobj.text,
-                                'object':cobj,
-            }
-
-        l = self.content_item_dict.get(cobj.id)
-        if l == None:
-            self.content_item_dict[cobj.id] = []
-            l = self.content_item_dict.get(cobj.id)
-        l.append(item)
-
-
-
-
     def mytree_item_clicked(self):
         item = self.currentItem()
         obj = item.model_data['object']
@@ -403,8 +408,6 @@ class MyTree(QTreeWidget):
 
     def set_mysender(self,mysender):
         self.mysender = mysender
-
-
 
     def set_label_treeitems(self,label_id_set,Mself):
 
@@ -524,7 +527,6 @@ class MyTree(QTreeWidget):
 
             # item.setExpanded(bool(self.mself.expanddict.get(cobj.id)))
 
-
     def setcontent(self,labels,contents,Mself):
 
         def get_labels_by_content_id_set(content_id_set):
@@ -597,11 +599,6 @@ class MyTree(QTreeWidget):
 
         set_content_to_tree(self,contents)
 
-
-
-
-
-    # no use
     def setitem(self,labels=None,contents=None):
 
         for i in range(self.topLevelItemCount()):
@@ -706,7 +703,7 @@ class MyTree(QTreeWidget):
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
 
         self.setcontent(labels,contents)
-    # 
+
     def itemDoubleClicked_connect(self,item,column):
         # sender = self.sender()
         # print(item.text(column))
@@ -717,7 +714,6 @@ class MyTree(QTreeWidget):
         id_ = item.model_data['object'].id
         self.mself.expanddict[id_] = not(item.isExpanded())
         # print(self.mself.expanddict)
-
 
 
 
@@ -750,8 +746,6 @@ class LabelTree(QTreeWidget):
         self.itemChanged.connect(self.itemChanged_connect)
         # self.itemClicked.connect(self.itemClicked_connect)
 
-
-
     def keyPressEvent(self, event):
         if (event.key() == Qt.Key_Insert):
             if QApplication.keyboardModifiers() == Qt.ShiftModifier:
@@ -761,7 +755,6 @@ class LabelTree(QTreeWidget):
                 self.add_child_tem()
             else:
                 self.add_next_item()
-
 
     def dragMoveEvent(self, event):
         self.sitems = self.selectedItems()
@@ -804,12 +797,6 @@ class LabelTree(QTreeWidget):
                     obj.pid = 1
                     obj.save()
 
-
-
-
-    # def itemClicked_connect(self,item,column):
-    #     item.setFlags(Qt.ItemIsEditable)
-
     def itemChanged_connect(self,item,column):
 
         if hasattr(item,'model_data') and item.model_data['name'] != item.text(0):
@@ -828,9 +815,6 @@ class LabelTree(QTreeWidget):
 
     def get_currentItem_model_data(self):
         return self.currentItem().model_data
-
-
-    # [ name ,pid ,queue ,grade]
 
     def get_Labels(self):
 
@@ -958,7 +942,6 @@ class LabelTree(QTreeWidget):
         self.setCurrentItem(nitem)
         self.editItem(nitem,0)
 
-
     def add_next_item(self):
         item = self.currentItem()
         nitem = TreeWidgetItem()
@@ -987,46 +970,18 @@ class LabelTree(QTreeWidget):
         self.editItem(nitem,0)
 
 
-    # def additem(self):
-    #     root = TreeWidgetItem(self)
-    #     root.setText(0,'333')
-
-    #     root.setExpanded
-
-    #     qti1 = TreeWidgetItem(root)
-    #     qti1.setText(0,'111')
-    #     root.addChild(qti1)
-
-    #     self.itemDoubleClicked.connect(self.edititem)
-
-class PushButton(QPushButton):
-    def __init__(self, *arg, **kw):
-        super().__init__(*arg, **kw)
-        self.model_data = None
-        
-
 class Mainwindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.show_label_lst = []
         self.expanddict = {}
         self.load_Expanded()
-
-
-
         self.initUI()
-
-
         self.lineedit_textchanged_time = None
         self.timer = QTimer(self)
         self.timer.setSingleShot(False)
         self.timer.timeout.connect(self.connect_db) 
         self.timer.start(1000 * 60 * 30)
-
-
-
-
 
     def connect_db(self):
         print('每半小时连接一次服务器',end='\r')
@@ -1133,12 +1088,6 @@ class Mainwindow(QMainWindow):
         self.show()
         self.show_labels()
 
-    # def __del__(self):
-    #     print('xg')
-
-    # def closeEvent(self,event):
-    #     sys.exit(app.exec_())
-
     def set_shortcut(self,name,shortcut,fun):
         save = QAction(QIcon(''),  name,  self)
         save.setShortcut(shortcut)
@@ -1182,7 +1131,6 @@ class Mainwindow(QMainWindow):
         time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
         self.textEdit.insertPlainText(time_now_str)
 
-
     def exec_test(self):
         print('exec_test')
         filename = 'myexec.py'
@@ -1192,10 +1140,6 @@ class Mainwindow(QMainWindow):
             exec(data)
         except Exception:
             traceback.print_exc()
-
-
-
-
 
     def show_labels_pre(self):
         if self.content_layout_current_id:
@@ -1223,7 +1167,6 @@ class Mainwindow(QMainWindow):
             if change:
                 obj.save()
                 print('数据保存完成',end='\r')
-
 
     def show_labels(self):
         # 设置 textedit 和 cl_bt_le 的文字 并生成标签
@@ -1351,39 +1294,6 @@ class Mainwindow(QMainWindow):
                             'object':cobj,
         }
 
-
-
-
-        # if sender.text() == '新建':
-        #     sender.setText('确定')
-        # elif sender.text() == '确定':
-        #     sender.setText('新建')
-    
-    # def cl_bt_le_textChanged(self):
-
-        
-        
-    #     self.timer.start(4000)
-    #     sender = self.sender()
-    #     print(sender)
-    #     self.lineedit_textchanged_time = time.time()
-
-
-
-
-
-    # def cl_bt_le_textChanged_finished(self):
-    #     # if self.lineedit_textchanged_time + 3.5 < time.time():
-    #     self.timer.stop()
-    #     print('修改',self.cl_bt_le.text())
-    #     if self.content_layout_current_id:
-    #         obj = models.Content.objects.get(id = self.content_layout_current_id)
-    #         if obj.name != self.cl_bt_le.text():
-    #             obj.name = self.cl_bt_le.text()
-    #             self.search_models()
-
-
-
     def addlabel(self):
 
         self.show_labels_pre()
@@ -1426,7 +1336,6 @@ class Mainwindow(QMainWindow):
         self.dia.exec()
         # ql.exec_()
 
-
     def dia_ok_bt_clicked(self):
 
         obj = models.Content.objects.get(id=self.content_layout_current_id)
@@ -1442,7 +1351,6 @@ class Mainwindow(QMainWindow):
 
         self.show_labels()
         self.dia.close()
-
 
     def dia_cancel_bt_clicked(self):
         obj = models.Content.objects.get(id=self.content_layout_current_id)
@@ -1512,7 +1420,6 @@ class Mainwindow(QMainWindow):
                     objsall = cobjs
             objsall = objsall.distinct()
         self.tree.setitem(labelobjs,objsall) #labelobjs
-
 
     def search_models(self):
 
@@ -1659,16 +1566,6 @@ class Mainwindow(QMainWindow):
 
 
 
-
-# printold = print
-
-# def print(*args,**kw):
-#     global GTIMES
-#     printold(str(args),*args,**kw)
-
-#     T = time.time()
-#     printold('------spend time:%ss' %  (T - GTIMES))
-#     GTIMES = T
 
 
 
