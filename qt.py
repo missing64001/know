@@ -1198,6 +1198,17 @@ class Mainwindow(QMainWindow):
             text = obj.text
             self.textEdit.setText(text)
             # self.textEdit.setFocus()
+            # 
+
+            x = self.textEdit.textCursor()
+            self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+            self.textEdit.moveCursor(x.End,x.KeepAnchor)
+            find_cursor = self.textEdit.textCursor()
+            plainFormat = QTextCharFormat(find_cursor.charFormat())
+            colorFormat = plainFormat
+            colorFormat.setForeground(Qt.black)
+            self.textEdit.mergeCurrentCharFormat(colorFormat)
+
             for to_find_text in letextlst:
 
                 x = self.textEdit.textCursor()

@@ -1,1 +1,0 @@
-F:\mygit\python\evaluate\manage.py makemigrations
