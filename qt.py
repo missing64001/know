@@ -163,7 +163,8 @@ class TextEdit(QTextEdit):
         os.chdir(old_path)
 
 
-        filename = 'myexec.py'
+        filename = os.path.join(CURRENTURL,'myexec.py') 
+
         with open(filename,'r',encoding='utf-8') as f:
             data = f.read()
         try:
@@ -226,23 +227,23 @@ class MyTree(QTreeWidget):
 
         for item in sitems:
             obj = item.model_data['object']
-            pobj = item.parent().model_data['object']
-            oldpobj = item.oldparent[0].model_data['object']
+            pobj = item.parent().model_data['object'] if item.parent() else None
+            oldpobj = item.oldparent[0].model_data['object'] if item.oldparent[0] else None
             if not item.parent() or not isinstance(pobj, models.Label):
-                pitem = item.parent()
-                self.removeItem(pitem,item)
+                self.removeItem(item)
+                # print(item.oldparent)
                 self.insertItem(*item.oldparent)
             elif isinstance(obj, models.Content):
                 if oldpobj != pobj:
-                    print('budeng')
-                    obj.labels.remove(oldpobj)
+                    if oldpobj:
+                        obj.labels.remove(oldpobj)
                     obj.labels.add(pobj)
                     obj.save()
 
         for item in sitems:
             if item.parent():
                 pobj = item.parent().model_data['object']
-                if item.oldparent[0].model_data['object'].id != pobj.id:
+                if not item.oldparent[0] or item.oldparent[0].model_data['object'].id != pobj.id:
                     # print(1,item.model_data['name'],item.parent().model_data['name'])
                     obj = item.model_data['object']
                     obj.pid = pobj.id
@@ -268,9 +269,9 @@ class MyTree(QTreeWidget):
     def indexItem(self,item):
         pitem = item.parent()
         if pitem:
-            pitem.indexOfChild(item)
+            return pitem.indexOfChild(item)
         else:
-            self.indexOfTopLevelItem(item)
+            return self.indexOfTopLevelItem(item)
 
     def insertItem(self, pitem, index, item):
         if pitem:
@@ -278,12 +279,12 @@ class MyTree(QTreeWidget):
         else:
             self.insertTopLevelItem(index, item)
 
-    def removeItem(self, pitem, item):
+    def removeItem(self, item):
+        pitem = item.parent()
         if pitem:
             pitem.removeChild(item)
         else:
             self.takeTopLevelItem(self.indexOfTopLevelItem(item))
-
 
     def addItem(self, pitem, item):
         if pitem:
@@ -291,7 +292,11 @@ class MyTree(QTreeWidget):
         else:
             self.addTopLevelItem(item)
 
-
+    def children(pitm):
+        if pitem:
+            return [ pitem.child(i) for i in range(pitem.childCount())]
+        else:
+            return [ self.topLevelItem(i) for i in range(self.topLevelItemCount())]
 
     def h_sort(self):
         def _sort(item):
@@ -303,7 +308,7 @@ class MyTree(QTreeWidget):
 
 
                 if isinstance(citem.model_data['object'], models.Label):
-                    _sort(citem)
+                    
                     label_id_dict[citem.model_data['object'].id] = citem
                 else:
                     content_id_dict[citem.model_data['object'].id] = citem
@@ -340,7 +345,7 @@ class MyTree(QTreeWidget):
                 cobj = citem.model_data['object']
                 if isinstance(cobj, models.Label):
                     citem.setExpanded(bool(self.mself.expanddict.get(cobj.id)))
-                    citem.setExpanded(bool(self.mself.expanddict.get(cobj.id)))
+                    _sort(citem)
                 
         for i in range(self.topLevelItemCount()):
             item = self.topLevelItem(i)
@@ -975,9 +980,13 @@ class Mainwindow(QMainWindow):
         super().__init__()
         self.show_label_lst = []
         self.expanddict = {}
+        self.content_layout_current_id = None
+
+
+
         self.load_Expanded()
         self.initUI()
-        self.lineedit_textchanged_time = None
+
         self.timer = QTimer(self)
         self.timer.setSingleShot(False)
         self.timer.timeout.connect(self.connect_db) 
@@ -1073,7 +1082,7 @@ class Mainwindow(QMainWindow):
 
 
 
-        self.content_layout_current_id = None
+
 
         menubar = self.menuBar()
         self.file = menubar.addMenu('&File')
@@ -1101,12 +1110,12 @@ class Mainwindow(QMainWindow):
         self.save_Expanded()
 
     def save_Expanded(self):
-        filename = 'expand.dat'
+        filename = os.path.join(CURRENTURL,'expand.dat') 
         with open(filename,'wb') as f:
             pickle.dump(self.expanddict,f)
 
     def load_Expanded(self):
-        filename = 'expand.dat'
+        filename = os.path.join(CURRENTURL,'expand.dat') 
 
         if os.path.isfile(filename):
             with open(filename,'rb') as f:
@@ -1132,8 +1141,12 @@ class Mainwindow(QMainWindow):
         self.textEdit.insertPlainText(time_now_str)
 
     def exec_test(self):
+        self.content_layout_current_id = None
+        self.textEdit.setText('')
+        self.cl_bt_le.setText('<run_exec_test>')
+
         print('exec_test')
-        filename = 'myexec.py'
+        filename = os.path.join(CURRENTURL,'myexec.py') 
         with open(filename,'r',encoding='utf-8') as f:
             data = f.read()
         try:
