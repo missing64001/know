@@ -292,7 +292,7 @@ class MyTree(QTreeWidget):
         else:
             self.addTopLevelItem(item)
 
-    def children(pitm):
+    def children(pitm=None):
         if pitem:
             return [ pitem.child(i) for i in range(pitem.childCount())]
         else:
