@@ -52,7 +52,8 @@ def addtime(date,type_,num):
         new = datetime.datetime.strptime(newstr, '%Y%m%d %H:%M:%S')
         return new
     else:
-        raise TypeError('错误的参数 %s %s %s %s' % (num,type_,type(num),type(type_)))
+        print('错误的参数 %s %s %s %s' % (num,type_,type(num),type(type_)))
+    return date
 
 def addtime_to_seconds(date,type_,num):
     return time.mktime(addtime(date,type_,num).timetuple())
@@ -87,20 +88,23 @@ class HCalendar(object):
             if item.text() == '<日历>':
                 citems = self.tree.children(item)
 
-    def get_rest_seconds(self,item):
+    def show_by_seconds(self,obj):
+        return show_by_seconds(self.get_rest_seconds(obj))
+
+    def get_rest_seconds(self,obj):
         # obj = item.model_data['object']
-        # di = self.getdict(obj)
-        # histroy = self.gethistroy(obj)
+        di = self.getdict(obj)
+        if not di:
+            return None
+        histroy = self.gethistroy(obj)
 
-        di = {'start':1544140036,'interval':('days',1),'times':5,'end':1544140136 + 3 * 24 * 3600}
-        histroy = {1544130056 + 3 * 24 * 3600}
+        # di = {'start':1544140036,'interval':('days',1),'times':5,'end':1544290136 + 3 * 24 * 3600}
+        # histroy = {1544100056 + 3 * 24 * 3600}
 
-        print('now',datetime.datetime.fromtimestamp(time.time()))
-        print('sta',datetime.datetime.fromtimestamp(di['start']))
-        print('end',datetime.datetime.fromtimestamp(di['end']))
-        print('his',datetime.datetime.fromtimestamp(max(histroy)))
-
-
+        # print('now',datetime.datetime.fromtimestamp(time.time()))
+        # print('sta',datetime.datetime.fromtimestamp(di['start']))
+        # print('end',datetime.datetime.fromtimestamp(di['end']))
+        # print('his',datetime.datetime.fromtimestamp(max(histroy)))
 
 
         lasthistroy = 0
@@ -119,30 +123,42 @@ class HCalendar(object):
             return start - time.time()
 
         elif interval:
-            while True:
-                if lasthistroy >= start:
-                    if times == -1:
-                        pass
-                    if times:
-                        times -= 1
-                    else:
-                        return 'finished'
-                    if end and start >= end:
-                        print('xxx',datetime.datetime.fromtimestamp(start))
-                        print('end',datetime.datetime.fromtimestamp(end))
-                        return 'finished'
-                    start = addtime_to_seconds(start,*interval)
-                else:
-                    if times:
-                        return addtime_to_seconds(start,interval[0],-interval[1]) - time.time()
-                    else:
-                        return 'finished'
+            end_times = 0
+            lasthistroy_times = 0
+            if end:
+                starttemp = start
+                while True:
+                    starttemp = addtime_to_seconds(starttemp,*interval)
+                    end_times += 1
+                    if starttemp > end:
+                        break
+
+            if lasthistroy:
+                starttemp = start
+                while True:
+                    starttemp = addtime_to_seconds(starttemp,*interval)
+                    lasthistroy_times += 1
+                    if starttemp > lasthistroy:
+                        break
+            if (times and lasthistroy_times >= times) or (end_times and lasthistroy_times >= end_times):
+                return 'finished'
+            else:
+                return addtime_to_seconds(start,interval[0],interval[1]*lasthistroy_times)- time.time()
+        else:
+            print(133333,interval)
+
 
     def getdict(self,obj):
-        timedict = re.findall(r'\<time\>([\w\W]+)\</time\>',obj.text)[0].strip()
-        timedict = [ s.split(':') for s in timedict.split('\n') if s.strip()]
-        timedict = dict(res2)
+        timedict = re.findall(r'\<time\>([\w\W]+)\</time\>',obj.text)
+        if not timedict:
+            return None
+        timedict = timedict[0].strip()
+        timedict = [ s.split('|') for s in timedict.split('\n') if s.strip()]
+        if not timedict:
+            return None
+        timedict = dict(timedict)
         timedict['object'] = obj
+        
         return self.dealdict(timedict)
 
     def dealdict(self,di):
@@ -169,9 +185,15 @@ class HCalendar(object):
             interval = interval.strip()
             num = re.findall(r'\d+',interval)[0]
             interval = (interval[len(num):],int(num))
+            di['interval'] = interval
+
+        return di
 
     def gethistroy(self,obj):
-        histroylst = re.findall(r'\<histroy\>([\w\W]+)\</histroy\>',obj.text)[0].strip()
+        histroylst = re.findall(r'\<histroy\>([\w\W]+)\</histroy\>',obj.text)
+        if not histroylst:
+            return None
+        histroylst = histroylst[0].strip()
         histroylst = re.findall(r'\<(\d{8} \d{2}:\d{2}:\d{2})\>',histroylst)
         histroylst = [ time.mktime(datetime.datetime.strptime(date, '%Y%m%d %H:%M:%S').timetuple()) for date in histroylst]
         return histroylst

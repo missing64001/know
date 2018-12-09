@@ -16,6 +16,7 @@ import traceback
 import pyperclip
 import datetime
 import pickle
+from func.hcalendar import HCalendar
 
 CURRENTURL = os.path.dirname(__file__)
 paths = [r'F:\my',]
@@ -983,6 +984,9 @@ class Mainwindow(QMainWindow):
         self.content_layout_current_id = None
 
 
+        self.hc = None # HCalendar
+        
+
 
         self.load_Expanded()
         self.initUI()
@@ -1037,6 +1041,8 @@ class Mainwindow(QMainWindow):
         vbox_left.addWidget(self.le1)
         vbox_left.addWidget(self.tree)
         vbox_right.addWidget(self.textEdit)
+
+        self.hc = HCalendar(self.tree,self.textEdit)
 
         self.content_layout.addLayout(cl_bt_hbox)
 
@@ -1106,8 +1112,11 @@ class Mainwindow(QMainWindow):
         self.file.addAction(save)
 
     def save_text(self):
+        print(1115,11)
         self.show_labels_pre()
+        print(1115,22)
         self.save_Expanded()
+        print(1115,33)
 
     def save_Expanded(self):
         filename = os.path.join(CURRENTURL,'expand.dat') 
@@ -1155,11 +1164,13 @@ class Mainwindow(QMainWindow):
             traceback.print_exc()
 
     def show_labels_pre(self):
+
+        print(1168,44)
         if self.content_layout_current_id:
             obj = models.Content.objects.get(id = self.content_layout_current_id)
             name = self.cl_bt_le.text()
             text = self.textEdit.toPlainText()
-
+            print(11)
             change = False
             if name != obj.name:
                 change = True
@@ -1174,12 +1185,19 @@ class Mainwindow(QMainWindow):
 
 
 
+            print(22)
             if text != obj.text:
                 change = True
                 obj.text = text
+
+
+            print(33)
             if change:
                 obj.save()
                 print('数据保存完成',end='\r')
+            print(44)
+
+        print(55)
 
     def show_labels(self):
         # 设置 textedit 和 cl_bt_le 的文字 并生成标签
@@ -1226,7 +1244,14 @@ class Mainwindow(QMainWindow):
 
             createddate = obj.create_date + datetime.timedelta(hours=8)
             createddate = createddate.strftime('%Y-%m-%d %H:%M:%S')
-            self.statusBar().showMessage(str(obj.id) + ' ' + createddate)
+
+            rest_seconds = self.hc.get_rest_seconds(obj)
+            print(rest_seconds)
+            if rest_seconds:
+                self.statusBar().showMessage(str(obj.id) + ' ' + createddate + ' ' + (str(rest_seconds) if rest_seconds else ''))
+            else:
+                self.statusBar().showMessage(str(obj.id) + ' ' + createddate)
+
 
 
             labs = obj.labels.all()
