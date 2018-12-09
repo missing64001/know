@@ -34,7 +34,7 @@ if bios[0] == 0:
 elif bios[0] == 1:
     file_exe = r'start /b E:\Desktop\SublimeText3\sublime_text.exe'
 elif bios[0] == 2:
-    file_exe = r'"H:\Desktop\lj\sublime text build 3143\sublime_text"'
+    file_exe = r'start /b H:\Desktop\lj\sublimetextbuild3143\sublime_text'
 
 # from main import models
 
