@@ -51,9 +51,9 @@ class PushButton(QPushButton):
 
 
 class TextEdit(QTextEdit):
-    def __init__(self, *arg, **kw):
+    def __init__(self, *arg,mself=None, **kw):
         super().__init__(*arg, **kw)
-
+        self.mself = mself
     def mouseDoubleClickEvent(self, event):
         try:
             x = self.textCursor()
@@ -119,6 +119,9 @@ class TextEdit(QTextEdit):
                     #     f.write(file_name)
                     # os.chdir(os.path.dirname(file_name))
                     # os.startfile('F:\\my\\F00_myfn\\h10_try_command.py')
+
+                elif res[0] == 'finish':
+                    self.setText(self.mself.hc.addhistory(self.toPlainText()))
 
         except:
             traceback.print_exc()
@@ -293,8 +296,8 @@ class MyTree(QTreeWidget):
         else:
             self.addTopLevelItem(item)
 
-    def children(pitm=None):
-        if pitem:
+    def children(self,pitem=None):
+        if pitem and isinstance(pitem,QTreeWidgetItem):
             return [ pitem.child(i) for i in range(pitem.childCount())]
         else:
             return [ self.topLevelItem(i) for i in range(self.topLevelItemCount())]
@@ -401,6 +404,10 @@ class MyTree(QTreeWidget):
         nitem.setFont(0,font)
 
         self.setCurrentItem(nitem)
+
+        if item.text(0) == '<日历>':
+            time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
+            mself.textEdit.setText('finish|\n\n<time>\nstart|%s\nend|%s\ninterval|1hours/1days/1weeks/1months/1years/1nyear（农历年）\ntimes|\n</time>'%(time_now_str,time_now_str))
 
     def mytree_item_clicked(self):
         item = self.currentItem()
@@ -1019,7 +1026,7 @@ class Mainwindow(QMainWindow):
         self.tree = MyTree()
         self.tree.set_mself(self)
         self.tree.set_mysender(self.label_tree_clicked)
-        self.textEdit = TextEdit()
+        self.textEdit = TextEdit(mself=self)
         self.le1 = QLineEdit()
         self.le1.returnPressed.connect(self.search_models)
 
@@ -1112,11 +1119,8 @@ class Mainwindow(QMainWindow):
         self.file.addAction(save)
 
     def save_text(self):
-        print(1115,11)
         self.show_labels_pre()
-        print(1115,22)
         self.save_Expanded()
-        print(1115,33)
 
     def save_Expanded(self):
         filename = os.path.join(CURRENTURL,'expand.dat') 
@@ -1165,12 +1169,10 @@ class Mainwindow(QMainWindow):
 
     def show_labels_pre(self):
 
-        print(1168,44)
         if self.content_layout_current_id:
             obj = models.Content.objects.get(id = self.content_layout_current_id)
             name = self.cl_bt_le.text()
             text = self.textEdit.toPlainText()
-            print(11)
             change = False
             if name != obj.name:
                 change = True
@@ -1182,22 +1184,14 @@ class Mainwindow(QMainWindow):
                         print('RuntimeError again')
                         pass
 
-
-
-
-            print(22)
             if text != obj.text:
                 change = True
                 obj.text = text
 
-
-            print(33)
             if change:
                 obj.save()
                 print('数据保存完成',end='\r')
-            print(44)
 
-        print(55)
 
     def show_labels(self):
         # 设置 textedit 和 cl_bt_le 的文字 并生成标签
@@ -1245,8 +1239,7 @@ class Mainwindow(QMainWindow):
             createddate = obj.create_date + datetime.timedelta(hours=8)
             createddate = createddate.strftime('%Y-%m-%d %H:%M:%S')
 
-            rest_seconds = self.hc.get_rest_seconds(obj)
-            print(rest_seconds)
+            rest_seconds = self.hc.show_by_seconds(obj)
             if rest_seconds:
                 self.statusBar().showMessage(str(obj.id) + ' ' + createddate + ' ' + (str(rest_seconds) if rest_seconds else ''))
             else:
@@ -1499,6 +1492,7 @@ class Mainwindow(QMainWindow):
                 self.le1.setText(res)
 
 
+
         def get_contents_by_textlst(textlst):
 
             def get_label_children(label_id_set):
@@ -1609,6 +1603,8 @@ class Mainwindow(QMainWindow):
         self.tree.set_label_treeitems(label_id_set,self)
         self.tree.setcontent(label_id_set,content_id_set_by_text,self)
         self.tree.h_sort()
+
+        self.hc.h_sort_by_tree(self.tree)
         # self.tree.setcontent(set(),content_id_set_by_true_text,self,False)
 
 

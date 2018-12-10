@@ -2,18 +2,25 @@
 import re
 import datetime
 import time
+import traceback
 
 def main():
+    text = '12312sfg gdghtrh <hisory>\n20181209 11:16:56\n20181210 11:16:56\n</history>'
+    history = re.findall(r'\<history\>[\w\W]+\</history\>',text)
+    # print(type(history[0]))
+    print(history)
+
+    time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
+
+    print(text)
+    text = text.replace('<history>','<history>\n%s\n'%time_now_str)
+    print(text)
 
 
-    hc = HCalendar(1,2)
-    rest = hc.get_rest_seconds(1)
-    if rest != 'finished':
-        sc = show_by_seconds(rest)
-        print(sc)
-    else:
-        print('finished')
-    # print(time.time())
+    hc = HCalendar()
+    text = hc.addhistory(text)
+
+    print(1111111111,text)
 
 def addtime(date,type_,num):
     if isinstance(date,datetime.datetime):
@@ -52,101 +59,121 @@ def addtime(date,type_,num):
         new = datetime.datetime.strptime(newstr, '%Y%m%d %H:%M:%S')
         return new
     else:
-        print('错误的参数 %s %s %s %s' % (num,type_,type(num),type(type_)))
+        raise TypeError('错误的参数 %s %s %s %s' % (num,type_,type(num),type(type_)))
     return date
 
 def addtime_to_seconds(date,type_,num):
     return time.mktime(addtime(date,type_,num).timetuple())
 
 def show_by_seconds(dd):
-    fh = ''
-    if dd <0:
-        dd = -dd
-        fh = '-'
+    try:
+        if dd == 'finished':
+            return dd
+        if not dd:
+            return 0
+        fh = ''
+        if dd <0:
+            dd = -dd
+            fh = '-'
 
-    S = dd % 60
-    dd = int(dd / 60)
+        S = dd % 60
+        dd = int(dd / 60)
 
-    xx = dd
-    M = dd % 60
+        xx = dd
+        M = dd % 60
 
-    dd = int(dd / 60)
+        dd = int(dd / 60)
 
-    H = dd % 60
-    H = dd % 24
+        H = dd % 60
+        H = dd % 24
 
-    day = int(dd / 24)
-    return 'rest %s%s:%02d:%02d:%02d'%(fh,day,H,M,S)
+        day = int(dd / 24)
+        return 'rest %s%s:%02d:%02d:%02d'%(fh,day,H,M,S)
+    except Exception as e:
+        traceback.print_exc()
+        print(dd)
+        return 0
+
+
+
 
 class HCalendar(object):
-    def __init__(self,tree,textedit):
+    def __init__(self,tree=None,textedit=None):
         self.te = textedit
         self.tree = tree
 
-    def h_sort(self):
-        for item in self.tree.children():
-            if item.text() == '<日历>':
-                citems = self.tree.children(item)
+    def h_sort_by_tree(self,tree):
+
+        try:
+            for item in tree.children():
+                if item.text(0) == '<日历>':
+                    itemlist = []
+                    for citem in tree.children(item):
+                        itemlist.append((self.get_rest_seconds(citem.model_data['object']),citem))
+                    itemlist.sort(key=lambda x: x[0] if x[0] else 0)
+                    for _,citem in itemlist:
+                        tree.removeItem(citem)
+                        tree.addItem(item, citem)
+        except Exception as e:
+            traceback.print_exc()
+
+                    
 
     def show_by_seconds(self,obj):
         return show_by_seconds(self.get_rest_seconds(obj))
 
     def get_rest_seconds(self,obj):
-        # obj = item.model_data['object']
-        di = self.getdict(obj)
-        if not di:
-            return None
-        histroy = self.gethistroy(obj)
+        try:
 
-        # di = {'start':1544140036,'interval':('days',1),'times':5,'end':1544290136 + 3 * 24 * 3600}
-        # histroy = {1544100056 + 3 * 24 * 3600}
+            di = self.getdict(obj)
+            if not di:
+                return None
+            history = self.gethistory(obj.text)
 
-        # print('now',datetime.datetime.fromtimestamp(time.time()))
-        # print('sta',datetime.datetime.fromtimestamp(di['start']))
-        # print('end',datetime.datetime.fromtimestamp(di['end']))
-        # print('his',datetime.datetime.fromtimestamp(max(histroy)))
-
-
-        lasthistroy = 0
-        start = di['start']
-        interval = di.get('interval')
-        end = di.get('end')
-        times = di.get('times')
+            lasthistory = 0
+            start = di['start']
+            interval = di.get('interval')
+            end = di.get('end')
+            times = di.get('times')
 
 
-        if histroy:
-            lasthistroy = max(histroy)
+            if history:
+                lasthistory = max(history)
 
-        if not interval and not end and not times:
-            if lasthistroy:
-                return 'finished'
-            return start - time.time()
+            if not interval and not end and not times:
+                if lasthistory:
+                    return 'finished'
+                return start - time.time()
 
-        elif interval:
-            end_times = 0
-            lasthistroy_times = 0
-            if end:
-                starttemp = start
-                while True:
-                    starttemp = addtime_to_seconds(starttemp,*interval)
-                    end_times += 1
-                    if starttemp > end:
-                        break
+            elif interval:
+                end_times = 0
+                lasthistory_times = 0
+                if end:
+                    starttemp = start
+                    while True:
+                        starttemp = addtime_to_seconds(starttemp,*interval)
+                        end_times += 1
+                        if starttemp > end:
+                            break
 
-            if lasthistroy:
-                starttemp = start
-                while True:
-                    starttemp = addtime_to_seconds(starttemp,*interval)
-                    lasthistroy_times += 1
-                    if starttemp > lasthistroy:
-                        break
-            if (times and lasthistroy_times >= times) or (end_times and lasthistroy_times >= end_times):
-                return 'finished'
+                if lasthistory:
+                    starttemp = start
+                    while True:
+                        starttemp = addtime_to_seconds(starttemp,*interval)
+                        lasthistory_times += 1
+                        if starttemp > lasthistory:
+                            break
+                if (times and lasthistory_times >= times) or (end_times and lasthistory_times >= end_times):
+                    return 'finished'
+                else:
+                    if not lasthistory_times:
+                        lasthistory_times += 1
+                    return addtime_to_seconds(start,interval[0],interval[1]*lasthistory_times)- time.time()
             else:
-                return addtime_to_seconds(start,interval[0],interval[1]*lasthistroy_times)- time.time()
-        else:
-            print(133333,interval)
+                print(133333,interval)
 
+        except Exception as e:
+            traceback.print_exc()
 
     def getdict(self,obj):
         timedict = re.findall(r'\<time\>([\w\W]+)\</time\>',obj.text)
@@ -189,14 +216,29 @@ class HCalendar(object):
 
         return di
 
-    def gethistroy(self,obj):
-        histroylst = re.findall(r'\<histroy\>([\w\W]+)\</histroy\>',obj.text)
-        if not histroylst:
+    def gethistory(self,text):
+        historylst = re.findall(r'\<history\>([\w\W]+)\</history\>',text)
+        if not historylst:
             return None
-        histroylst = histroylst[0].strip()
-        histroylst = re.findall(r'\<(\d{8} \d{2}:\d{2}:\d{2})\>',histroylst)
-        histroylst = [ time.mktime(datetime.datetime.strptime(date, '%Y%m%d %H:%M:%S').timetuple()) for date in histroylst]
-        return histroylst
+        historylst = historylst[0].strip()
+        historylst = re.findall(r'\<(\d{8} \d{2}:\d{2}:\d{2})\>',historylst)
+        historylst = [ time.mktime(datetime.datetime.strptime(date, '%Y%m%d %H:%M:%S').timetuple()) for date in historylst]
+        return historylst
+
+    def addhistory(self,text):
+        history = re.findall(r'\<history\>[\w\W]+\</history\>',text)
+        time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
+        if history:
+            if len(history) != 1:
+                print('获得了多个history')
+                return text
+            text = text.replace('<history>','<history>\n<%s>\n'%time_now_str)
+        else:
+            text = text +('\n<history>\n<%s>\n</history>\n'%time_now_str)
+
+        return text
+
+
 
 if __name__ == '__main__':
     main()
