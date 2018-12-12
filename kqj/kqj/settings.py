@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    'suit',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -108,9 +109,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'zh-Hans'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
@@ -123,3 +124,53 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+SUIT_CONFIG = {
+    'ADMIN_NAME': 'evaluate',
+    # 'ADMIN_NAME': 'TSWGAIMS',
+    'HEADER_DATE_FORMAT': 'Y-m-d l',
+    'HEADER_TIME_FORMAT': 'H:i',
+    # forms
+    'SHOW_REQUIRED_ASTERISK': True,
+    'CONFIRM_UNSAVED_CHANGES': True,
+    # menu
+    'LIST_PER_PAGE': 10,
+    'MENU_OPEN_FIRST_CHILD': True,
+    'MENU': (
+                'sites',
+
+                {'label': '平台管理团队',
+                  'app': 'incubator',
+                  'models': (
+                            'Incubator','index.Bonus','index.Subtraction','institution.InvestReport',
+
+                            {'label': '企业评估报告', 'url': '/admin/institution/report'},
+                            {'label': '资产负债表', 'url': '/admin/company/balance'},
+
+                )},
+
+                  
+                {'label': '基本信息',
+                  'app': 'company',
+                  'models': (
+                            {'label': '企业基本信息', 'url': '/admin/company/companyinfo_opt'},
+                            'CoreMember','IndependentEvaluationOfEnterprises',
+                            # 'FinancialSituation','ProductsAndMarket','TechnologyRD','ServerRequest',
+                            {'label': '资产负债表', 'url': '/admin/company/balance'},
+                            {'label': '利润表', 'url': '/admin/company/profit'},
+                            {'label': '现金流量表', 'url': '/admin/company/cash_flow'},
+
+                )},
+
+
+                  
+
+
+
+
+
+             ),
+        # 每一个字典表示左侧菜单的一栏
+    # label表示name，app表示上边的install的app，modelRs表示用了哪些modelsf 
+}

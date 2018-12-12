@@ -18,16 +18,9 @@ import datetime
 import pickle
 from func.hcalendar import HCalendar
 
-CURRENTURL = os.path.dirname(__file__)
-paths = [r'F:\my',]
-for path in paths:
-    if os.path.exists(path):
-        sys.path.insert(1,path)
-        break
-else:
-    print('not find my model in ',paths)
+from gl import myexec,get_computer_info,CURRENTURL
 
-from F00_myfn.h09_get_bios import get_computer_info
+
 
 bios = get_computer_info
 if bios[0] == 0:
@@ -128,9 +121,55 @@ class TextEdit(QTextEdit):
         super().mouseDoubleClickEvent(event)
 
     def keyPressEvent(self, event):
-        # print('event',event.key())
-        if (event.key() == Qt.Key_Tab and QApplication.keyboardModifiers()!=Qt.ShiftModifier and QApplication.keyboardModifiers()!=Qt.ControlModifier):
-            self.insertPlainText('    ')
+        return myexec(globals(),locals())
+
+        print(event.key())
+        if event.key() == Qt.Key_Tab:
+            if QApplication.keyboardModifiers()==Qt.ControlModifier:
+                print('alt table')
+            else:
+                st = self.textCursor().selectedText()
+                if not st:
+                    self.insertPlainText('    ')
+                else:
+                    tc = self.textCursor()
+                    # self.moveCursor(tc.PreviousBlock,tc.MoveAnchor)
+                    st = self.textCursor().selectedText()
+                    # print(st)
+                    st = [ '    ' + s for s in st.split('\u2029')]
+                    length = len(st)
+                    st = '\n'.join(st)
+                    self.insertPlainText(st)
+
+                    tc = self.textCursor()
+                    if length == 1:
+                        self.moveCursor(tc.StartOfBlock,tc.KeepAnchor)
+                    else:
+                        for _ in range(length-1):
+                            self.moveCursor(tc.PreviousBlock,tc.KeepAnchor)
+
+
+        elif event.key() == 16777218:
+            tc = self.textCursor()
+            st = self.textCursor().selectedText()
+            for s in st.split('\u2029'):
+                if not s.startswith('    '):
+                    break
+            else:
+                st = [s[4:] for s in st.split('\u2029')]
+                length = len(st)
+                st = '\n'.join(st)
+                self.insertPlainText(st)
+
+                tc = self.textCursor()
+                if length == 1:
+                    self.moveCursor(tc.StartOfBlock,tc.KeepAnchor)
+                else:
+                    for _ in range(length-1):
+                        self.moveCursor(tc.PreviousBlock,tc.KeepAnchor)
+
+
+
         elif event.key() == Qt.Key_Backspace:
 
             x = self.textCursor()
@@ -142,7 +181,7 @@ class TextEdit(QTextEdit):
                 self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
                 self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
                 self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
-            super().keyPressEvent(event)
+            QTextEdit.keyPressEvent(self,event)
         elif event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             cursor = self.textCursor()
             self.moveCursor(cursor.StartOfBlock,cursor.KeepAnchor)
@@ -153,12 +192,14 @@ class TextEdit(QTextEdit):
                 i = x.end() -x.start()
                 i = i - i % 4
             self.setTextCursor(cursor)
-            super().keyPressEvent(event)
+            QTextEdit.keyPressEvent(self,event)
             self.insertPlainText(' '*i)
-
-
+        elif event.key() == 70:
+            if QApplication.keyboardModifiers()==Qt.ControlModifier:
+                # print('ctrl+f')
+                self.setText(self.mself.hc.addhistory(self.toPlainText()))
         else:
-            super().keyPressEvent(event)
+            QTextEdit.keyPressEvent(self,event)
 
     def exec_test(self,**kw):
         print('run_exec_test')

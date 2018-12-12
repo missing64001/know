@@ -17,19 +17,19 @@
 
 
 
-import sys,os
-sys.path.append(r'F:\my\P028_knowledge_system\knowqt\kqj')
-os.environ['DJANGO_SETTINGS_MODULE'] ='kqj.settings'
+# import sys,os
+# sys.path.append(r'F:\my\P028_knowledge_system\knowqt\kqj')
+# os.environ['DJANGO_SETTINGS_MODULE'] ='kqj.settings'
 
-# from django.core.management import setup_environ
-# from kqj import settings
+# # from django.core.management import setup_environ
+# # from kqj import settings
 
-import django 
-django.setup()
+# import django 
+# django.setup()
 
 
 
-from data import models
+# from data import models
 
 
 
