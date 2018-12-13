@@ -1,8 +1,12 @@
+# 日历的功能
+
 
 import re
 import datetime
 import time
 import traceback
+from PyQt5.QtGui import QBrush,QColor
+from gl import myexec
 
 def main():
     text = '12312sfg gdghtrh <hisory>\n20181209 11:16:56\n20181210 11:16:56\n</history>'
@@ -103,7 +107,7 @@ class HCalendar(object):
         self.tree = tree
 
     def h_sort_by_tree(self,tree):
-
+        # return myexec(globals(),locals())
         try:
             for item in tree.children():
                 if item.text(0) == '<日历>':
@@ -111,13 +115,61 @@ class HCalendar(object):
                     for citem in tree.children(item):
                         itemlist.append((self.get_rest_seconds(citem.model_data['object']),citem))
                     itemlist.sort(key=lambda x: x[0] if x[0] else 0)
-                    for _,citem in itemlist:
+                    for tim,citem in itemlist:
+                        if tim < 0:
+                            citem.setBackground(0,QBrush(QColor(255,170,255)))
+                        elif tim < 3600 * 24:
+                            n = int(((3600 * 24 - tim) / (3600 * 24)) * (150-50))
+                            citem.setBackground(0,QBrush(QColor(255,50+n,255)))
+                        elif tim < 3600 * 24 * 7:
+                            n = int(((3600 * 24 * 7 - tim) / (3600 * 24 * 6)) * (225-150))
+                            citem.setBackground(0,QBrush(QColor(255,50,150+n)))
+                        elif tim < 3600 * 24 * 30:
+                            n = int(((3600 * 24 * 30 - tim) / (3600 * 24 * 23)) * (225-150))
+                            citem.setBackground(0,QBrush(QColor(150+n,50,150)))
+                        elif tim < 3600 * 24 * 365:
+                            n = int(((3600 * 24 * 365 - tim) / (3600 * 24 * 335)) * (150-50))
+                            citem.setBackground(0,QBrush(QColor(50,150,50+n)))
+                        elif tim < 3600 * 24 * 365 * 5:
+                            n = int(((3600 * 24 * 365 * 5 - tim) / (3600 * 24 * 365 * 4)) * (150-50))
+                            citem.setBackground(0,QBrush(QColor(50+n,50,50)))
+                        else:
+                            citem.setBackground(0,QBrush(QColor(50,50,50)))
+
+
+
+                        # if tim < 0:
+                        #     print(11)
+                        #     citem.setBackground(0,QBrush(QColor(255,255,255)))
+                        # elif tim < 3600 * 24:
+                        #     n = int(((3600 * 24 - tim) / (3600 * 24)) * (255-50))
+                        #     citem.setBackground(0,QBrush(QColor(50,255-n,50)))
+                        # elif tim < 3600 * 24 * 7:
+                        #     n = int(((3600 * 24 * 7 - tim) / (3600 * 24 * 6)) * (120-50))
+                        #     citem.setBackground(0,QBrush(QColor(50,255,120-n)))
+                        # elif tim < 3600 * 24 * 30:
+                        #     n = int(((3600 * 24 * 30 - tim) / (3600 * 24 * 23)) * (120-50))
+                        #     citem.setBackground(0,QBrush(QColor(120-n,255,120)))
+                        # elif tim < 3600 * 24 * 365:
+                        #     n = int(((3600 * 24 * 365 - tim) / (3600 * 24 * 335)) * (255-120))
+                        #     citem.setBackground(0,QBrush(QColor(120,255,255-n)))
+                        # elif tim < 3600 * 24 * 365 * 5:
+                        #     n = int(((3600 * 24 * 365 * 5 - tim) / (3600 * 24 * 365 * 4)) * (255-120))
+                        #     citem.setBackground(0,QBrush(QColor(255-n,255,255)))
+                        # else:
+                        #     citem.setBackground(0,QBrush(QColor(255,255,255)))
+
+
+
+
+
+
+
+
                         tree.removeItem(citem)
                         tree.addItem(item, citem)
         except Exception as e:
             traceback.print_exc()
-
-                    
 
     def show_by_seconds(self,obj):
         return show_by_seconds(self.get_rest_seconds(obj))
