@@ -116,14 +116,21 @@ class TextEdit(QTextEdit):
                 elif res[0] == 'finish':
                     self.setText(self.mself.hc.addhistory(self.toPlainText()))
 
+
+                elif res[0] == 'content':
+                    r = res[1].strip().split()[0]
+                    if r.isdigit():
+                        r = int(r)
+                        self.mself.label_tree_clicked(r)
+                        return
+
         except:
             traceback.print_exc()
         super().mouseDoubleClickEvent(event)
 
     def keyPressEvent(self, event):
-        return myexec(globals(),locals())
-
-        print(event.key())
+        # return myexec(globals(),locals())
+        # print(event.key())
         if event.key() == Qt.Key_Tab:
             if QApplication.keyboardModifiers()==Qt.ControlModifier:
                 print('alt table')
@@ -1232,7 +1239,6 @@ class Mainwindow(QMainWindow):
             if change:
                 obj.save()
                 print('数据保存完成',end='\r')
-
 
     def show_labels(self):
         # 设置 textedit 和 cl_bt_le 的文字 并生成标签
