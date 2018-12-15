@@ -7,11 +7,11 @@
     <a href="/tree">tree</a> <a href="/xs">小说</a>
     {% for xs in xss%}
         <div class="sxitem">
-            <h1> {{xs.0}} </h1>
+            <h1> {{xs.0.1}} </h1>
             {% for url in xs.1 %}
                 <ul>
                     <li>
-                        <a href="/getxsdata?name={{xs.0}}{{url.0}}">{{url.1}}</a>
+                        <a href="/getxsdata?name={{xs.0.0}}{{url.0}}">{{url.1}}</a>
                     </li>
                 </ul>
             {% endfor %}

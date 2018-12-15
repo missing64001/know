@@ -76,9 +76,9 @@ def xs_view(request):
         lst.sort(key=lambda x:x[0])
         cname = ml.get(name)
         if cname:
-            last20[cname] = lst[-20:]
+            last20[(name,cname)] = lst[-20:]
         else:
-            last20[name] = lst[-20:]
+            last20[(name,name)] = lst[-20:]
         
 
 
