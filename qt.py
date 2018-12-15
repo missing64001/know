@@ -8,6 +8,14 @@ try:
     from PyQt5.QtCore import Qt, QTimer 
     from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat
     from gl import myexec,get_computer_info,CURRENTURL
+    bios = get_computer_info
+    if bios[0] == 0:
+        file_exe = r'start /b F:\sublime\SublimeText_XP85\sublime_text.exe'
+    elif bios[0] == 1:
+        file_exe = r'start /b E:\Desktop\SublimeText3\sublime_text.exe'
+    elif bios[0] == 2:
+        file_exe = r'start /b H:\Desktop\lj\sublimetextbuild3143\sublime_text'
+        
 except Exception:
     pass
 
@@ -28,13 +36,7 @@ from func.hcalendar import HCalendar
 
 
 
-bios = get_computer_info
-if bios[0] == 0:
-    file_exe = r'start /b F:\sublime\SublimeText_XP85\sublime_text.exe'
-elif bios[0] == 1:
-    file_exe = r'start /b E:\Desktop\SublimeText3\sublime_text.exe'
-elif bios[0] == 2:
-    file_exe = r'start /b H:\Desktop\lj\sublimetextbuild3143\sublime_text'
+
 
 # from main import models
 
