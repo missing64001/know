@@ -7,7 +7,7 @@ sys.path.insert(1,path)
 
 from django.http import HttpResponse
 import json
-import qt
+import qtdata as qt
 from .models import *
 
 # sys.path.insert(1,path)
