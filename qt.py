@@ -7,6 +7,7 @@ try:
     from PyQt5.QtWidgets import QDialog, QShortcut, QAbstractItemView, QAction ,QMessageBox
     from PyQt5.QtCore import Qt, QTimer 
     from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat
+    from gl import myexec,get_computer_info,CURRENTURL
 except Exception:
     pass
 
@@ -23,7 +24,7 @@ import datetime
 import pickle
 from func.hcalendar import HCalendar
 
-from gl import myexec,get_computer_info,CURRENTURL
+
 
 
 

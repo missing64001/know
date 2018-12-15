@@ -7,9 +7,9 @@ import time
 import traceback
 try:
     from PyQt5.QtGui import QBrush,QColor
+    from gl import myexec
 except Exception:
     pass
-from gl import myexec
 
 def main():
     text = '12312sfg gdghtrh <hisory>\n20181209 11:16:56\n20181210 11:16:56\n</history>'
