@@ -84,7 +84,7 @@ def Timed_restart(run_class,timee=10,cmdname = "程序已运行",argss=()):
 		strrr = ("：%s，%s秒内未完成则重启"%(time_now - time_last,timee))
 
 
-		os.system("title " + cmdname + " " + strrr)
+		# os.system("title " + cmdname + " " + strrr)
 		if not "threading_lst" in dir(run_class):
 			run_class.threading_lst = []
 		if not "id" in dir(run_class):
