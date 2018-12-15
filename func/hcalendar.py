@@ -5,7 +5,10 @@ import re
 import datetime
 import time
 import traceback
-from PyQt5.QtGui import QBrush,QColor
+try:
+    from PyQt5.QtGui import QBrush,QColor
+except Exception:
+    pass
 from gl import myexec
 
 def main():
