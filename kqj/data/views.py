@@ -70,7 +70,7 @@ def xs_view(request):
 
     # pprint(xsdict)
     last20 = {}
-    ml = {'jl':'剑来','ddct','大道朝天','xxtx','侠行天下'}
+    ml = {'jl':'剑来','ddct':'大道朝天','xxtx':'侠行天下'}
 
     for name,lst in xsdict.items():
         lst.sort(key=lambda x:x[0])
