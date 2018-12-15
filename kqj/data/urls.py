@@ -6,4 +6,7 @@ urlpatterns = [
     url(r'^$',tree_view, name='tree_view'),
     url(r'^tree/$',tree_view, name='tree_view'),
     url(r'^getdata/$',getdata_view, name='getdata_view'),
+    url(r'^xs/$',xs_view, name='xs_view'),
+    url(r'^getxsdata$',getxsdata_view, name='getxsdata_view'),
+
 ]
