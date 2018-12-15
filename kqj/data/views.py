@@ -70,9 +70,16 @@ def xs_view(request):
 
     # pprint(xsdict)
     last20 = {}
+    ml = {'jl':'剑来','ddct','大道朝天','xxtx','侠行天下'}
+
     for name,lst in xsdict.items():
         lst.sort(key=lambda x:x[0])
-        last20[name] = lst[-20:]
+        cname = ml.get(name)
+        if cname:
+            last20[cname] = lst[-20:]
+        else:
+            last20[name] = lst[-20:]
+        
 
 
 
