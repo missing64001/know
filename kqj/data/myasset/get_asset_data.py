@@ -151,6 +151,6 @@ def getres():
 
     res2 = get_all_amount_by_coin()
 
-    res = res2[:3] + res1 + res2[3:]
+    res = res2[:3] + ['\n'] + res1 + ['\n'] + res2[3:]
     return res
 
