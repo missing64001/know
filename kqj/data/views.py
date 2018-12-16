@@ -5,7 +5,7 @@ path = os.path.dirname(CURRENTURL)
 path = os.path.dirname(path)
 sys.path.insert(1,path)
 
-from django.http import HttpResponse
+from django.http import HttpResponse,HttpResponseRedirect
 import json
 import re
 import qtdata as qt
@@ -20,13 +20,14 @@ from .myasset.get_asset_data import getres
 
 
 def tree_view(request):
-    # mw = qt.Mainwindow()
-    # mw.le1.setText('#1')
-    # mw.search_models()
+    if not get_user_group(request.user,'super'):
+        return HttpResponseRedirect('/admin/')
     return render(request,'tree.html')
 
 
 def getdata_view(request):
+    if not get_user_group(request.user,'super'):
+        return HttpResponse(0)
 
     search = request.GET.get('search')
     cid = request.GET.get('cid')
@@ -52,6 +53,9 @@ def getdata_view(request):
 
 
 def xs_view(request):
+    if not get_user_group(request.user,'super'):
+        return HttpResponseRedirect('/admin/')
+
     directory = os.path.dirname(os.path.dirname(CURRENTURL))
     directory = os.path.join(directory,'func','xiaoshuo','day')
 
@@ -87,6 +91,9 @@ def xs_view(request):
     return render(request,'xiaoshuo.html',{'xss':last20.items()})
 
 def getxsdata_view(request):
+    if not get_user_group(request.user,'super'):
+        return HttpResponseRedirect('/admin/')
+
     directory = os.path.dirname(os.path.dirname(CURRENTURL))
     directory = os.path.join(directory,'func','xiaoshuo','day')
 
@@ -110,3 +117,28 @@ def asset_view(request):
     # pprint(assets)
     assets = '\n'.join(assets)
     return render(request,'asset.html',{'assets':assets})
+
+
+def get_user_group(request,groupname=None):
+
+    try:
+        user = request.user
+    except Exception:
+        user = request
+    if user.is_anonymous:
+        return None
+
+    if user.is_superuser:
+        if not groupname:
+            return 'super'
+        else:
+            mygname = 'super'
+    elif not  groupname:
+        if user.groups.all():
+            return user.groups.all()[0].name
+    else:
+        if user.groups.all():
+            mygname = user.groups.all()[0].name
+        else:
+            mygname = None
+    return mygname == groupname
