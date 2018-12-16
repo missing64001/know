@@ -91,9 +91,6 @@ def xs_view(request):
     return render(request,'xiaoshuo.html',{'xss':last20.items()})
 
 def getxsdata_view(request):
-    if not get_user_group(request.user,'super'):
-        return HttpResponseRedirect('/admin/')
-
     directory = os.path.dirname(os.path.dirname(CURRENTURL))
     directory = os.path.join(directory,'func','xiaoshuo','day')
 
