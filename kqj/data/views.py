@@ -12,6 +12,7 @@ import qtdata as qt
 from .models import *
 
 from pprint import pprint
+from .myasset.get_asset_data import getres
 
 # sys.path.insert(1,path)
 
@@ -101,3 +102,11 @@ def getxsdata_view(request):
         data = f.read()
     data = '\n'.join([da.strip() for da in data.split('\n') if da.strip()])
     return render(request,'xsdata.html',{'data':data})
+
+
+def asset_view(request):
+    assets = getres()
+    from pprint import pprint
+    # pprint(assets)
+    assets = '\n'.join(assets)
+    return render(request,'asset.html',{'assets':assets})
