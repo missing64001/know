@@ -259,17 +259,24 @@ class TextEdit(QTextEdit):
 
             # cmd = 'mkdir 11xxzz'
 
-            os.chdir(r'F:\my\P028_knowledge_system\knowqt')
+            if git_cwd == 'all':
+                git_cwds = self.git_pathdict.items()
+            else:
+                git_cwds = [(git_cwd,self.git_pathdict[git_cwd])]
 
+            data = '' 
+            for name,cwd in git_cwds:
+                os.chdir(cwd)
 
-            with subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as f:
-                data = f.stdout.read().decode('utf-8')
-                data += f.stderr.read().decode('utf-8')
+                with subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as f:
+                    data += '\n------------------%s-----------------\n' % name
+                    data += f.stdout.read().decode('utf-8')
+                    data += f.stderr.read().decode('utf-8')
 
 
             x = self.mself.textEdit.toPlainText() 
             # print(x)
-            x += '\n-------------------------------------------\n-------------------------------------------\n'+data + ' '.join(allpath) + self.git_cwd + ' '
+            x += data + ' '.join(allpath) + git_cwd + ' '
             self.mself.textEdit.setText(x)
             cursor = self.textCursor()
             self.moveCursor(cursor.End,cursor.MoveAnchor)
@@ -1279,22 +1286,21 @@ class Mainwindow(QMainWindow):
         cmd = 'git diff'
         # cmd = 'mkdir 11xxzz'
 
-        os.chdir(r'F:\my\P028_knowledge_system\knowqt')
-
-
-        with subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as f:
-            data = f.stdout.read().decode('utf-8')
-
-
-        x = self.textEdit.toPlainText() 
-        # print(x)
-        x += data
+        x = list(set(self.textEdit.git_pathdict))
+        x.append('all')
+        x = ' '.join(x)
+        x = x + '\n' + self.textEdit.git_cwd
+ 
 
         self.content_layout_current_id = None
 
         # x = os.getcwd()
         self.cl_bt_le.setText('<git>')
         self.textEdit.setText(x)
+
+        
+        cursor = self.textEdit.textCursor()
+        self.textEdit.moveCursor(cursor.End,cursor.MoveAnchor)
     
 
 
