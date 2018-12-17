@@ -31,6 +31,7 @@ import pyperclip
 import datetime
 import pickle
 from func.hcalendar import HCalendar
+import subprocess
 
 
 
@@ -55,6 +56,16 @@ class TextEdit(QTextEdit):
     def __init__(self, *arg,mself=None, **kw):
         super().__init__(*arg, **kw)
         self.mself = mself
+
+        self.func_arg()
+
+    def func_arg(self):
+        self.git_cwd = 'all'
+        self.git_pathdict = {'evaluate':r'F:\mygit\python\evaluate',
+                             'know':r'F:\my\P028_knowledge_system\knowqt',
+                                }
+
+
     def mouseDoubleClickEvent(self, event):
         try:
             x = self.textCursor()
@@ -197,7 +208,14 @@ class TextEdit(QTextEdit):
                 self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
                 self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
             QTextEdit.keyPressEvent(self,event)
+
         elif event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            if self.mself.cl_bt_le.text() == '<git>' and self.mself.content_layout_current_id == None:
+
+                self.git_keypress_enter()
+
+                return None
+
             cursor = self.textCursor()
             self.moveCursor(cursor.StartOfBlock,cursor.KeepAnchor)
             zzz = self.textCursor().selectedText()
@@ -215,6 +233,41 @@ class TextEdit(QTextEdit):
                 self.setText(self.mself.hc.addhistory(self.toPlainText()))
         else:
             QTextEdit.keyPressEvent(self,event)
+
+    def git_keypress_enter(self):
+        return myexec(globals(),locals())
+        cursor = self.textCursor()
+        self.moveCursor(cursor.StartOfBlock,cursor.KeepAnchor)
+        cmd = self.textCursor().selectedText()
+
+        import subprocess
+        if ' git ' in cmd:
+            allpath = list(set(self.git_pathdict))
+            allpath.insert(0,'all')
+            allpath.append('\n')
+
+            git_cwd,cmd = cmd.split(' git ')
+            if git_cwd not in allpath:
+                return None
+
+            cmd = 'git ' + cmd
+
+            # cmd = 'mkdir 11xxzz'
+
+            os.chdir(r'F:\my\P028_knowledge_system\knowqt')
+
+
+            with subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as f:
+                data = f.stdout.read().decode('utf-8')
+                data += f.stderr.read().decode('utf-8')
+
+
+            x = self.mself.textEdit.toPlainText() 
+            # print(x)
+            x += '\n-------------------------------------------\n-------------------------------------------\n'+data + ' '.join(allpath) + self.git_cwd + ' '
+            self.mself.textEdit.setText(x)
+            cursor = self.textCursor()
+            self.moveCursor(cursor.End,cursor.MoveAnchor)
 
     def exec_test(self,**kw):
         print('run_exec_test')
@@ -1048,8 +1101,10 @@ class Mainwindow(QMainWindow):
 
 
         self.hc = None # HCalendar
-        
-
+        self.le1 = None
+        self.tree = None
+        self.textEdit = None
+        self.cl_bt_le = None
 
         self.load_Expanded()
         self.initUI()
@@ -1210,18 +1265,33 @@ class Mainwindow(QMainWindow):
         self.textEdit.insertPlainText(time_now_str)
 
     def exec_test(self):
-        self.content_layout_current_id = None
-        self.textEdit.setText('')
-        self.cl_bt_le.setText('<run_exec_test>')
+        print(111)
+        return myexec(globals(),locals())
+        import subprocess
+        # locale.setlocale(locale.LC_ALL,'zh_CN.UTF-8')
 
-        print('exec_test')
-        filename = os.path.join(CURRENTURL,'myexec.py') 
-        with open(filename,'r',encoding='utf-8') as f:
-            data = f.read()
-        try:
-            exec(data)
-        except Exception:
-            traceback.print_exc()
+
+        cmd = 'git diff'
+        # cmd = 'mkdir 11xxzz'
+
+        os.chdir(r'F:\my\P028_knowledge_system\knowqt')
+
+
+        with subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as f:
+            data = f.stdout.read().decode('utf-8')
+
+
+        x = self.textEdit.toPlainText() 
+        # print(x)
+        x += data
+
+        self.content_layout_current_id = None
+
+        # x = os.getcwd()
+        self.cl_bt_le.setText('<git>')
+        self.textEdit.setText(x)
+    
+
 
     def show_labels_pre(self):
 
