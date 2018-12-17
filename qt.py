@@ -176,6 +176,7 @@ class TextEdit(QTextEdit):
 
 
         elif event.key() == 16777218:
+            'shift table'
             tc = self.textCursor()
             st = self.textCursor().selectedText()
             for s in st.split('\u2029'):
@@ -227,19 +228,23 @@ class TextEdit(QTextEdit):
             self.setTextCursor(cursor)
             QTextEdit.keyPressEvent(self,event)
             self.insertPlainText(' '*i)
+
         elif event.key() == 70:
             if QApplication.keyboardModifiers()==Qt.ControlModifier:
                 # print('ctrl+f')
                 self.setText(self.mself.hc.addhistory(self.toPlainText()))
+            else:
+                QTextEdit.keyPressEvent(self,event)
+
         else:
             QTextEdit.keyPressEvent(self,event)
 
     def git_keypress_enter(self):
         return myexec(globals(),locals())
+        # print(11)
         cursor = self.textCursor()
         self.moveCursor(cursor.StartOfBlock,cursor.KeepAnchor)
         cmd = self.textCursor().selectedText()
-
         import subprocess
         if ' git ' in cmd:
             allpath = list(set(self.git_pathdict))
