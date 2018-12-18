@@ -103,7 +103,7 @@ def get_all_amount_by_coin():
     date = MYSQL.get_exec('SELECT create_time from assets_value group by id desc limit 1;')
 
 
-    timeStamp = int(date[0][0])
+    timeStamp = int(date[0][1])
 
 
     timeArray = time.localtime(timeStamp)
