@@ -1,3 +1,14 @@
+
+a = '123456789'
+print(a[:-4:-1])
+
+exit()
+
+
+
+
+
+
 from django.shortcuts import render
 import sys,os
 CURRENTURL = os.path.dirname(__file__)
@@ -21,7 +32,7 @@ from .myasset.get_asset_data import getres
 
 def tree_view(request):
     if not get_user_group(request.user,'super'):
-        return HttpResponseRedirect('/admin/')
+        return HttpResponseRedirect('/admin/login/?next=/')
     return render(request,'tree.html')
 
 
@@ -54,7 +65,7 @@ def getdata_view(request):
 
 def xs_view(request):
     if not get_user_group(request.user,'super'):
-        return HttpResponseRedirect('/admin/')
+        return HttpResponseRedirect('/admin/login/?next=/')
 
     directory = os.path.dirname(os.path.dirname(CURRENTURL))
     directory = os.path.join(directory,'func','xiaoshuo','day')
@@ -81,9 +92,9 @@ def xs_view(request):
         lst.sort(key=lambda x:x[0])
         cname = ml.get(name)
         if cname:
-            last20[(name,cname)] = lst[-20:]
+            last20[(name,cname)] = lst[:-6:-1]
         else:
-            last20[(name,name)] = lst[-20:]
+            last20[(name,name)] = lst[:-6:-1]
         
 
 
@@ -109,8 +120,10 @@ def getxsdata_view(request):
 
 
 def asset_view(request):
+    if not get_user_group(request.user,'super'):
+        return HttpResponseRedirect('/admin/login/?next=/')
     assets = getres()
-    from pprint import pprint
+    # from pprint import pprint
     # pprint(assets)
     assets = '\n'.join(assets)
     return render(request,'asset.html',{'assets':assets})
