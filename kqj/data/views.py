@@ -1,14 +1,3 @@
-
-a = '123456789'
-print(a[:-4:-1])
-
-exit()
-
-
-
-
-
-
 from django.shortcuts import render
 import sys,os
 CURRENTURL = os.path.dirname(__file__)
