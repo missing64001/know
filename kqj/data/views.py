@@ -116,7 +116,7 @@ def asset_view(request):
     # from pprint import pprint
     # pprint(assets)
     assets = '\n'.join(assets)
-    assets += '\n' + get_wal_data()
+    assets += '\n\n' + get_wal_data()
     return render(request,'asset.html',{'assets':assets})
 
 
