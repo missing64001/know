@@ -13,6 +13,7 @@ from .models import *
 
 from pprint import pprint
 from .myasset.get_asset_data import getres
+from .myasset.get_other_data import get_wal_orderBook
 
 # sys.path.insert(1,path)
 
@@ -115,6 +116,7 @@ def asset_view(request):
     # from pprint import pprint
     # pprint(assets)
     assets = '\n'.join(assets)
+    assets += '\n' + get_wal_orderBook()
     return render(request,'asset.html',{'assets':assets})
 
 
