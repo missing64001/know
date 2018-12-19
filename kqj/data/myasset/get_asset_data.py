@@ -68,7 +68,7 @@ def get_all_amount_by_exchange():
 
     res = []
     for l in lst:
-        res.append('%10s %10d %7.3f%%' % (l[0],l[1],l[2]))
+        res.append('%10s %10d %7.3f%%' % (l[0],l[1]/10,l[2]))
     return res
 
 
@@ -112,14 +112,14 @@ def get_all_amount_by_coin():
     thelastreslst = []
     # print(res)
     thelastreslst.append(otherStyleTime)
-    thelastreslst.append('%.3f' %res)
+    thelastreslst.append('%.3f' %(res/10))
 
 
 
     lst = []
     for da in data:
         if da[1]:
-            lst.append([da[0],da[1],da[1]/res *100,int(da[2]),da[1]/int(da[2])])
+            lst.append([da[0],da[1]/10,da[1]/res *100,int(da[2]),da[1]/int(da[2])])
     lst.sort(key=lambda x:x[2])
     # pprint(lst)   
     for l in lst:
