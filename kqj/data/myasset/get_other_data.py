@@ -2,6 +2,13 @@ import urllib
 import urllib.parse
 import urllib.request
 import requests
+import time
+
+def main():
+    from pprint import pprint
+    data = get_wal_data()
+    print(data)
+
 
 def http_get_request(url, params, add_to_headers=None):
     headers = {
@@ -23,10 +30,51 @@ def http_get_request(url, params, add_to_headers=None):
         return
 
 
-def get_wal_orderBook(id_ = 29):
-    url = 'https://www.whaleex.com/BUSINESS/api/public/orderBook/symbol/%s' % id_
-    params = {'level':'20'}
+def bingdata(da1,da2):
+
+    da1 = da1.split('\n')
+    da2 = da2.split('\n')
+
+    if len(da1)>len(da2):
+        da2 += [' '* len(da2[0])]*(len(da1)-len(da2))
+    elif len(da1)<len(da2):
+        da1 += [' '* len(da1[0])]*(len(da2)-len(da1))
+
+    data = [ (d1 if d1 else ' '*23)           +'  '+d2 for d1,d2 in zip(da1,da2)]
+
+
+
+    data = '\n'.join(data)
+
+    return data
+
+def get_wal_data(id_ = 29):
+    def setdate(i):
+        x = time.strftime('%d %H:%M:%S',time.localtime(i/1000))
+        return x
+
+
+
+    url = 'https://www.whaleex.com/BUSINESS/api/public/lastTrade?symbolId=%s&size=30' % id_
+    params = {}
     data = http_get_request(url, params)
+
+
+
+
+    data = [ ['--' if da['bidAsk'] == 'B' else '  ',da['price'],da['quantity'],int(da['timestamp'])] for da in data ]
+
+    data = [ '%s %4.2f%% %10.2f %s' % ( da[0],float(da[1])*100,float(da[2])    ,  setdate(da[3]) ) for da in data ]
+
+    resdata = '\n'.join(data)
+
+
+
+
+    url = 'https://www.whaleex.com/BUSINESS/api/public/orderBook/symbol/%s?level=20' % id_
+    params = {}
+    data = http_get_request(url, params)
+    # print(data)
     asks = data['asks']
     bids = data['bids']
 
@@ -41,6 +89,11 @@ def get_wal_orderBook(id_ = 29):
 
 
     res = asks + '\n\n' + bids
-    return res
+
+
 
     
+    return bingdata(res,resdata)
+
+if __name__ == '__main__':
+    main()
