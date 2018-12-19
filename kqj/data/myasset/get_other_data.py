@@ -55,7 +55,7 @@ def get_wal_data(id_ = 29):
 
 
 
-    url = 'https://www.whaleex.com/BUSINESS/api/public/lastTrade?symbolId=%s&size=30' % id_
+    url = 'https://www.whaleex.com/BUSINESS/api/public/lastTrade?symbolId=%s&size=100' % id_
     params = {}
     data = http_get_request(url, params)
 
