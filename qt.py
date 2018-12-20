@@ -243,7 +243,8 @@ class TextEdit(QTextEdit):
         return myexec(globals(),locals())
         # print(11)
         cursor = self.textCursor()
-        self.moveCursor(cursor.StartOfBlock,cursor.KeepAnchor)
+        self.moveCursor(cursor.StartOfBlock,cursor.MoveAnchor)
+        self.moveCursor(cursor.EndOfBlock,cursor.KeepAnchor)
         cmd = self.textCursor().selectedText()
         import subprocess
         if ' git ' in cmd:
@@ -274,6 +275,8 @@ class TextEdit(QTextEdit):
                         da = f.stdout.read().decode('utf-8')
                     zz = re.findall(r'\n\* (.*)','\n'+da)[0]
                     cmd = 'git push origin ' + zz
+                elif cmd == 'git commit':
+                    cmd = "git commit -m'debugbyknow'"
 
                 with subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as f:
                     data += '\n------------------%s-----------------\n' % name
