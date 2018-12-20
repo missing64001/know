@@ -268,6 +268,13 @@ class TextEdit(QTextEdit):
             for name,cwd in git_cwds:
                 os.chdir(cwd)
 
+                if cmd.startswith('git push'):
+                    cmd = 'git branch'
+                    with subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as f:
+                        da = f.stdout.read().decode('utf-8')
+                    zz = re.findall(r'\n\* (.*)','\n'+da)[0]
+                    cmd = 'git push origin ' + zz
+
                 with subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as f:
                     data += '\n------------------%s-----------------\n' % name
                     data += f.stdout.read().decode('utf-8')
