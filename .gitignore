@@ -14,8 +14,7 @@ build
 __pycache__
 
 # django:
-*/migrations
-
+migrations
 
 # My configurations:
 baksql

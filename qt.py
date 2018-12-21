@@ -258,6 +258,7 @@ class TextEdit(QTextEdit):
 
             cmd = 'git ' + cmd
 
+
             # cmd = 'mkdir 11xxzz'
 
             if git_cwd == 'all':

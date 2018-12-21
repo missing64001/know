@@ -1,8 +1,9 @@
+## for django
 import sys
 import os
 
 from pprint import pprint
-import sip
+# import sip
 from hmysql import models,Q,timezone
 import time
 from django.db import connection
