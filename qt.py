@@ -5,8 +5,8 @@ try:
     from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFrame,QSplitter, QStyleFactory, QApplication
     from PyQt5.QtWidgets import QTreeWidget, QTextEdit, QMainWindow, QTreeWidgetItem, QLineEdit,QPushButton, QLabel
     from PyQt5.QtWidgets import QDialog, QShortcut, QAbstractItemView, QAction ,QMessageBox
-    from PyQt5.QtCore import Qt, QTimer 
-    from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat
+    from PyQt5.QtCore import Qt, QTimer, QRegExp
+    from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat ,QTextDocumentFragment
     from gl import myexec,get_computer_info,CURRENTURL
     bios = get_computer_info
     if bios[0] == 0:
@@ -1240,6 +1240,7 @@ class Mainwindow(QMainWindow):
         self.set_shortcut('embark2','alt+e',self.embark_shortcut )
         self.set_shortcut('writetime','Ctrl+T',self.shortcut_writetime )
         self.set_shortcut('writetime','alt+T',self.shortcut_writetime )
+        self.set_shortcut('git','alt+G',self.shortcut_git )
 
         self.show()
         self.show_labels()
@@ -1287,14 +1288,11 @@ class Mainwindow(QMainWindow):
         time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
         self.textEdit.insertPlainText(time_now_str)
 
-    def exec_test(self):
-        print(111)
+    def shortcut_git(self):
         return myexec(globals(),locals())
-        import subprocess
+
         # locale.setlocale(locale.LC_ALL,'zh_CN.UTF-8')
 
-
-        cmd = 'git diff'
         # cmd = 'mkdir 11xxzz'
 
         x = list(set(self.textEdit.git_pathdict))
@@ -1312,15 +1310,54 @@ class Mainwindow(QMainWindow):
         
         cursor = self.textEdit.textCursor()
         self.textEdit.moveCursor(cursor.End,cursor.MoveAnchor)
-    
 
+    def exec_test(self):
+        print(111)
+        return myexec(globals(),locals())
+
+        fname = r'C:\Users\vanlance\Desktop\新建位图图像.bmp'
+        # fname = r'C:\Users\vanlance\Desktopbg9.png'
+        fragment = QTextDocumentFragment.fromHtml("<img src='%s'>" % fname)
+
+        # self.textEdit.textCursor().insertFragment(fragment);
+
+
+        x = self.textEdit.textCursor()
+        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+
+        while self.textEdit.find(QRegExp('<hgpic=\\d+>')):
+            self.textEdit.moveCursor(x.Left,x.MoveAnchor)
+            self.textEdit.textCursor().insertFragment(fragment);
+            self.textEdit.find(QRegExp('<hgpic=\\d+>'))
+        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+
+            # print(112233)
+            # zzz = self.textEdit.textCursor().selectedText() 
+            # zzz = zzz.replace('\ufffc','33')
+            # print(zzz)
+
+        # for to_find_text in letextlst:
+
+
+        #         find_cursor = self.textEdit.textCursor()
+        #         plainFormat = QTextCharFormat(find_cursor.charFormat())
+        #         colorFormat = plainFormat
+        #         colorFormat.setForeground(Qt.red)
+        #         self.textEdit.mergeCurrentCharFormat(colorFormat)
+            
+        # self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+        
+
+        # filename = 'textedit.txt'
+        # with open(filename,'w',encoding='utf-8') as f:
+        #     f.write(self.textEdit.toPlainText())
 
     def show_labels_pre(self):
 
         if self.content_layout_current_id:
             obj = models.Content.objects.get(id = self.content_layout_current_id)
             name = self.cl_bt_le.text()
-            text = self.textEdit.toPlainText()
+            text = self.textEdit.toPlainText().replace('\ufffc','')
             change = False
             if name != obj.name:
                 change = True
@@ -1380,7 +1417,7 @@ class Mainwindow(QMainWindow):
                     colorFormat.setForeground(Qt.red)
                     self.textEdit.mergeCurrentCharFormat(colorFormat)
                 
-                self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+            self.textEdit.moveCursor(x.Start,x.MoveAnchor)
 
 
             createddate = obj.create_date + datetime.timedelta(hours=8)
