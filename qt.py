@@ -56,15 +56,55 @@ class TextEdit(QTextEdit):
     def __init__(self, *arg,mself=None, **kw):
         super().__init__(*arg, **kw)
         self.mself = mself
+        self.__func_arg__()
 
-        self.func_arg()
-
-    def func_arg(self):
+    def __func_arg__(self):
         self.git_cwd = 'all'
         self.git_pathdict = {'evaluate':r'F:\mygit\python\evaluate',
                              'know':r'F:\my\P028_knowledge_system\knowqt',
                                 }
 
+    def insertFromMimeData(self,source):
+        print('insertFromMimeData')
+        return myexec(globals(),locals())
+        if source.hasImage():
+            xx = source.imageData()
+            hgfile = models.HGFile.objects.create(name='qt')
+
+            path = os.path.join('static','pic',str(hgfile.id)+'.png')
+
+            hgfile.path = path
+
+            zz = xx.save(os.path.join(CURRENTURL,'kqj','data',path))
+            fname = os.path.join(CURRENTURL,'kqj','data',path)
+            
+            fragment = QTextDocumentFragment.fromHtml("<img src='%s'>" % fname)
+            self.textCursor().insertFragment(fragment);
+
+            self.insertPlainText('<hgpic=%s>' % hgfile.id)
+
+        else:
+            QTextEdit.insertFromMimeData(self, source)
+
+    def canInsertFromMimeData(self,source):
+        print('canInsertFromMimeData')
+        return myexec(globals(),locals())
+        return QTextEdit.canInsertFromMimeData(self, source)
+
+    def dropEvent(self, e):
+        return myexec(globals(),locals())
+        print('dropevent')
+
+        emine = e.mimeData()
+        if emine.hasUrls():
+            print(e.mimeData().text(),33333333333)
+        tx = e.mimeData().text()
+        if tx.startswith('file:///'):
+            tx = tx[8:]
+            print(tx)
+
+        else:
+            QTextEdit.dropEvent(self, e)
 
     def mouseDoubleClickEvent(self, event):
         try:
@@ -1314,10 +1354,9 @@ class Mainwindow(QMainWindow):
     def exec_test(self):
         print(111)
         return myexec(globals(),locals())
+        print(444)
 
-        fname = r'C:\Users\vanlance\Desktop\新建位图图像.bmp'
-        # fname = r'C:\Users\vanlance\Desktopbg9.png'
-        fragment = QTextDocumentFragment.fromHtml("<img src='%s'>" % fname)
+
 
         # self.textEdit.textCursor().insertFragment(fragment);
 
@@ -1326,6 +1365,12 @@ class Mainwindow(QMainWindow):
         self.textEdit.moveCursor(x.Start,x.MoveAnchor)
 
         while self.textEdit.find(QRegExp('<hgpic=\\d+>')):
+
+            id_ = self.textEdit.textCursor().selectedText()
+            id_ = re.findall('<hgpic=(\\d+)>',id_)[0]
+            fname = os.path.join(CURRENTURL,'kqj','data','static','pic',id_)
+            fragment = QTextDocumentFragment.fromHtml("<img src='%s'>" % fname)
+
             self.textEdit.moveCursor(x.Left,x.MoveAnchor)
             self.textEdit.textCursor().insertFragment(fragment);
             self.textEdit.find(QRegExp('<hgpic=\\d+>'))
@@ -1377,6 +1422,47 @@ class Mainwindow(QMainWindow):
                 obj.save()
                 print('数据保存完成',end='\r')
 
+    def set_textEdit(self):
+
+        # 设置字体颜色
+        letextlst = self.le1.text().split()
+        x = self.textEdit.textCursor()
+        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+        self.textEdit.moveCursor(x.End,x.KeepAnchor)
+        find_cursor = self.textEdit.textCursor()
+        plainFormat = QTextCharFormat(find_cursor.charFormat())
+        colorFormat = plainFormat
+        colorFormat.setForeground(Qt.black)
+        self.textEdit.mergeCurrentCharFormat(colorFormat)
+
+        for to_find_text in letextlst:
+
+            x = self.textEdit.textCursor()
+            self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+
+            while self.textEdit.find(to_find_text):
+                find_cursor = self.textEdit.textCursor()
+                plainFormat = QTextCharFormat(find_cursor.charFormat())
+                colorFormat = plainFormat
+                colorFormat.setForeground(Qt.red)
+                self.textEdit.mergeCurrentCharFormat(colorFormat)
+
+        # 设置图片
+        x = self.textEdit.textCursor()
+        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+
+        while self.textEdit.find(QRegExp('<hgpic=\\d+>')):
+
+            id_ = self.textEdit.textCursor().selectedText()
+            id_ = re.findall('<hgpic=(\\d+)>',id_)[0]
+            fname = os.path.join(CURRENTURL,'kqj','data','static','pic',id_)
+            fragment = QTextDocumentFragment.fromHtml("<img src='%s'>" % fname)
+
+            self.textEdit.moveCursor(x.Left,x.MoveAnchor)
+            self.textEdit.textCursor().insertFragment(fragment);
+            self.textEdit.find(QRegExp('<hgpic=\\d+>'))
+        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+
     def show_labels(self):
         # 设置 textedit 和 cl_bt_le 的文字 并生成标签
         for bt in self.show_label_lst:
@@ -1393,31 +1479,10 @@ class Mainwindow(QMainWindow):
             letextlst = self.le1.text().split()
             text = obj.text
             self.textEdit.setText(text)
-            # self.textEdit.setFocus()
-            # 
+            self.set_textEdit()
 
-            x = self.textEdit.textCursor()
-            self.textEdit.moveCursor(x.Start,x.MoveAnchor)
-            self.textEdit.moveCursor(x.End,x.KeepAnchor)
-            find_cursor = self.textEdit.textCursor()
-            plainFormat = QTextCharFormat(find_cursor.charFormat())
-            colorFormat = plainFormat
-            colorFormat.setForeground(Qt.black)
-            self.textEdit.mergeCurrentCharFormat(colorFormat)
 
-            for to_find_text in letextlst:
 
-                x = self.textEdit.textCursor()
-                self.textEdit.moveCursor(x.Start,x.MoveAnchor)
-
-                while self.textEdit.find(to_find_text):
-                    find_cursor = self.textEdit.textCursor()
-                    plainFormat = QTextCharFormat(find_cursor.charFormat())
-                    colorFormat = plainFormat
-                    colorFormat.setForeground(Qt.red)
-                    self.textEdit.mergeCurrentCharFormat(colorFormat)
-                
-            self.textEdit.moveCursor(x.Start,x.MoveAnchor)
 
 
             createddate = obj.create_date + datetime.timedelta(hours=8)
@@ -1800,7 +1865,6 @@ class getdata(object):
         self.get_contents_by_label = {}
         self.labeldict = {}
         self.contentdict = {}
-
 
     def set_all_data(self):
 

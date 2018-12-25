@@ -25,3 +25,8 @@ class History(models.Model):
     label = models.ForeignKey(Label,verbose_name='标签')
     content = models.ForeignKey(Content,verbose_name='内容')
     create_date = models.DateTimeField(verbose_name='生成时间',auto_now_add=True,blank=True,null=True)
+
+class HGFile(models.Model):
+    name = models.CharField(max_length=50,verbose_name='名称',blank=True,null=True)
+    path = models.CharField(max_length=50,verbose_name='路径',blank=True,null=True)
+    create_date = models.DateTimeField(verbose_name='生成时间',auto_now_add=True,blank=True,null=True)
