@@ -32,7 +32,7 @@ import datetime
 import pickle
 from func.hcalendar import HCalendar
 import subprocess
-
+import screen_capture
 
 
 
@@ -1281,6 +1281,7 @@ class Mainwindow(QMainWindow):
         self.set_shortcut('writetime','Ctrl+T',self.shortcut_writetime )
         self.set_shortcut('writetime','alt+T',self.shortcut_writetime )
         self.set_shortcut('git','alt+G',self.shortcut_git )
+        self.set_shortcut('shotscreen','alt+B',self.shortcut_shotscreen )
 
         self.show()
         self.show_labels()
@@ -1351,51 +1352,20 @@ class Mainwindow(QMainWindow):
         cursor = self.textEdit.textCursor()
         self.textEdit.moveCursor(cursor.End,cursor.MoveAnchor)
 
+    def shortcut_shotscreen(self):
+        app = QApplication.instance() or QApplication(sys.argv)
+        screen_capture.WScreenShot.run()
+        app.exec_()
+
     def exec_test(self):
         print(111)
         return myexec(globals(),locals())
-        print(444)
-
-
-
-        # self.textEdit.textCursor().insertFragment(fragment);
-
-
-        x = self.textEdit.textCursor()
-        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
-
-        while self.textEdit.find(QRegExp('<hgpic=\\d+>')):
-
-            id_ = self.textEdit.textCursor().selectedText()
-            id_ = re.findall('<hgpic=(\\d+)>',id_)[0]
-            fname = os.path.join(CURRENTURL,'kqj','data','static','pic',id_)
-            fragment = QTextDocumentFragment.fromHtml("<img src='%s'>" % fname)
-
-            self.textEdit.moveCursor(x.Left,x.MoveAnchor)
-            self.textEdit.textCursor().insertFragment(fragment);
-            self.textEdit.find(QRegExp('<hgpic=\\d+>'))
-        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
-
-            # print(112233)
-            # zzz = self.textEdit.textCursor().selectedText() 
-            # zzz = zzz.replace('\ufffc','33')
-            # print(zzz)
-
-        # for to_find_text in letextlst:
-
-
-        #         find_cursor = self.textEdit.textCursor()
-        #         plainFormat = QTextCharFormat(find_cursor.charFormat())
-        #         colorFormat = plainFormat
-        #         colorFormat.setForeground(Qt.red)
-        #         self.textEdit.mergeCurrentCharFormat(colorFormat)
-            
-        # self.textEdit.moveCursor(x.Start,x.MoveAnchor)
-        
-
-        # filename = 'textedit.txt'
-        # with open(filename,'w',encoding='utf-8') as f:
-        #     f.write(self.textEdit.toPlainText())
+        import screen_capture
+        import imp 
+        imp.reload(screen_capture)
+        app = QApplication.instance() or QApplication(sys.argv)
+        screen_capture.WScreenShot.run()
+        app.exec_()
 
     def show_labels_pre(self):
 
@@ -1500,7 +1470,6 @@ class Mainwindow(QMainWindow):
             strr = labs.values('name')
             strr = [ s['name'] for s in strr]
             
-
             labs = list(labs)
 
             labs = [ {'id':la.id,
