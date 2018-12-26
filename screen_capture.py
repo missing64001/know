@@ -69,8 +69,17 @@ class WScreenShot(QWidget):
             #screenshot = QApplication.primaryScreen().grabWindow(0)
             # 通用
             screenshot = QApplication.primaryScreen().grabWindow(QApplication.desktop().winId())
-            rect = QRect(self.startPoint, self.endPoint)
-            print(rect)
+            
+            x1 = min(self.startPoint.x(),self.endPoint.x())
+            y1 = min(self.startPoint.y(),self.endPoint.y())
+            x2 = max(self.startPoint.x(),self.endPoint.x()) - x1
+            y2 = max(self.startPoint.y(),self.endPoint.y()) - y1
+            rect = QRect(x1,y1,x2,y2)
+            # rect = QRect(abs(rect.x()),abs(rect.y()),abs(rect.width()),abs(rect.height()))
+            # print(self.startPoint)
+            # print(self.endPoint)
+            # from pprint import pprint
+            # print(rect)
             outputRegion = screenshot.copy(rect)
 
             QGuiApplication.clipboard().setPixmap(outputRegion)
