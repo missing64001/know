@@ -33,6 +33,7 @@ def getdata_view(request):
     search = request.GET.get('search')
     cid = request.GET.get('cid')
     ctype = request.GET.get('ctype')
+    txt = request.GET.get('txt')
     if search:
         textlst = search.strip().split(' ')
 
@@ -47,7 +48,11 @@ def getdata_view(request):
         cid = int(cid)
         cobj = Content.objects.get(id=cid)
         res = cobj.text
-
+    elif txt:
+        cobj = Content.objects.get(id=395)
+        cobj.text = cobj.text + '\n%s' % txt
+        cobj.save()
+        res = 'txt'
 
     return HttpResponse(res)
 

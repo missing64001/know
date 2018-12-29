@@ -45,12 +45,12 @@ function run_ajax(ldata) {
             }
             else if(ldata['ctype'] == 'c'){
                 // console.log('finish')
-                $('textarea').text(data)
+                $('textarea.item').text(data)
+                $('textarea.sendtxt').text('')
 
             }
-            else{
-                // console.log('nofinish')
-                // console.log(ldata)
+            else if (data == 'txt'){
+                alert('提交成功')
             }
             
 
@@ -114,4 +114,12 @@ function itemclick(tt) {
     cid = $(tt).attr('cid')
     ctype = $(tt).attr('ctype')
     run_ajax({"cid":cid,"ctype":ctype})
+}
+
+
+function sendtxt() {
+    var txt = $('textarea.sendtxt').val()
+    if (txt){
+        run_ajax({"txt":txt})
+    }
 }

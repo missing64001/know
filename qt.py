@@ -45,7 +45,13 @@ import screen_capture
 
 GTIMES = time.time()
 
-
+def gettype(obj):
+    if isinstance(obj, models.Label):
+        return 'l'
+    elif isinstance(obj, models.Content):
+        return 'c'
+    print(obj,'错误的参数类型')
+    return
 
 class PushButton(QPushButton):
     def __init__(self, *arg, **kw):
@@ -380,11 +386,11 @@ class MyTree(QTreeWidget):
         if (event.key() == Qt.Key_Insert):
             if QApplication.keyboardModifiers() == Qt.ShiftModifier:
                 # self.close()
-                pass
+                print(22)
             elif QApplication.keyboardModifiers() == Qt.ControlModifier:
-                self.add_child_tem()
+                self.add_child_item()
             else:
-                pass
+                self.add_next_item()
 
     def dragMoveEvent(self, event):
         # self.sitems = self.selectedItems()
@@ -534,15 +540,30 @@ class MyTree(QTreeWidget):
     def set_mself(self,mself):
         self.mself = mself
 
-    def add_child_tem(self):
+    def add_child_item(self):
+        pitem = self.currentItem()
+        if not gettype(pitem.model_data['object']) == 'l':
+            return
+        else:
+            nitem = TreeWidgetItem(pitem)
+            self.add_tree_citem(pitem,nitem)
+
+    def add_next_item(self):
+        bitem = self.currentItem()
+        pitem = bitem.parent()
+        if not pitem:
+            return
+        elif gettype(bitem.model_data['object']) == 'l':
+            print('ll')
+        else:
+            nitem = TreeWidgetItem()
+            self.insertItem(pitem, self.indexItem(bitem)+1, nitem)
+            self.add_tree_citem(pitem,nitem)
+
+    def add_tree_citem(self,item,nitem):
         mself = self.mself
 
         mself.show_labels_pre()
-        item = self.currentItem()
-        if not isinstance(item.model_data['object'], models.Label):
-            return
-
-        nitem = TreeWidgetItem(item)
         label = item.model_data['object']
 
 
@@ -578,9 +599,12 @@ class MyTree(QTreeWidget):
 
         self.setCurrentItem(nitem)
 
+        self.save_queue(nitem.parent())
+
         if item.text(0) == '<日历>':
             time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
             mself.textEdit.setText('finish|\n\n<time>\nstart|%s\nend|%s\ninterval|1hours/1days/1weeks/1months/1years/1nyear（农历年）\ntimes|\n</time>'%(time_now_str,time_now_str))
+
 
     def mytree_item_clicked(self):
         item = self.currentItem()
@@ -900,6 +924,26 @@ class MyTree(QTreeWidget):
         id_ = item.model_data['object'].id
         self.mself.expanddict[id_] = not(item.isExpanded())
         # print(self.mself.expanddict)
+    
+    def save_queue(self,item):
+        if not item:
+            return
+        obj = item.model_data['object']
+        if gettype(obj) != 'l':
+            return
+        queue = [[],[]]
+        for citem in self.children(item):
+            cobj = citem.model_data['object']
+            if gettype(cobj) == 'l':
+                queue[0].append(str(cobj.id))
+            elif gettype(cobj) == 'c':
+                queue[1].append(str(cobj.id))
+
+        queue = (','.join(queue[0]),','.join(queue[1]))
+        queue = '|'.join(queue)
+        obj.queue = queue
+        obj.save()
+
 
 
 
@@ -1177,6 +1221,11 @@ class Mainwindow(QMainWindow):
         self.timer.setSingleShot(False)
         self.timer.timeout.connect(self.connect_db) 
         self.timer.start(1000 * 60 * 30)
+
+        self.get_labels_by_content = {}
+        self.get_contents_by_label = {}
+        self.labeldict = {}
+        self.contentdict = {}
 
     def connect_db(self):
         print('每半小时连接一次服务器',end='\r')
@@ -1600,19 +1649,73 @@ class Mainwindow(QMainWindow):
     def dia_ok_bt_clicked(self):
 
         obj = models.Content.objects.get(id=self.content_layout_current_id)
+
+        objlabelset = self.get_labels_by_content.get(obj.id,set())
+        changedlabelset = []
+
         if self.bt_sender.model_data:
             # print(self.bt_sender.model_data['object'])
             # print(type(self.bt_sender.model_data['object']))
+            objlabelset.remove(self.bt_sender.model_data['object'].id)
+            changedlabelset.append(self.bt_sender.model_data['object'].id)
             obj.labels.remove(self.bt_sender.model_data['object'])
 
 
-
         lobj = self.ltree.get_currentItem_model_data()['object']
+        objlabelset = set(objlabelset)
+        objlabelset.add(lobj.id)
+        if lobj.id in changedlabelset:
+            changedlabelset = []
+        elif not changedlabelset:
+            changedlabelset = [-1,lobj.id]
+        else:
+            changedlabelset.append(lobj.id)
         obj.labels.add(lobj)
 
 
-        # 设置lobj的排序
+        # 修改label content置顶
+        que = QueueDeal(lobj.queue)
+        id_ = str(obj.id)
+        if id_ in que.queue[1]:
+            que.queue[1].remove(id_)
+        que.queue[1].insert(0,id_)
+        lobj.queue = que.queue2str()
+        lobj.save()
 
+
+        # 根据修改的label移动content
+        def contentmove(objid,changedlabelset,pitem = None):
+            if objid not in self.contentdict or not changedlabelset:
+                return None
+            for item in self.tree.children(pitem):
+                obj = item.model_data['object']
+                if gettype(obj) == 'l':
+                    contentmove(objid,changedlabelset,item)
+                    if obj.id == changedlabelset[1]:
+                        citem = TreeWidgetItem()
+                        cobj = self.contentdict[objid]
+                        citem.setText(0,cobj.name)
+                        citem.model_data = {
+                                            'id':cobj.id,
+                                            'name':cobj.name,
+                                            'text':cobj.text,
+                                            'object':cobj,
+                        }
+                        font = QFont()
+                        font.setBold(True)
+                        citem.setFont(0,font)
+                        self.tree.insertItem(item,0,citem)
+                elif gettype(obj) == 'c':
+                    if obj.id == objid and pitem.model_data['object'].id == changedlabelset[0]:
+                        sip.delete(item)
+
+        contentmove(obj.id,changedlabelset)
+
+        # self.get_contents_by_label = {}
+        # self.labeldict = {}
+        # self.contentdict = {}
+
+        # 设置lobj的排序
         self.show_labels()
         self.dia.close()
 
