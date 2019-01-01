@@ -88,7 +88,7 @@ def xs_view(request):
     for name,lst in xsdict.items():
         lst.sort(key=lambda x:x[0])
         data = ml.get(name)
-        if cname:
+        if data:
             last20[(name,data[0],data[1])] = lst[:-6:-1]
         else:
             last20[(name,name,'#')] = lst[:-6:-1]
