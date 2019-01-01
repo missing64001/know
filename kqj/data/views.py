@@ -81,15 +81,17 @@ def xs_view(request):
 
     # pprint(xsdict)
     last20 = {}
-    ml = {'jl':'剑来','ddct':'大道朝天','xxtx':'侠行天下'}
+    ml = {'jl':('剑来',r'https://tieba.baidu.com/f?kw=%BD%A3%C0%B4&fr=ala0&loc=rec'),
+    'ddct':('大道朝天',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E5%A4%A7%E9%81%93%E6%9C%9D%E5%A4%A9&fr=search'),
+    'xxtx':('侠行天下',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search')}
 
     for name,lst in xsdict.items():
         lst.sort(key=lambda x:x[0])
-        cname = ml.get(name)
+        data = ml.get(name)
         if cname:
-            last20[(name,cname)] = lst[:-6:-1]
+            last20[(name,data[0],data[1])] = lst[:-6:-1]
         else:
-            last20[(name,name)] = lst[:-6:-1]
+            last20[(name,name,'#')] = lst[:-6:-1]
         
 
 

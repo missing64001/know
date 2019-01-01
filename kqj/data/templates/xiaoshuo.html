@@ -31,7 +31,8 @@
     <a href="/tree">tree</a> <a href="/xs">小说</a> <a href="/asset">asset</a>
     {% for xs in xss%}
         <div class="sxitem">
-            <h1> {{xs.0.1}} </h1>
+            <h1> <a href="{{xs.0.2}}">{{xs.0.1}}</a></h1>
+
             {% for url in xs.1 %}
                 <ul>
                     <li>
