@@ -298,32 +298,32 @@ def main():
         get_all_amount_by_coin()
     return
 
-    assets_value_sql_s="""
-    -- drop table if exists assets_value;
-    create table if not exists assets_value(
-    id int unsigned primary key auto_increment,
-    name varchar(50) not null,
-    value_int int not null,
-    value_wei tinyint not null,
-    volume bigint not null,
-    create_time int not null
-    );
-    """
+    # assets_value_sql_s="""
+    # -- drop table if exists assets_value;
+    # create table if not exists assets_value(
+    # id int unsigned primary key auto_increment,
+    # name varchar(50) not null,
+    # value_int int not null,
+    # value_wei tinyint not null,
+    # volume bigint not null,
+    # create_time int not null
+    # );
+    # """
     
-    my_assets_sql_s="""
-    -- drop table if exists my_assets;
-    create table if not exists my_assets(
-    id int unsigned primary key auto_increment,
-    name varchar(50) not null,
-    volume int not null,
-    exchange varchar(50) not null,
-    create_time int not null
-    );
-    """
+    # my_assets_sql_s="""
+    # -- drop table if exists my_assets;
+    # create table if not exists my_assets(
+    # id int unsigned primary key auto_increment,
+    # name varchar(50) not null,
+    # volume int not null,
+    # exchange varchar(50) not null,
+    # create_time int not null
+    # );
+    # """
 
-    mysql_exec_sqls = [assets_value_sql_s,my_assets_sql_s]
-    for sql_s in mysql_exec_sqls:
-        MYSQL.exec(sql_s)
+    # mysql_exec_sqls = [assets_value_sql_s,my_assets_sql_s]
+    # for sql_s in mysql_exec_sqls:
+    #     MYSQL.exec(sql_s)
 
     # MYSQL.exec('insert into assets_value values(null,"btc",450002212,4,12323445522,null);')
     # save_chat_content('uidxx01','uname1','chat_idxx01','chat_name1','text','content my hh')
@@ -332,7 +332,7 @@ def main():
 if __name__ == '__main__':
     main()
 else:
-    MYSQL = Mysql('localhost','my_blockchain_assets','my_blockchain_assets',db='my_blockchain_assets')
+    MYSQL = Mysql('120.79.41.9','my_blockchain_assets','my_blockchain_assets',db='my_blockchain_assets')
 '''
 create user "my_blockchain_assets"@"%" identified by "my_blockchain_assets";
 grant all privileges on my_blockchain_assets.* to 'my_blockchain_assets'@'%' with grant option;

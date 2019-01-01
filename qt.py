@@ -605,7 +605,6 @@ class MyTree(QTreeWidget):
             time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
             mself.textEdit.setText('finish|\n\n<time>\nstart|%s\nend|%s\ninterval|1hours/1days/1weeks/1months/1years/1nyear（农历年）\ntimes|\n</time>'%(time_now_str,time_now_str))
 
-
     def mytree_item_clicked(self):
         item = self.currentItem()
         obj = item.model_data['object']
@@ -1653,23 +1652,25 @@ class Mainwindow(QMainWindow):
         objlabelset = self.get_labels_by_content.get(obj.id,set())
         changedlabelset = []
 
+        add_label_id = None
+        del_label_id = None
+
         if self.bt_sender.model_data:
             # print(self.bt_sender.model_data['object'])
             # print(type(self.bt_sender.model_data['object']))
             objlabelset.remove(self.bt_sender.model_data['object'].id)
-            changedlabelset.append(self.bt_sender.model_data['object'].id)
+            del_label_id = self.bt_sender.model_data['object'].id
             obj.labels.remove(self.bt_sender.model_data['object'])
 
 
         lobj = self.ltree.get_currentItem_model_data()['object']
         objlabelset = set(objlabelset)
         objlabelset.add(lobj.id)
-        if lobj.id in changedlabelset:
-            changedlabelset = []
-        elif not changedlabelset:
-            changedlabelset = [-1,lobj.id]
+        if del_label_id == lobj.id:
+            del_label_id = None
         else:
-            changedlabelset.append(lobj.id)
+            add_label_id = lobj.id
+
         obj.labels.add(lobj)
 
 
@@ -1684,32 +1685,11 @@ class Mainwindow(QMainWindow):
 
 
         # 根据修改的label移动content
-        def contentmove(objid,changedlabelset,pitem = None):
-            if objid not in self.contentdict or not changedlabelset:
-                return None
-            for item in self.tree.children(pitem):
-                obj = item.model_data['object']
-                if gettype(obj) == 'l':
-                    contentmove(objid,changedlabelset,item)
-                    if obj.id == changedlabelset[1]:
-                        citem = TreeWidgetItem()
-                        cobj = self.contentdict[objid]
-                        citem.setText(0,cobj.name)
-                        citem.model_data = {
-                                            'id':cobj.id,
-                                            'name':cobj.name,
-                                            'text':cobj.text,
-                                            'object':cobj,
-                        }
-                        font = QFont()
-                        font.setBold(True)
-                        citem.setFont(0,font)
-                        self.tree.insertItem(item,0,citem)
-                elif gettype(obj) == 'c':
-                    if obj.id == objid and pitem.model_data['object'].id == changedlabelset[0]:
-                        sip.delete(item)
 
-        contentmove(obj.id,changedlabelset)
+
+
+
+        self.contentmove(obj.id,add_label_id,del_label_id)
 
         # self.get_contents_by_label = {}
         # self.labeldict = {}
@@ -1733,8 +1713,8 @@ class Mainwindow(QMainWindow):
             if button==QMessageBox.Ok:  
                 obj.labels.remove(self.bt_sender.model_data['object'])
                 self.show_labels()
-            
-
+                del_label_id = self.bt_sender.model_data['object'].id
+                self.contentmove(obj.id,-1,del_label_id)
         # 
         self.dia.close()
 
@@ -1751,6 +1731,46 @@ class Mainwindow(QMainWindow):
         # width = self.bt_sender.fontMetrics().width(self.bt_sender.model_data['name']) + 10
         # self.bt_sender.setMinimumSize(width,20)
         # self.bt_sender.setMaximumSize(width,20)
+
+    def contentmove(self,objid,add_label_id,del_label_id,pitem = None):
+        if not add_label_id and not del_label_id:
+            return
+        for item in self.tree.children(pitem):
+            lobj = item.model_data['object']
+            if gettype(lobj) == 'l':
+                self.contentmove(objid,add_label_id,del_label_id,item)
+
+                if del_label_id == lobj.id:
+                    for c in self.tree.children(item):
+                        co = c.model_data['object']
+                        if gettype(co) == 'c' and co.id == objid:
+                            sip.delete(c)
+
+                elif add_label_id == lobj.id:
+
+                    hascontent = True
+
+                    for c in self.tree.children(item):
+                        co = c.model_data['object']
+                        if gettype(co) == 'c' and co.id == objid:
+                            break
+                    else:
+                        hascontent = False
+
+                    if not hascontent:
+                        citem = TreeWidgetItem()
+                        cobj = self.contentdict[objid]
+                        citem.setText(0,cobj.name)
+                        citem.model_data = {
+                                            'id':cobj.id,
+                                            'name':cobj.name,
+                                            'text':cobj.text,
+                                            'object':cobj,
+                        }
+                        font = QFont()
+                        font.setBold(True)
+                        citem.setFont(0,font)
+                        self.tree.insertItem(item,0,citem)
 
     def label_tree_clicked(self,id):
 
