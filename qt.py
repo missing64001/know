@@ -6,7 +6,7 @@ try:
     from PyQt5.QtWidgets import QTreeWidget, QTextEdit, QMainWindow, QTreeWidgetItem, QLineEdit,QPushButton, QLabel
     from PyQt5.QtWidgets import QDialog, QShortcut, QAbstractItemView, QAction ,QMessageBox
     from PyQt5.QtCore import Qt, QTimer, QRegExp
-    from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat ,QTextDocumentFragment
+    from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat ,QTextDocumentFragment ,QTextOption ,QClipboard
     from gl import myexec,get_computer_info,CURRENTURL
     bios = get_computer_info
     if bios[0] == 0:
@@ -64,6 +64,7 @@ class TextEdit(QTextEdit):
         super().__init__(*arg, **kw)
         self.mself = mself
         self.__func_arg__()
+        self.setWordWrapMode(QTextOption.NoWrap)
 
     def __func_arg__(self):
         self.git_cwd = 'all'
@@ -72,8 +73,8 @@ class TextEdit(QTextEdit):
                                 }
 
     def insertFromMimeData(self,source):
-        print('insertFromMimeData')
-        return myexec(globals(),locals())
+        # print('insertFromMimeData')
+        # return myexec(globals(),locals())
         if source.hasImage():
             xx = source.imageData()
             hgfile = models.HGFile.objects.create(name='qt')
@@ -121,7 +122,7 @@ class TextEdit(QTextEdit):
             zzz = self.textCursor().selectedText()
 
             res = zzz.split('|')
-            if len(res) == 2:
+            if len(res) >= 2:
                 if res[0] == 'file':
                     file_name = res[1]
                     os.startfile(file_name)
@@ -182,6 +183,27 @@ class TextEdit(QTextEdit):
                 elif res[0] == 'finish':
                     self.setText(self.mself.hc.addhistory(self.toPlainText()))
 
+                elif res[0] == 'search':
+                    text = self.mself.le1.text()
+                    res = res[1:]
+                    for i,r in enumerate(res):
+                        r = r.strip().split()[0]
+                        if text == r:
+                            i += 1
+                            if i >= len(res):
+                                i = 0
+                            # print(res,i)
+                            r = res[i].strip().split()[0]
+                            break
+                    else:
+                        r = res[0].strip().split()[0]
+                    # print(r)
+                    self.mself.le1.setText(r)
+                    self.mself.search_models()
+
+                elif res[0] == 'http':
+                    self.exec_test()
+                    
 
                 elif res[0] == 'content':
                     r = res[1].strip().split()[0]
@@ -283,6 +305,13 @@ class TextEdit(QTextEdit):
             else:
                 QTextEdit.keyPressEvent(self,event)
 
+        # ctrl shift v
+        elif event.key() == 86 and QApplication.keyboardModifiers() == Qt.ControlModifier | Qt.ShiftModifier:
+
+            clipboard = QApplication.clipboard()
+            s = clipboard.text()
+            self.insertPlainText(s)
+
         else:
             QTextEdit.keyPressEvent(self,event)
 
@@ -340,20 +369,9 @@ class TextEdit(QTextEdit):
             self.moveCursor(cursor.End,cursor.MoveAnchor)
 
     def exec_test(self,**kw):
-        print('run_exec_test')
-
-        old_path = r'F:\my\P028_knowledge_system\knowqt'
-        os.chdir(old_path)
-
-
-        filename = os.path.join(CURRENTURL,'myexec.py') 
-
-        with open(filename,'r',encoding='utf-8') as f:
-            data = f.read()
-        try:
-            exec(data)
-        except Exception:
-            traceback.print_exc()
+        print('exec_test')
+        return myexec(globals(),locals())
+        os.startfile(r'http://www.baidu.com')
 
 
 class TreeWidgetItem(QTreeWidgetItem):
@@ -546,6 +564,7 @@ class MyTree(QTreeWidget):
             return
         else:
             nitem = TreeWidgetItem(pitem)
+            nitem.setFlags(nitem.flags() & ~Qt.ItemIsEditable)
             self.add_tree_citem(pitem,nitem)
 
     def add_next_item(self):
@@ -557,6 +576,7 @@ class MyTree(QTreeWidget):
             print('ll')
         else:
             nitem = TreeWidgetItem()
+            nitem.setFlags(nitem.flags() & ~Qt.ItemIsEditable)
             self.insertItem(pitem, self.indexItem(bitem)+1, nitem)
             self.add_tree_citem(pitem,nitem)
 
@@ -757,6 +777,7 @@ class MyTree(QTreeWidget):
             for id_ in content_id_set:
                 cobj = Mself.contentdict[id_]
                 item = TreeWidgetItem(pitem)
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 item.setText(0,cobj.name)
                 item.model_data = {
                                     'id':cobj.id,
@@ -1379,7 +1400,7 @@ class Mainwindow(QMainWindow):
         self.textEdit.insertPlainText(time_now_str)
 
     def shortcut_git(self):
-        return myexec(globals(),locals())
+        # return myexec(globals(),locals())
 
         # locale.setlocale(locale.LC_ALL,'zh_CN.UTF-8')
 
@@ -1430,7 +1451,7 @@ class Mainwindow(QMainWindow):
                     try:
                         item.setText(0,name)
                     except RuntimeError:
-                        print('RuntimeError again')
+                        # print('RuntimeError again')
                         pass
 
             if text != obj.text:

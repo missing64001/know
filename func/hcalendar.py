@@ -110,13 +110,15 @@ class HCalendar(object):
         self.tree = tree
 
     def h_sort_by_tree(self,tree):
-        # return myexec(globals(),locals())
         try:
             for item in tree.children():
                 if item.text(0) == '<日历>':
                     itemlist = []
                     for citem in tree.children(item):
-                        itemlist.append((self.get_rest_seconds(citem.model_data['object']),citem))
+                        second = self.get_rest_seconds(citem.model_data['object'])
+                        if second == 'finished':
+                            second = 900000000
+                        itemlist.append((second,citem))
                     itemlist.sort(key=lambda x: x[0] if x[0] else 0)
                     for tim,citem in itemlist:
                         if tim < 0:
@@ -172,6 +174,7 @@ class HCalendar(object):
                         tree.removeItem(citem)
                         tree.addItem(item, citem)
         except Exception as e:
+            print('h_sort_by_tree')
             traceback.print_exc()
 
     def show_by_seconds(self,obj):
@@ -179,7 +182,6 @@ class HCalendar(object):
 
     def get_rest_seconds(self,obj):
         try:
-
             di = self.getdict(obj)
             if not di:
                 return None
@@ -228,6 +230,7 @@ class HCalendar(object):
                 print(133333,interval)
 
         except Exception as e:
+            print('get_rest_seconds')
             traceback.print_exc()
 
     def getdict(self,obj):
