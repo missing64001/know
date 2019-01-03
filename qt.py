@@ -64,7 +64,8 @@ class TextEdit(QTextEdit):
         super().__init__(*arg, **kw)
         self.mself = mself
         self.__func_arg__()
-        self.setWordWrapMode(QTextOption.NoWrap)
+        # self.setWordWrapMode(QTextOption.NoWrap)
+        self.ismyInsertPlainText = False
 
     def __func_arg__(self):
         self.git_cwd = 'all'
@@ -90,7 +91,8 @@ class TextEdit(QTextEdit):
             self.textCursor().insertFragment(fragment);
 
             self.insertPlainText('<hgpic=%s>' % hgfile.id)
-
+        elif self.ismyInsertPlainText:
+            self.insertPlainText(source.text())
         else:
             QTextEdit.insertFromMimeData(self, source)
 
@@ -202,7 +204,7 @@ class TextEdit(QTextEdit):
                     self.mself.search_models()
 
                 elif res[0] == 'http':
-                    self.exec_test()
+                    os.startfile(res[1].strip().split()[0])
                     
 
                 elif res[0] == 'content':
@@ -211,6 +213,24 @@ class TextEdit(QTextEdit):
                         r = int(r)
                         self.mself.label_tree_clicked(r)
                         return
+
+                elif res[0] == 'textedit_nowrap':
+                    if self.wordWrapMode() == QTextOption.WordWrap:
+                        self.setWordWrapMode(QTextOption.NoWrap)
+                    else:
+                        self.setWordWrapMode(QTextOption.WordWrap)
+
+                    
+
+                elif res[0] == 'copy_type':
+                    if self.frameStyle() == 54:
+                        self.setFrameStyle(QFrame.WinPanel)
+                        self.ismyInsertPlainText = True
+                    elif self.frameStyle() == 3:
+                        self.setFrameStyle(54)
+                        self.ismyInsertPlainText = False
+
+
 
         except:
             traceback.print_exc()
@@ -269,14 +289,15 @@ class TextEdit(QTextEdit):
         elif event.key() == Qt.Key_Backspace:
 
             x = self.textCursor()
-            self.moveCursor(x.PreviousWord,x.KeepAnchor)
-            zzz = self.textCursor().selectedText()
-            self.setTextCursor(x)
-            if zzz.endswith('    '):
-                self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
-                self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
-                self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
-                self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
+            if x.selectedText() == '':
+                self.moveCursor(x.PreviousWord,x.KeepAnchor)
+                zzz = self.textCursor().selectedText()
+                self.setTextCursor(x)
+                if zzz.endswith('    '):
+                    self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
+                    self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
+                    self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
+                    self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
             QTextEdit.keyPressEvent(self,event)
 
         elif event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
