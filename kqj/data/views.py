@@ -14,6 +14,7 @@ from .models import *
 from pprint import pprint
 from .myasset.get_asset_data import getres
 from .myasset.get_other_data import get_wal_data
+import time
 
 # sys.path.insert(1,path)
 
@@ -50,7 +51,8 @@ def getdata_view(request):
         res = cobj.text
     elif txt:
         cobj = Content.objects.get(id=395)
-        cobj.text = cobj.text + '\n%s' % txt
+        time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
+        cobj.text = cobj.text + '\n%s\n%s' % (time_now_str,txt)
         cobj.save()
         res = 'txt'
 

@@ -65,7 +65,8 @@ class TextEdit(QTextEdit):
         self.mself = mself
         self.__func_arg__()
         # self.setWordWrapMode(QTextOption.NoWrap)
-        self.ismyInsertPlainText = False
+        self.setFrameStyle(QFrame.WinPanel)
+        self.ismyInsertPlainText = True
 
     def __func_arg__(self):
         self.git_cwd = 'all'
@@ -322,7 +323,7 @@ class TextEdit(QTextEdit):
         elif event.key() == 70:
             if QApplication.keyboardModifiers()==Qt.ControlModifier:
                 # print('ctrl+f')
-                self.setText(self.mself.hc.addhistory(self.toPlainText()))
+                self.exec_test()
             else:
                 QTextEdit.keyPressEvent(self,event)
 
@@ -392,8 +393,18 @@ class TextEdit(QTextEdit):
     def exec_test(self,**kw):
         print('exec_test')
         return myexec(globals(),locals())
-        os.startfile(r'http://www.baidu.com')
-
+        history = self.mself.hc.addhistoryex(self.toPlainText())
+        cursor = self.textCursor()
+        if history[0] == -1:
+            self.moveCursor(cursor.End,cursor.MoveAnchor)
+            self.insertPlainText(history[1])
+            cursor.setPosition(history[2],cursor.MoveAnchor)
+            self.setTextCursor(cursor)
+        else:
+            cursor.setPosition(history[0],cursor.MoveAnchor)
+            self.setTextCursor(cursor)
+            self.insertPlainText(history[1])
+            self.moveCursor(cursor.Left,cursor.MoveAnchor)
 
 class TreeWidgetItem(QTreeWidgetItem):
     def __init__(self, *arg, **kw):
@@ -1451,12 +1462,16 @@ class Mainwindow(QMainWindow):
     def exec_test(self):
         print(111)
         return myexec(globals(),locals())
-        import screen_capture
-        import imp 
-        imp.reload(screen_capture)
-        app = QApplication.instance() or QApplication(sys.argv)
-        screen_capture.WScreenShot.run()
-        app.exec_()
+        # import screen_capture
+        # import imp 
+        # imp.reload(screen_capture)
+        # app = QApplication.instance() or QApplication(sys.argv)
+        # screen_capture.WScreenShot.run()
+        # app.exec_()
+        # 
+        tcur = self.textEdit.textCursor()
+        tcur.setPosition(25,tcur.MoveAnchor)
+        self.textEdit.setTextCursor(tcur)
 
     def show_labels_pre(self):
 

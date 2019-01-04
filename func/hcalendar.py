@@ -1,6 +1,6 @@
 # 日历的功能
 
-
+from pprint import pprint
 import re
 import datetime
 import time
@@ -12,6 +12,35 @@ except Exception:
     pass
 
 def main():
+
+    text = """
+
+asdfdf
+
+<history11>
+<20190104 10:15:11>
+    用socket通讯速度快很多
+<20190103 17:57:30>
+    效率好低啊
+    查找怎么提高效率
+<20190103 10:01:46>
+    可以跑通
+</history>d3
+import hashlib
+md5obj = hashlib.md5()
+md5obj.update(f.read())
+hash = md5obj.hexdigest()fdghf
+
+    """
+    hc = HCalendar()
+    x = hc.addhistoryex(text)
+
+    print(x)
+    # pprint(dir(x))
+    print(type(x.start()),type(x.end()))
+    print(text[x.start():x.end()])
+
+def test1():
     text = '12312sfg gdghtrh <hisory>\n20181209 11:16:56\n20181210 11:16:56\n</history>'
     history = re.findall(r'\<history\>[\w\W]+\</history\>',text)
     # print(type(history[0]))
@@ -296,6 +325,13 @@ class HCalendar(object):
 
         return text
 
+    def addhistoryex(self,text):
+        history = re.search(r'\<history\>[\w\W]+\</history\>',text)
+        time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
+        if history:
+            return history.start() + 10,'<%s>\n    \n'%time_now_str,-1
+        else:
+            return -1,'\n<history>\n<%s>\n    \n</history>\n'%time_now_str,len(text) + 35
 
 
 if __name__ == '__main__':
