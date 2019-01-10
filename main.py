@@ -5,6 +5,8 @@ from hmysql import models
 import traceback
 import time
 import os
+from PyQt5.QtCore import QThread
+
 def main():
     try:
         app = QApplication(sys.argv)

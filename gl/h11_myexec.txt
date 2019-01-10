@@ -1,0 +1,12 @@
+history = self.mself.hc.addhistoryex(self.toPlainText())
+cursor = self.textCursor()
+if history[0] == -1:
+    self.moveCursor(cursor.End,cursor.MoveAnchor)
+    self.insertPlainText(history[1])
+    cursor.setPosition(history[2],cursor.MoveAnchor)
+    self.setTextCursor(cursor)
+else:
+    cursor.setPosition(history[0],cursor.MoveAnchor)
+    self.setTextCursor(cursor)
+    self.insertPlainText(history[1])
+    self.moveCursor(cursor.Left,cursor.MoveAnchor)

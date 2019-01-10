@@ -87,10 +87,13 @@ def dectry(fun):
 
 
 # @dectry
-def myexec(gl=None,lc=None):
+def myexec(di=True):
     try:
         s3 = None
         bc = {}
+        gl = sys._getframe().f_back.f_globals
+        lc = sys._getframe().f_back.f_locals
+
         if gl:
             bc.update(gl)
         if lc:
@@ -151,9 +154,14 @@ def myexec(gl=None,lc=None):
             with open(filename,'w',encoding='utf-8') as f:
                 f.write(s3)
             traceback.print_exc()
+        finally:
+            filename = os.path.join(CURRENTURL,'h11_myexec.txt')
+            with open(filename,'w',encoding='utf-8') as f:
+                f.write(s3)
+
         # print(reslst_reslst)
         if reslst_reslst:
-            return reslst_reslst[0]
+            return reslst_reslst[-1]
         return None
     except Exception:
         print('----------s1----------')

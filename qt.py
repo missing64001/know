@@ -78,7 +78,7 @@ class TextEdit(QTextEdit):
 
     def insertFromMimeData(self,source):
         # print('insertFromMimeData')
-        # return myexec(globals(),locals())
+        # return myexec()
         if source.hasImage():
             xx = source.imageData()
             hgfile = models.HGFile.objects.create(name='qt')
@@ -101,11 +101,11 @@ class TextEdit(QTextEdit):
 
     def canInsertFromMimeData(self,source):
         print('canInsertFromMimeData')
-        return myexec(globals(),locals())
+        # return myexec()
         return QTextEdit.canInsertFromMimeData(self, source)
 
     def dropEvent(self, e):
-        return myexec(globals(),locals())
+        # return myexec()
         print('dropevent')
 
         emine = e.mimeData()
@@ -240,7 +240,7 @@ class TextEdit(QTextEdit):
         super().mouseDoubleClickEvent(event)
 
     def keyPressEvent(self, event):
-        # return myexec(globals(),locals())
+        # return myexec()
         # print(event.key())
         if event.key() == Qt.Key_Tab:
             if QApplication.keyboardModifiers()==Qt.ControlModifier:
@@ -340,7 +340,7 @@ class TextEdit(QTextEdit):
             QTextEdit.keyPressEvent(self,event)
 
     def git_keypress_enter(self):
-        return myexec(globals(),locals())
+        # return myexec()
         # print(11)
         cursor = self.textCursor()
         self.moveCursor(cursor.StartOfBlock,cursor.MoveAnchor)
@@ -394,7 +394,7 @@ class TextEdit(QTextEdit):
 
     def exec_test(self,**kw):
         print('exec_test')
-        return myexec(globals(),locals())
+        return myexec()
         history = self.mself.hc.addhistoryex(self.toPlainText())
         cursor = self.textCursor()
         if history[0] == -1:
@@ -1434,7 +1434,7 @@ class Mainwindow(QMainWindow):
         self.textEdit.insertPlainText(time_now_str)
 
     def shortcut_git(self):
-        # return myexec(globals(),locals())
+        # return myexec()
 
         # locale.setlocale(locale.LC_ALL,'zh_CN.UTF-8')
 
@@ -1462,8 +1462,7 @@ class Mainwindow(QMainWindow):
         app.exec_()
 
     def exec_test(self):
-        print(111)
-        return myexec(globals(),locals())
+        return myexec()
         # import screen_capture
         # import imp 
         # imp.reload(screen_capture)
