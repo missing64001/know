@@ -124,8 +124,7 @@ class TextEdit(QTextEdit):
             x = self.textCursor()
             self.moveCursor(x.StartOfBlock,x.MoveAnchor)
             self.moveCursor(x.EndOfBlock,x.KeepAnchor)
-            zzz = self.textCursor().selectedText()
-
+            zzz = self.textCursor().selectedText().strip()
             res = zzz.split('|')
             if len(res) >= 2:
                 if res[0] == 'file':

@@ -28,3 +28,21 @@ django.setup()
 from data import models
 from django.db.models import Q
 from django.utils import timezone
+
+
+
+
+
+# x = models.Label.objects.filter(id=3)[0]
+# print(x)
+
+# x.grade = 3
+# print('zzz')
+# x.grade = 5
+# x.name = '''中国'sdf''\nw''ef""'''
+# print('hhh')
+# x.save()
+# print('ccc')
+
+# x = models.Label.objects.filter(id=3)[0]
+# print('aaa')
