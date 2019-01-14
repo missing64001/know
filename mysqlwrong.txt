@@ -67,3 +67,48 @@ ValueError: 11111111
 
 
 C:\Users\Administrator\AppData\Local\Programs\Python\Python35\lib\site-packages\django\db\models\sql\compiler.py
+
+
+
+
+
+
+
+
+INSERT INTO `data_content_labels` (`content_id`, `label_id`) VALUES (%s, %s) (54
+1, 161)
+222 SELECT `data_content`.`id`, `data_content`.`name`, `data_content`.`text`, `d
+ata_content`.`create_date` FROM `data_content` WHERE `data_content`.`id` = %s (5
+41,)
+111
+SELECT `data_content`.`id`, `data_content`.`name`, `data_content`.`text`, `data_
+content`.`create_date` FROM `data_content` WHERE `data_content`.`id` = %s (541,)
+
+222 SELECT `data_label`.`name` FROM `data_label` INNER JOIN `data_content_labels
+` ON (`data_label`.`id` = `data_content_labels`.`label_id`) WHERE `data_content_
+labels`.`content_id` = %s (541,)
+111
+SELECT `data_label`.`name` FROM `data_label` INNER JOIN `data_content_labels` ON
+ (`data_label`.`id` = `data_content_labels`.`label_id`) WHERE `data_content_labe
+ls`.`content_id` = %s (541,)
+222 SELECT `data_label`.`id`, `data_label`.`name`, `data_label`.`pid`, `data_lab
+el`.`queue`, `data_label`.`grade`, `data_label`.`create_date` FROM `data_label`
+INNER JOIN `data_content_labels` ON (`data_label`.`id` = `data_content_labels`.`
+label_id`) WHERE `data_content_labels`.`content_id` = %s (541,)
+111
+SELECT `data_label`.`id`, `data_label`.`name`, `data_label`.`pid`, `data_label`.
+`queue`, `data_label`.`grade`, `data_label`.`create_date` FROM `data_label` INNE
+R JOIN `data_content_labels` ON (`data_label`.`id` = `data_content_labels`.`labe
+l_id`) WHERE `data_content_labels`.`content_id` = %s (541,)
+222 UPDATE `data_label` SET `name` = %s, `pid` = %s, `queue` = %s, `grade` = %s,
+ `create_date` = %s WHERE `data_label`.`id` = %s ('7 实数的完备性', 202, '|534,5
+35,541', 10, '2018-12-11 14:11:01.845800', 161)
+111
+UPDATE `data_label` SET `name` = %s, `pid` = %s, `queue` = %s, `grade` = %s, `cr
+eate_date` = %s WHERE `data_label`.`id` = %s ('7 实数的完备性', 202, '|534,535,5
+41', 10, '2018-12-11 14:11:01.845800', 161)
+
+
+
+
+C:\Users\Administrator\AppData\Local\Programs\Python\Python35\Lib\site-packages\pymysql\cursors.py  mogrify

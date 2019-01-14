@@ -1,10 +1,10 @@
 import sys
+import os
 from PyQt5.QtWidgets import QApplication
 from qt import Mainwindow
 from hmysql import models
 import traceback
 import time
-import os
 from PyQt5.QtCore import QThread
 
 def main():

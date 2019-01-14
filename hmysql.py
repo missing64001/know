@@ -46,3 +46,6 @@ from django.utils import timezone
 
 # x = models.Label.objects.filter(id=3)[0]
 # print('aaa')
+
+        # cobj = models.Content.objects.create(name=name,text=text)
+        # cobj.labels.add(label)
