@@ -33,8 +33,8 @@ from django.utils import timezone
 
 
 
-# x = models.Label.objects.filter(id=3)[0]
-# print(x)
+x = models.Label.objects.filter(id=3)[0]
+print(x)
 
 # x.grade = 3
 # print('zzz')
