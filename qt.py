@@ -1,7 +1,6 @@
 
 import sys
 import os
-os.system('pip list')
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFrame,QSplitter, QStyleFactory, QApplication
 from PyQt5.QtWidgets import QTreeWidget, QTextEdit, QMainWindow, QTreeWidgetItem, QLineEdit,QPushButton, QLabel
 from PyQt5.QtWidgets import QDialog, QShortcut, QAbstractItemView, QAction ,QMessageBox
@@ -125,6 +124,13 @@ class TextEdit(QTextEdit):
             self.moveCursor(x.StartOfBlock,x.MoveAnchor)
             self.moveCursor(x.EndOfBlock,x.KeepAnchor)
             zzz = self.textCursor().selectedText().strip()
+            if zzz.startswith('http://') or zzz.startswith('https://'):
+                os.startfile(zzz.split()[0])
+                return
+
+
+
+
             res = zzz.split('|')
             if len(res) >= 2:
                 if res[0] == 'file':
@@ -236,7 +242,7 @@ class TextEdit(QTextEdit):
 
         except:
             traceback.print_exc()
-        super().mouseDoubleClickEvent(event)
+        # super().mouseDoubleClickEvent(event)
 
     def keyPressEvent(self, event):
         # return myexec()

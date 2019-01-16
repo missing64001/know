@@ -18,6 +18,7 @@ migrations
 
 # My configurations:
 baksql
+pymysql
 func/xiaoshuo/day
 expand.dat
 myfn/h10_try_command_file.txt
