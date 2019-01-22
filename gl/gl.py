@@ -8,6 +8,7 @@ basepath = r'F:\my'
 imports = [
             ('F00_myfn','h11_myexec'),
             ('F00_myfn','h09_get_bios'),
+            ('F00_pythonself','get_cost_time'),
             ]
 
 localpath = os.path.join(CURRENTURL,'gl')
@@ -39,7 +40,9 @@ for im in imports:
 
 myexec = importitems[0].myexec
 get_computer_info = importitems[1].get_computer_info
-
+gctdec = importitems[2].gctdec
+tprintex = importitems[2].tprintex
+gcts = importitems[2].gcts
 
 # setattr(M,'myexec',importitems[0].myexec)
 # setattr(M,'get_computer_info',importitems[1].get_computer_info)

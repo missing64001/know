@@ -22,7 +22,7 @@ elif bios[0] == 2:
 
 from pprint import pprint
 import sip
-from hmysql import models,Q,timezone
+from hmysql import mymodels as models,Q,timezone,            Label,Content
 import time
 from django.db import connection
 from functools import reduce
@@ -39,20 +39,26 @@ import screen_capture
 
 
 
-
 # from main import models
 
 
 
 GTIMES = time.time()
 
+
+
+#-------------------重写formysql-------------------
 def gettype(obj):
-    if isinstance(obj, models.Label):
+    # print(11,obj,type(obj))
+    if isinstance(obj, Label):
         return 'l'
-    elif isinstance(obj, models.Content):
+    elif isinstance(obj, Content):
         return 'c'
     print(obj,'错误的参数类型')
     return
+#-------------------重写formysql-------------------
+
+
 
 class PushButton(QPushButton):
     def __init__(self, *arg, **kw):
@@ -238,6 +244,10 @@ class TextEdit(QTextEdit):
                         self.setFrameStyle(54)
                         self.ismyInsertPlainText = False
 
+                else:
+                    super().mouseDoubleClickEvent(event)
+            else:
+                super().mouseDoubleClickEvent(event)
 
 
         except:
@@ -469,11 +479,11 @@ class MyTree(QTreeWidget):
             obj = item.model_data['object']
             pobj = item.parent().model_data['object'] if item.parent() else None
             oldpobj = item.oldparent[0].model_data['object'] if item.oldparent[0] else None
-            if not item.parent() or not isinstance(pobj, models.Label):
+            if not item.parent() or gettype(pobj) != 'l':
                 self.removeItem(item)
                 # print(item.oldparent)
                 self.insertItem(*item.oldparent)
-            elif isinstance(obj, models.Content):
+            elif gettype(obj) == 'c':
                 if oldpobj != pobj:
                     if oldpobj:
                         obj.labels.remove(oldpobj)
@@ -492,7 +502,7 @@ class MyTree(QTreeWidget):
                 label_queue = []
                 content_queue = []
                 for i in range(item.parent().childCount()):
-                    if isinstance(item.parent().child(i).model_data['object'], models.Label):
+                    if gettype(item.parent().child(i).model_data['object'])=='l':
                         label_queue.append(str(item.parent().child(i).model_data['object'].id))
                     else:
                         content_queue.append(str(item.parent().child(i).model_data['object'].id))
@@ -547,8 +557,7 @@ class MyTree(QTreeWidget):
                 citem = item.child(i)
 
 
-                if isinstance(citem.model_data['object'], models.Label):
-                    
+                if gettype(citem.model_data['object'])=='l':
                     label_id_dict[citem.model_data['object'].id] = citem
                 else:
                     content_id_dict[citem.model_data['object'].id] = citem
@@ -583,7 +592,7 @@ class MyTree(QTreeWidget):
             for i in range(item.childCount()):
                 citem = item.child(i)
                 cobj = citem.model_data['object']
-                if isinstance(cobj, models.Label):
+                if gettype(cobj)=='l':
                     citem.setExpanded(bool(self.mself.expanddict.get(cobj.id)))
                     _sort(citem)
                 
@@ -591,7 +600,7 @@ class MyTree(QTreeWidget):
             item = self.topLevelItem(i)
             cobj = item.model_data['object']
             item.setExpanded(bool(self.mself.expanddict.get(cobj.id)))
-            if isinstance(item.model_data['object'], models.Label):
+            if gettype(item.model_data['object'])=='l':
                 _sort(item)
 
     def set_mself(self,mself):
@@ -630,9 +639,9 @@ class MyTree(QTreeWidget):
         mself.textEdit.setText('new')
         name = mself.cl_bt_le.text()
         text = mself.textEdit.toPlainText()
-
         cobj = models.Content.objects.create(name=name,text=text)
         cobj.labels.add(label)
+        print(cobj.id)
 
         mself.content_layout_current_id = cobj.id
         mself.show_labels()
@@ -667,7 +676,7 @@ class MyTree(QTreeWidget):
     def mytree_item_clicked(self):
         item = self.currentItem()
         obj = item.model_data['object']
-        if isinstance(obj, models.Label):
+        if gettype(obj)=='l':
             createddate = obj.create_date + datetime.timedelta(hours=8)
             createddate = createddate.strftime('%Y-%m-%d %H:%M:%S')
             self.mself.statusBar().showMessage(str(obj.id) + ' ' + createddate)
@@ -873,7 +882,7 @@ class MyTree(QTreeWidget):
         for i in range(self.topLevelItemCount()):
             sip.delete(self.topLevelItem(0))
 
-
+        #-------------------重写formysql-------------------
         if not labels and not contents:
             labels = models.Label.objects.all().order_by('id')
             labels_values = list(labels.values('id','name','pid','queue','grade','create_date'))
@@ -881,7 +890,8 @@ class MyTree(QTreeWidget):
             labels = []
         else:
             labels_values = list(labels.values('id','name','pid','queue','grade','create_date'))
-
+        #-------------------重写formysql-------------------
+        #
         # print(len(labels))
         
         labels = list(labels)
@@ -1108,12 +1118,13 @@ class LabelTree(QTreeWidget):
     def get_Labels(self):
 
         labels = models.Label.objects.all().order_by('id')
+        #-------------------重写formysql-------------------
         labels_values = list(labels.values('id','name','pid','queue','grade','create_date'))
         labels = list(labels)
         queue_queue = {'data':None,'children':{}}
         queue_child_dict = {1:queue_queue['children']}
         rest = {}
-
+        #-------------------重写formysql-------------------
         
         c = 0
         for i in range(len(labels)):
@@ -1287,7 +1298,9 @@ class Mainwindow(QMainWindow):
         self.contentdict = {}
 
     def connect_db(self):
+        #-------------------重写formysql-------------------
         print('每半小时连接一次服务器',end='\r')
+
         x = models.Content.objects.filter(id = -100).count()
         print('每半小时连接一次服务器 成功连接 '+ str(x))
 
@@ -1855,6 +1868,7 @@ class Mainwindow(QMainWindow):
             labelobjs = None
         else:
             for te in text.split(' '):
+                #-------------------重写formysql-------------------
                 cobjs = models.Content.objects.filter(Q(name__contains=te) | Q(text__contains=te) ) #| Q(labels__name__contains=te)
 
                 labels = models.Label.objects.filter(name__contains=te)
@@ -1863,7 +1877,7 @@ class Mainwindow(QMainWindow):
                 # cobjs |= models.Content.objects.filter(labels__id__in=labels)
                 
                 labelobjs = models.Label.objects.filter(id__in=labels)
-
+                #-------------------重写formysql-------------------
                 if objsall:
                     objsall = objsall & cobjs
                 else:
@@ -2045,9 +2059,9 @@ class QueueDeal(object):
 
 
 if __name__ == '__main__':
-    content_id_set_lst = [{1,2,3},{3,4,5},{1,8,3}]
-    content_id_set = reduce(lambda x,y:x & y,content_id_set_lst)
-    print(content_id_set)
+    obj = models.Content
+    print(obj)
+
     # labelall = models.Label.objects.all()
     # contentall = models.Content.objects.all()
     # labelall = list(labelall)
