@@ -22,7 +22,7 @@ elif bios[0] == 2:
 
 from pprint import pprint
 import sip
-from hmysql import mymodels as models,Q,timezone,            Label,Content
+from hmysql import mymodels as models,Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,      Label,Content
 import time
 from django.db import connection
 from functools import reduce
@@ -49,10 +49,11 @@ GTIMES = time.time()
 
 #-------------------重写formysql-------------------
 def gettype(obj):
-    # print(11,obj,type(obj))
-    if isinstance(obj, Label):
+    if "<class 'hmysql.MyModels'>" == str(type(obj)):
+        obj = obj.model
+    if isinstance(obj, Label) or str(obj) == "<class 'data.models.Label'>":
         return 'l'
-    elif isinstance(obj, Content):
+    elif isinstance(obj, Content) or str(obj) == "<class 'data.models.Content'>":
         return 'c'
     print(obj,'错误的参数类型')
     return
@@ -131,7 +132,7 @@ class TextEdit(QTextEdit):
             self.moveCursor(x.EndOfBlock,x.KeepAnchor)
             zzz = self.textCursor().selectedText().strip()
             if zzz.startswith('http://') or zzz.startswith('https://'):
-                os.startfile(zzz.split()[0])
+                os.startfile(zzz.strip())
                 return
 
 
@@ -183,7 +184,7 @@ class TextEdit(QTextEdit):
 
                     filename = r'F:\my\P028_knowledge_system\knowqt\myfn\h10_try_command_file.txt'
                     with open(filename,'w',encoding='utf-8') as f:
-                        f.write(file_name)
+                        f.write('python ' + file_name)
                     os.chdir(os.path.dirname(file_name))
                     os.startfile(r'F:\my\P028_knowledge_system\knowqt\myfn\h10_try_command.py')
 
@@ -877,6 +878,9 @@ class MyTree(QTreeWidget):
 
         set_content_to_tree(self,contents)
 
+
+
+    # 旧的
     def setitem(self,labels=None,contents=None):
 
         for i in range(self.topLevelItemCount()):
@@ -1118,9 +1122,23 @@ class LabelTree(QTreeWidget):
     def get_Labels(self):
 
         labels = models.Label.objects.all().order_by('id')
+
+
+        # labels = list(models.labeldict.values())
+        # labels.sort()
+        # labels_values = [ {  j:i   for i,j in zip(label,LABEL_FIELDS)} for label in labels]
+        
+
         #-------------------重写formysql-------------------
         labels_values = list(labels.values('id','name','pid','queue','grade','create_date'))
         labels = list(labels)
+
+
+
+
+
+
+
         queue_queue = {'data':None,'children':{}}
         queue_child_dict = {1:queue_queue['children']}
         rest = {}
@@ -1301,7 +1319,7 @@ class Mainwindow(QMainWindow):
         #-------------------重写formysql-------------------
         print('每半小时连接一次服务器',end='\r')
 
-        x = models.Content.objects.filter(id = -100).count()
+        x = list(models.Content.objects.filter(id = -100))
         print('每半小时连接一次服务器 成功连接 '+ str(x))
 
     def initUI(self):

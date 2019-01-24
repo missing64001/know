@@ -1,3 +1,4 @@
+
 # 标签
 # label
 #     id
@@ -26,7 +27,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] ='kqj.settings'
 import django 
 django.setup()
 from data import models
-from data.models import Label,Content
+from data.models import Label,Content,HGFile
 from django.db.models import Q
 from django.utils import timezone
 from django.db import connection
@@ -36,17 +37,55 @@ import pickle
 from gl.gl import gctdec,tprintex,gcts
 
 
-
-label_fields = ('name','pid','queue','grade','create_date')
-content_fields = ('name','text','create_date')
+LABEL_FIELDS = ('id','name','pid','queue','grade','create_date')
+CONTENT_FIELDS = ('id','name','text','create_date')
+HGFILE_FIELDS = ('id','name','path','create_date')
 get_labels_by_content = {}
 get_contents_by_label = {}
 
+
+
+
+
+
+def getattr_data(di,fields,objid,name):
+    return di[objid][fields.index(name)]
+
+def setattr_data(di,fields,objid,name,value):
+    di[objid][fields.index(name)] = value
+
+# 选择哪个运行 后期可以实现
+def whichrun(f1,f2):
+    re1 = f1[0](*f1[1])
+    re2 = f2[0](*f2[1])
+    if re1 != re2:
+        print('re1 != re2',re1,re2)
+    else:
+        print('运行了whichrun' ,end='\r')
+    return re2
+
 class MyModels(object):
-    def __init__(self,model=None,obj=None):
+    all_data = []
+    def __init__(self,model=None,obj=None,objid=None):
         self.model = model
         self.obj = obj
+        if objid:
+            self.objid = objid
+        elif obj:
+            self.objid = obj.id
+        else:
+            self.objid = objid
+
         self.lastcommand = None
+        
+
+        self.labeldict = None
+        self.contentdict = None
+        self.get_labels_by_content = None
+        self.get_contents_by_label = None
+
+        self.get_data()
+        
 
     def __getattr__(self,name):
         # print(name)
@@ -58,6 +97,25 @@ class MyModels(object):
             self.model = models.HGFile
 
 
+        elif self.model == models.Label and name in LABEL_FIELDS:
+            fields = LABEL_FIELDS
+            di = self.labeldict
+            objid = self.objid
+
+            re1 = (getattr_data,(di,fields,objid,name))
+            re2 = (getattr,(self.obj,name))
+            return whichrun(re1,re2)
+        elif self.model == models.Content and name in CONTENT_FIELDS:
+            fields = CONTENT_FIELDS
+            di = self.contentdict
+            objid = self.objid
+
+            re1 = (getattr_data,(di,fields,objid,name))
+            re2 = (getattr,(self.obj,name))
+            return whichrun(re1,re2)
+        elif self.model == models.HGFile and name in HGFILE_FIELDS:
+            return getattr(self.obj,name)
+
 
         elif name == 'DoesNotExist':
             return self.model.DoesNotExist
@@ -66,6 +124,55 @@ class MyModels(object):
 
         self.lastcommand = name
         return self
+
+    def __setattr__(self,name,value):
+
+
+        if name in ('model','obj','lastcommand','labeldict','contentdict','get_labels_by_content','get_contents_by_label'):
+            super().__setattr__(name,value)
+        #     return
+
+        di = None
+        if self.model == models.Label and name in LABEL_FIELDS:
+            di = self.labeldict
+            fields = LABEL_FIELDS
+            objid = self.objid
+
+            re1 = (setattr_data,(di,fields,objid,name,value))
+            re2 = (setattr,(self.obj,name,value))
+            return whichrun(re1,re2)
+
+
+        elif self.model == models.Content and name in CONTENT_FIELDS:
+            di = self.contentdict
+            fields = CONTENT_FIELDS
+            objid = self.objid
+
+            re1 = (setattr_data,(di,fields,objid,name,value))
+            re2 = (setattr,(self.obj,name,value))
+            return whichrun(re1,re2)
+
+        elif self.model == models.HGFile and name in HGFILE_FIELDS:
+            setattr(self.obj,name,value)
+            return
+
+        else:
+            return super().__setattr__(name,value)
+        
+
+
+        
+
+    def get_data(self):
+        if not self.all_data:
+            filename = 'alldata.dat'
+            all_data = get_all_data_from_mysql(filename)
+            self.all_data.append(all_data[0])
+            self.all_data.append(all_data[1])
+            self.all_data.append(all_data[2])
+            self.all_data.append(all_data[3])
+
+        self.labeldict,self.contentdict,self.get_labels_by_content,self.get_contents_by_label = self.all_data
 
     def add(self,*args,**kw):
         if not self.lastcommand:
@@ -79,39 +186,130 @@ class MyModels(object):
         removefun = getattr(self,'%s_remove' % self.lastcommand)
         return removefun(*args,**kw)
 
+    def all(self,*args,**kw):
+        if not self.lastcommand:
+            raise ValueError('lastcommand is None,can\'t remove')
+        allfun = getattr(self,'%s_all' % self.lastcommand)
+        return allfun(*args,**kw)
+
+    def labels_add(self,label):
+
+        def _labels_add(label):
+            objid = self.objid
+            if hasattr(label,'objid'):
+                labelid = label.objid
+            else:
+                labelid = label.id
+
+            labelset = self.get_labels_by_content.get(objid)
+            if labelset:
+                labelset.add(labelid)
+            else:
+                self.get_labels_by_content[objid] = {labelid}
+
+            contentset = self.get_contents_by_label.get(labelid)
+            if contentset:
+                contentset.add(objid)
+            else:
+                self.get_contents_by_label[labelid] = {objid}
+
+        re1 = (_labels_add,(label,))
+        re2 = (self.obj.labels.add,(label.obj,))
+        return whichrun(re1,re2)
+
+    def labels_remove(self,label):
+
+        def _labels_remove(label):
+            objid = self.objid
+            if hasattr(label,'objid'):
+                labelid = label.objid
+            else:
+                labelid = label.id
+
+            labelset = self.get_labels_by_content.get(objid)
+            if labelset:
+                labelset.remove(labelid)
+            else:
+                self.get_labels_by_content[objid] = {labelid}
+
+            contentset = self.get_contents_by_label.get(labelid)
+            if contentset:
+                contentset.remove(objid)
+            else:
+                self.get_contents_by_label[labelid] = {objid}
+
+        re1 = (_labels_remove,(label,))
+        re2 = (self.obj.labels.remove,(label.obj,))
+        return whichrun(re1,re2)
+
     def create(self,*args,**kw):
         obj = self.model.objects.create(*args,**kw)
-        # return MyModels(self.model,obj)
-        return obj
 
-    def labels_add(self,*args,**kw):
-        return self.obj.labels.add(*args,**kw)
+        if isinstance(obj,models.Label):
+            self.labeldict[obj.id] = get_model_all_data(obj)
+        elif isinstance(obj,models.Content):
+            self.contentdict[obj.id] = get_model_all_data(obj)
 
-    def labels_remove(self,*args,**kw):
-        return self.obj.labels.remove(*args,**kw)
+        return MyModels(self.model,obj)
+
+    def save(self):
+        re1 = (self.obj.save,())
+        re2 = (lambda:None,())
+        return whichrun(re1,re2)
+
+    def labels_all(self,*args,**kw):
+        data = self.obj.labels.all(*args,**kw)
+        return MyQuery(data)
+
+    def objects_all(self,*args,**kw):
+        data = self.model.objects.all(*args,**kw)
+        return MyQuery(data)
 
     def get(self,*args,**kw):
         obj = self.model.objects.get(*args,**kw)
-        # return MyModels(self.model,obj)
+        obj = MyModels(self.model,obj)
         return obj
 
-    def save(self):
-        return self.obj.save()
-
-    def all(self):
-        return self.model.objects.all()
-
     def filter(self,*args,**kw):
-        return self.model.objects.filter(*args,**kw)
+        data = self.model.objects.filter(*args,**kw)
+        return MyQuery(data)
 
 
-def get_models_all_data(obj):
+class MyQuery(object):
+    """docstring for myquery"""
+    def __init__(self, query):
+        self.query = query
+
+
+    def __iter__(self):
+        self.objs = list(self.query)
+        self.index = 0
+        self.maxindex = len(self.objs)
+        return self
+
+    def __next__(self):
+        if self.index >= self.maxindex:
+            raise StopIteration
+        else:
+            obj = self.objs[self.index]
+            self.index+=1
+            return MyModels(obj.__class__,obj)
+
+    def values(self,*args,**kw):
+        return self.query.values(*args,**kw)
+
+    def order_by(self,*args,**kw):
+        return MyQuery(self.query.order_by(*args,**kw))
+        
+
+
+def get_model_all_data(obj):
     lst = []
     field_names = None
     if isinstance(obj,models.Label):
-        field_names = label_fields
+        field_names = LABEL_FIELDS
     elif isinstance(obj,models.Content):
-        field_names = content_fields
+        field_names = CONTENT_FIELDS
     for name in field_names:
         lst.append(getattr(obj,name))
     return lst
@@ -120,7 +318,10 @@ def get_models_all_data(obj):
 def get_md5(lst):
     m2 = hashlib.md5()
     for l in lst:
-        da = str(list(l.items()).sort()).encode('utf-8')
+        ll = list(l.items())
+        ll.sort()
+        da = str(ll).encode('utf-8')
+        # print(len(da))
         m2.update(da)
     return m2.hexdigest()
 
@@ -132,10 +333,10 @@ def get_all_data_from_mysql(filename):
 
 
     labelall = models.Label.objects.all()
-    labeldict = {item.id:get_models_all_data(item) for item in labelall}
+    labeldict = {item.id:get_model_all_data(item) for item in labelall}
 
     contentall = models.Content.objects.all()
-    contentdict = {item.id:get_models_all_data(item) for item in contentall}
+    contentdict = {item.id:get_model_all_data(item) for item in contentall}
 
     cursor = connection.cursor()
     sql = 'select content_id,label_id from data_content_labels;'
@@ -153,6 +354,8 @@ def get_all_data_from_mysql(filename):
             get_contents_by_label[row[1]] = {row[0]}
         else:
             contents_set.add(row[0])
+    print('finish get_all_data_from_mysql')
+    print(get_md5((labeldict,contentdict,get_labels_by_content,get_contents_by_label)))
     return labeldict,contentdict,get_labels_by_content,get_contents_by_label
 
 
@@ -174,6 +377,24 @@ def save_all_data(filename,labeldict,contentdict,get_labels_by_content,get_conte
 
 
 def main():
+    x = models.Content.objects.get(id=3)
+    print(x)
+    print(getattr(x,'pk'))
+    pprint(dir(x))
+    # for name in dir(x):
+    #     print(name,getattr(x,name))
+    # print(list(x))
+    
+
+    exit()
+
+
+
+
+
+
+
+
     filename = 'alldata.dat'
     gcts(22)
     all_data = get_all_data_from_local(filename)
