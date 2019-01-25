@@ -20,7 +20,6 @@
 #     content
 #     create_time
 
-
 import sys,os
 sys.path.append(r'F:\my\P028_knowledge_system\knowqt\kqj')
 os.environ['DJANGO_SETTINGS_MODULE'] ='kqj.settings'
@@ -35,7 +34,9 @@ from pprint import pprint
 import hashlib
 import pickle
 from gl.gl import gctdec,tprintex,gcts
-
+from threading import Thread
+from PyQt5.QtCore import QThread,QProcess
+import time
 
 LABEL_FIELDS = ('id','name','pid','queue','grade','create_date')
 CONTENT_FIELDS = ('id','name','text','create_date')
@@ -43,6 +44,46 @@ HGFILE_FIELDS = ('id','name','path','create_date')
 get_labels_by_content = {}
 get_contents_by_label = {}
 
+
+
+def run(lst):
+    while True:
+        if lst:
+            s = lst.pop()
+            print(s,len(lst))
+            time.sleep(1)
+        time.sleep(0.1)
+
+def runn(conn1,conn2):
+    conn2.close()
+    lst = []
+    Thread(target=run,args=(lst,)).start()
+    while True:
+        try :
+            msg = conn1.recv()
+            lst.append(msg)
+        except EOFError:  #抛出无数据时异常
+            conn1.close()
+            break
+
+
+
+# class Thread(Process):
+#     # def __init __(self):
+#     #     super(Thread，self).__ init __()
+#     def run(self):
+#         print(1111111111111111111)
+#         i = 0
+#         import time
+#         filename = '11xx2233.txt'
+#         with open(filename,'a',encoding='utf-8') as f:
+            
+#             while True:
+#                 time.sleep(1)
+#                 i += 1
+#                 print('-----------',i)
+#                 f.write(str(i))
+#                 f.write('\n')
 
 
 
@@ -55,9 +96,12 @@ def setattr_data(di,fields,objid,name,value):
     di[objid][fields.index(name)] = value
 
 # 选择哪个运行 后期可以实现
-def whichrun(f1,f2):
+def whichrun(f1,f2,mustrun=True):
     re1 = f1[0](*f1[1])
-    re2 = f2[0](*f2[1])
+    if mustrun:
+        re2 = f2[0](*f2[1])
+    else:
+        return re1
     if re1 != re2:
         print('re1 != re2',re1,re2)
     else:
@@ -104,7 +148,7 @@ class MyModels(object):
 
             re1 = (getattr_data,(di,fields,objid,name))
             re2 = (getattr,(self.obj,name))
-            return whichrun(re1,re2)
+            return whichrun(re1,re2,False)
         elif self.model == models.Content and name in CONTENT_FIELDS:
             fields = CONTENT_FIELDS
             di = self.contentdict
@@ -112,7 +156,7 @@ class MyModels(object):
 
             re1 = (getattr_data,(di,fields,objid,name))
             re2 = (getattr,(self.obj,name))
-            return whichrun(re1,re2)
+            return whichrun(re1,re2,False)
         elif self.model == models.HGFile and name in HGFILE_FIELDS:
             return getattr(self.obj,name)
 
@@ -139,7 +183,14 @@ class MyModels(object):
             objid = self.objid
 
             re1 = (setattr_data,(di,fields,objid,name,value))
-            re2 = (setattr,(self.obj,name,value))
+
+            def _temp(self,name,value):
+                obj = self.obj
+                if not obj:
+                    obj = self.model.objects.get(id=self.objid)
+                    self.obj = obj
+                return setattr(obj,name,value)
+            re2 = (_temp,(self,name,value))
             return whichrun(re1,re2)
 
 
@@ -149,7 +200,14 @@ class MyModels(object):
             objid = self.objid
 
             re1 = (setattr_data,(di,fields,objid,name,value))
-            re2 = (setattr,(self.obj,name,value))
+
+            def _temp(self,name,value):
+                obj = self.obj
+                if not obj:
+                    obj = self.model.objects.get(id=self.objid)
+                    self.obj = obj
+                return setattr(obj,name,value)
+            re2 = (_temp,(self,name,value))
             return whichrun(re1,re2)
 
         elif self.model == models.HGFile and name in HGFILE_FIELDS:
@@ -213,8 +271,17 @@ class MyModels(object):
             else:
                 self.get_contents_by_label[labelid] = {objid}
 
+        def labels_add(label):
+            if label.obj:
+                lobj = label.obj
+            else:
+                lobj = Label.objects.get(id=label.objid)
+            self.obj.labels.add(lobj)
+
+
+
         re1 = (_labels_add,(label,))
-        re2 = (self.obj.labels.add,(label.obj,))
+        re2 = (labels_add,(label,))
         return whichrun(re1,re2)
 
     def labels_remove(self,label):
@@ -238,8 +305,15 @@ class MyModels(object):
             else:
                 self.get_contents_by_label[labelid] = {objid}
 
+        def labels_remove(label):
+            if label.obj:
+                lobj = label.obj
+            else:
+                lobj = Label.objects.get(id=label.objid)
+            self.obj.labels.remove(lobj)
+
         re1 = (_labels_remove,(label,))
-        re2 = (self.obj.labels.remove,(label.obj,))
+        re2 = (labels_remove,(label,))
         return whichrun(re1,re2)
 
     def create(self,*args,**kw):
@@ -253,8 +327,8 @@ class MyModels(object):
         return MyModels(self.model,obj)
 
     def save(self):
-        re1 = (self.obj.save,())
-        re2 = (lambda:None,())
+        re1 = (lambda:None,())
+        re2 = (self.obj.save,())
         return whichrun(re1,re2)
 
     def labels_all(self,*args,**kw):
@@ -419,7 +493,8 @@ def main():
 if __name__ == '__main__':
     main()
 else:
-    mymodels = MyModels()
+    # mymodels = MyModels()
+    pass
 
 # def gettype(obj):
 #     if isinstance(obj, models.Label):

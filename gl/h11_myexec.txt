@@ -1,12 +1,10 @@
-history = self.mself.hc.addhistoryex(self.toPlainText())
-cursor = self.textCursor()
-if history[0] == -1:
-    self.moveCursor(cursor.End,cursor.MoveAnchor)
-    self.insertPlainText(history[1])
-    cursor.setPosition(history[2],cursor.MoveAnchor)
-    self.setTextCursor(cursor)
-else:
-    cursor.setPosition(history[0],cursor.MoveAnchor)
-    self.setTextCursor(cursor)
-    self.insertPlainText(history[1])
-    self.moveCursor(cursor.Left,cursor.MoveAnchor)
+# import screen_capture
+# import imp 
+# imp.reload(screen_capture)
+# app = QApplication.instance() or QApplication(sys.argv)
+# screen_capture.WScreenShot.run()
+# app.exec_()
+0 / 0 
+tcur = self.textEdit.textCursor()
+tcur.setPosition(25,tcur.MoveAnchor)
+self.textEdit.setTextCursor(tcur)

@@ -22,7 +22,7 @@ elif bios[0] == 2:
 
 from pprint import pprint
 import sip
-from hmysql import mymodels as models,Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,      Label,Content
+from hmysql import Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,      Label,Content ,runn
 import time
 from django.db import connection
 from functools import reduce
@@ -34,6 +34,9 @@ import pickle
 from func.hcalendar import HCalendar
 import subprocess
 import screen_capture
+from multiprocessing import Process,Pipe
+
+# sys.setrecursionlimit(150) # set the maximum depth as 1500
 
 
 
@@ -880,7 +883,7 @@ class MyTree(QTreeWidget):
 
 
 
-    # 旧的
+
     def setitem(self,labels=None,contents=None):
 
         for i in range(self.topLevelItemCount()):
@@ -1121,24 +1124,16 @@ class LabelTree(QTreeWidget):
 
     def get_Labels(self):
 
-        labels = models.Label.objects.all().order_by('id')
-
-
-        # labels = list(models.labeldict.values())
-        # labels.sort()
-        # labels_values = [ {  j:i   for i,j in zip(label,LABEL_FIELDS)} for label in labels]
-        
-
+        # 应该是修改好了
         #-------------------重写formysql-------------------
-        labels_values = list(labels.values('id','name','pid','queue','grade','create_date'))
-        labels = list(labels)
+        # labels = models.Label.objects.all().order_by('id')
 
-
-
-
-
-
-
+        labels = list(models.labeldict.values())
+        labels.sort()
+        labels_values = [ {  j:i   for i,j in zip(label,LABEL_FIELDS)} for label in labels]
+        # labels_values = list(labels.values('id','name','pid','queue','grade','create_date'))
+        # labels = list(labels)
+        # 
         queue_queue = {'data':None,'children':{}}
         queue_child_dict = {1:queue_queue['children']}
         rest = {}
@@ -1146,12 +1141,8 @@ class LabelTree(QTreeWidget):
         
         c = 0
         for i in range(len(labels)):
-            la = labels[i]
+            la = MyModels(Label,None,labels[i][0])
             labels_values[i]['object'] = la
-
-
-
-
             id = labels_values[i]['id']
             name = labels_values[i]['name']
             pid = labels_values[i]['pid']
@@ -1314,6 +1305,15 @@ class Mainwindow(QMainWindow):
         self.get_contents_by_label = {}
         self.labeldict = {}
         self.contentdict = {}
+
+        global models
+        models = MyModels()
+
+        self.iaa = 1
+
+        conn1, self.conn = Pipe()
+        Process(target=runn,args = (conn1,self.conn)).start()
+        conn1.close()
 
     def connect_db(self):
         #-------------------重写formysql-------------------
@@ -1498,17 +1498,17 @@ class Mainwindow(QMainWindow):
         app.exec_()
 
     def exec_test(self):
-        return myexec()
+        # return myexec()
         # import screen_capture
         # import imp 
         # imp.reload(screen_capture)
         # app = QApplication.instance() or QApplication(sys.argv)
         # screen_capture.WScreenShot.run()
         # app.exec_()
-        # 
-        tcur = self.textEdit.textCursor()
-        tcur.setPosition(25,tcur.MoveAnchor)
-        self.textEdit.setTextCursor(tcur)
+        self.iaa += 1
+        if self.iaa > 10:
+            raise ValueError('111')
+        self.conn.send(Label.objects.all())
 
     def show_labels_pre(self):
 
@@ -2070,10 +2070,6 @@ class QueueDeal(object):
             return '|'.join(queue)
         return '|'
         
-
-
-
-
 
 
 if __name__ == '__main__':
