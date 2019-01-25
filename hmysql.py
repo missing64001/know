@@ -331,6 +331,23 @@ class MyModels(object):
         re2 = (self.obj.save,())
         return whichrun(re1,re2)
 
+    def filter_cid_by_textlst(self,lst):
+        resset = set()
+        for i,content in self.contentdict.values():
+            name = content[CONTENT_FIELDS.index('name')]
+            text = content[CONTENT_FIELDS.index('text')]
+            for te in lst:
+                if te not in name and te not in text:
+                    break
+            else:
+                resset.add(i)
+        return resset
+
+
+
+
+
+
     def labels_all(self,*args,**kw):
         data = self.obj.labels.all(*args,**kw)
         return MyQuery(data)
@@ -350,13 +367,24 @@ class MyModels(object):
 
 
 class MyQuery(object):
-    """docstring for myquery"""
-    def __init__(self, query):
+    """docstring for myquery
+        MyModels(__class__,None,id)
+        MyModels(__class__,obj)
+
+        MyQuery(query)
+        MyQuery(dict,model)
+    """
+
+    def __init__(self, query, model=None):
         self.query = query
+        self.model = model
 
 
     def __iter__(self):
-        self.objs = list(self.query)
+        if self.model:
+            self.objs = list(self.query)
+        else:
+            self.objs = list(self.query)
         self.index = 0
         self.maxindex = len(self.objs)
         return self
@@ -367,7 +395,11 @@ class MyQuery(object):
         else:
             obj = self.objs[self.index]
             self.index+=1
+            if self.model:
+                return MyModels(self.model,None,obj)
             return MyModels(obj.__class__,obj)
+
+            
 
     def values(self,*args,**kw):
         return self.query.values(*args,**kw)

@@ -22,7 +22,7 @@ elif bios[0] == 2:
 
 from pprint import pprint
 import sip
-from hmysql import Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,      Label,Content ,runn
+from hmysql import Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,MyQuery,      Label,Content ,runn
 import time
 from django.db import connection
 from functools import reduce
@@ -695,16 +695,16 @@ class MyTree(QTreeWidget):
         for i in range(self.topLevelItemCount()):
             sip.delete(self.topLevelItem(0))
 
-        labels = [Mself.labeldict[i] for i in label_id_set]
+        labels = list(MyQuery(label_id_set,Label))
         labels_values = [{
-                            'id':Mself.labeldict[i].id,
-                            'name':Mself.labeldict[i].name,
-                            'pid':Mself.labeldict[i].pid,
-                            'queue':Mself.labeldict[i].queue,
-                            'grade':Mself.labeldict[i].grade,
-                            'create_date':Mself.labeldict[i].create_date,
+                            'id':label.id,
+                            'name':label.name,
+                            'pid':label.pid,
+                            'queue':label.queue,
+                            'grade':label.grade,
+                            'create_date':label.create_date,
                         } 
-                        for i in label_id_set]
+                        for label in MyQuery(label_id_set,Label)]
 
         queue_queue = {'data':None,'children':{}}
         queue_child_dict = {1:queue_queue['children']}
@@ -826,8 +826,7 @@ class MyTree(QTreeWidget):
             if not content_id_set:
                 return 0
 
-            for id_ in content_id_set:
-                cobj = Mself.contentdict[id_]
+            for cobj in MyQuery(content_id_set,Content):
                 item = TreeWidgetItem(pitem)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 item.setText(0,cobj.name)
@@ -883,7 +882,7 @@ class MyTree(QTreeWidget):
 
 
 
-
+    # 旧的
     def setitem(self,labels=None,contents=None):
 
         for i in range(self.topLevelItemCount()):
@@ -987,8 +986,9 @@ class MyTree(QTreeWidget):
             item.setBackground(0,QBrush(QColor("#CEC1C4")))
             item.typelc = 'l'
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-
+        print(111111111)
         self.setcontent(labels,contents)
+        print(222222222)
 
     def itemDoubleClicked_connect(self,item,column):
         # sender = self.sender()
@@ -1301,13 +1301,14 @@ class Mainwindow(QMainWindow):
         self.timer.timeout.connect(self.connect_db) 
         self.timer.start(1000 * 60 * 30)
 
-        self.get_labels_by_content = {}
-        self.get_contents_by_label = {}
-        self.labeldict = {}
-        self.contentdict = {}
 
         global models
         models = MyModels()
+
+        self.get_labels_by_content = models.get_labels_by_content
+        self.get_contents_by_label = models.get_contents_by_label
+        self.labeldict = MyQuery(models.labeldict,Label)
+        self.contentdict = MyQuery(models.contentdict,Content)
 
         self.iaa = 1
 
@@ -1853,7 +1854,7 @@ class Mainwindow(QMainWindow):
 
                     if not hascontent:
                         citem = TreeWidgetItem()
-                        cobj = self.contentdict[objid]
+                        cobj = MyModels(Content,None,objid)
                         citem.setText(0,cobj.name)
                         citem.model_data = {
                                             'id':cobj.id,
@@ -1872,6 +1873,8 @@ class Mainwindow(QMainWindow):
         self.content_layout_current_id = id
         self.show_labels()
 
+
+    # 旧的
     def search_models_none(self):
         def labels_children(labels):
             ls = set()
@@ -1881,13 +1884,25 @@ class Mainwindow(QMainWindow):
 
         text = self.le1.text()
 
-        objsall = models.Content.objects.filter(id=-1111)
+        # objsall = models.Content.objects.filter(id=-1111)
+        cidset = set()
         if not text:
             labelobjs = None
         else:
             for te in text.split(' '):
                 #-------------------重写formysql-------------------
+
+
+
+
+
+
                 cobjs = models.Content.objects.filter(Q(name__contains=te) | Q(text__contains=te) ) #| Q(labels__name__contains=te)
+
+
+
+
+
 
                 labels = models.Label.objects.filter(name__contains=te)
 
@@ -1896,12 +1911,13 @@ class Mainwindow(QMainWindow):
                 
                 labelobjs = models.Label.objects.filter(id__in=labels)
                 #-------------------重写formysql-------------------
-                if objsall:
-                    objsall = objsall & cobjs
-                else:
-                    objsall = cobjs
-            objsall = objsall.distinct()
-        self.tree.setitem(labelobjs,objsall) #labelobjs
+                # if objsall:
+                #     objsall = objsall & cobjs
+                # else:
+                #     objsall = cobjs
+            cidset = models.filter_cid_by_textlst(te)
+
+        self.tree.setitem(labelobjs,cidset) #labelobjs
 
     def search_models(self):
 
@@ -1937,8 +1953,8 @@ class Mainwindow(QMainWindow):
 
             def get_label_children(label_id_set):
                 llen = len(label_id_set)
-                for i in self.labeldict:
-                    label = self.labeldict[i]
+                for label in self.labeldict:
+                    # label = self.labeldict[i]
                     if label.pid in label_id_set:
                         label_id_set.add(label.id)
                 if llen != len(label_id_set):
@@ -1953,8 +1969,8 @@ class Mainwindow(QMainWindow):
                 content_id_set_by_text = set()
                 # content_id_set_by_true_text = set()
                 label_id_set = set()
-                for i in self.labeldict:
-                    label = self.labeldict[i]
+                for label in self.labeldict:
+                    # label = self.labeldict[i]
                     if text in label.name:
                         label_id_set.add(label.id)
 
@@ -1966,7 +1982,8 @@ class Mainwindow(QMainWindow):
                 # for id_ in label_id_set:
                 #     content_id_set_by_label |= self.get_contents_by_label.get(id_,set())
 
-                for id_,content in self.contentdict.items():
+                for content in self.contentdict:
+                    id_ = content.id
                     if text in content.name:
                         content_id_set_by_text.add(id_)
                     elif text in content.text:
@@ -1993,50 +2010,51 @@ class Mainwindow(QMainWindow):
 
 
 
+        # 不需要了
+        # def set_all_data():
+        #     self.get_labels_by_content = {}
+        #     self.get_contents_by_label = {}
+        #     self.labeldict = {}
+        #     self.contentdict = {}
 
-        def set_all_data():
-            self.get_labels_by_content = {}
-            self.get_contents_by_label = {}
-            self.labeldict = {}
-            self.contentdict = {}
 
+        #     def set_content_labels():
+        #         cursor = connection.cursor()
+        #         sql = 'select content_id,label_id from data_content_labels;'
+        #         cursor.execute(sql)
+        #         rows = cursor.fetchall()
 
-            def set_content_labels():
-                cursor = connection.cursor()
-                sql = 'select content_id,label_id from data_content_labels;'
-                cursor.execute(sql)
-                rows = cursor.fetchall()
+        #         for row in rows:
+        #             labels_set = self.get_labels_by_content.get(row[0])
+        #             if not labels_set:
+        #                 self.get_labels_by_content[row[0]] = {row[1]}
+        #             else:
+        #                 labels_set.add(row[1])
 
-                for row in rows:
-                    labels_set = self.get_labels_by_content.get(row[0])
-                    if not labels_set:
-                        self.get_labels_by_content[row[0]] = {row[1]}
-                    else:
-                        labels_set.add(row[1])
+        #             contents_set = self.get_contents_by_label.get(row[1])
+        #             if not contents_set:
+        #                 self.get_contents_by_label[row[1]] = {row[0]}
+        #             else:
+        #                 contents_set.add(row[0])
 
-                    contents_set = self.get_contents_by_label.get(row[1])
-                    if not contents_set:
-                        self.get_contents_by_label[row[1]] = {row[0]}
-                    else:
-                        contents_set.add(row[0])
-
-            labelall = models.Label.objects.all()
-            contentall = models.Content.objects.all()
+        #     labelall = models.Label.objects.all()
+        #     contentall = models.Content.objects.all()
             
 
-            for label in labelall:
-                self.labeldict[label.id] = label
+        #     for label in labelall:
+        #         self.labeldict[label.id] = label
             
 
-            for content in contentall:
-                self.contentdict[content.id] = content
+        #     for content in contentall:
+        #         self.contentdict[content.id] = content
 
             
-            set_content_labels()
+        #     set_content_labels()
+
+        # set_all_data()
 
 
 
-        set_all_data()
         textlst = self.le1.text().split(' ')
         # pprint(self.get_contents_by_label)
         content_id_set_by_text,label_id_set = get_contents_by_textlst(textlst)
