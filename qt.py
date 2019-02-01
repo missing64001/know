@@ -22,7 +22,7 @@ elif bios[0] == 2:
 
 from pprint import pprint
 import sip
-from hmysql import Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,MyQuery,      Label,Content ,runn
+from hmysql import Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,MyQuery,save_all_data,      Label,Content ,runn
 import time
 from django.db import connection
 from functools import reduce
@@ -503,23 +503,25 @@ class MyTree(QTreeWidget):
                     obj.pid = pobj.id
                     obj.save()
 
-                label_queue = []
-                content_queue = []
-                for i in range(item.parent().childCount()):
-                    if gettype(item.parent().child(i).model_data['object'])=='l':
-                        label_queue.append(str(item.parent().child(i).model_data['object'].id))
-                    else:
-                        content_queue.append(str(item.parent().child(i).model_data['object'].id))
+        self.save_queue(item.parent())
+                # label_queue = []
+                # content_queue = []
+                # for i in range(item.parent().childCount()):
+                #     if gettype(item.parent().child(i).model_data['object'])=='l':
+                #         label_queue.append(str(item.parent().child(i).model_data['object'].id))
+                #     else:
+                #         content_queue.append(str(item.parent().child(i).model_data['object'].id))
 
 
 
-                queue = (','.join(label_queue),','.join(content_queue))
+                # queue = (','.join(label_queue),','.join(content_queue))
 
-                queue = '|'.join(queue)
-                pobj.queue = queue
-                # print(pobj.name,pobj.id,pobj.queue)
-                pobj.save()
+                # queue = '|'.join(queue)
+                # pobj.queue = queue
+                # # print(pobj.name,pobj.id,pobj.queue)
+                # pobj.save()
 
+    # tree deal
     def indexItem(self,item):
         pitem = item.parent()
         if pitem:
@@ -551,6 +553,7 @@ class MyTree(QTreeWidget):
             return [ pitem.child(i) for i in range(pitem.childCount())]
         else:
             return [ self.topLevelItem(i) for i in range(self.topLevelItemCount())]
+
 
     def h_sort(self):
         def _sort(item):
@@ -645,7 +648,7 @@ class MyTree(QTreeWidget):
         text = mself.textEdit.toPlainText()
         cobj = models.Content.objects.create(name=name,text=text)
         cobj.labels.add(label)
-        print(cobj.id)
+        # print(cobj.id)
 
         mself.content_layout_current_id = cobj.id
         mself.show_labels()
@@ -676,6 +679,7 @@ class MyTree(QTreeWidget):
         if item.text(0) == '<日历>':
             time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
             mself.textEdit.setText('finish|\n\n<time>\nstart|%s\nend|%s\ninterval|1hours/1days/1weeks/1months/1years/1nyear（农历年）\ntimes|\n</time>'%(time_now_str,time_now_str))
+
 
     def mytree_item_clicked(self):
         item = self.currentItem()
@@ -880,9 +884,39 @@ class MyTree(QTreeWidget):
 
         set_content_to_tree(self,contents)
 
+    def itemDoubleClicked_connect(self,item,column):
+        # sender = self.sender()
+        # print(item.text(column))
+        # print(11)
+        # print(item.text(column))
+        # print(item.isExpanded())
+        item.setExpanded( item.isExpanded())
+        id_ = item.model_data['object'].id
+        self.mself.expanddict[id_] = not(item.isExpanded())
+        # print(self.mself.expanddict)
+    
+    def save_queue(self,item):
+        print('save_queue')
+        if not item:
+            return
+        obj = item.model_data['object']
+        if gettype(obj) != 'l':
+            return
+        queue = [[],[]]
+        for citem in self.children(item):
+            cobj = citem.model_data['object']
+            if gettype(cobj) == 'l':
+                queue[0].append(str(cobj.id))
+            elif gettype(cobj) == 'c':
+                queue[1].append(str(cobj.id))
+
+        queue = (','.join(queue[0]),','.join(queue[1]))
+        queue = '|'.join(queue)
+        obj.queue = queue
+        obj.save()
 
 
-    # 旧的
+    # 旧的 --------------------------------------------------
     def setitem(self,labels=None,contents=None):
 
         for i in range(self.topLevelItemCount()):
@@ -986,41 +1020,9 @@ class MyTree(QTreeWidget):
             item.setBackground(0,QBrush(QColor("#CEC1C4")))
             item.typelc = 'l'
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-        print(111111111)
+        # print(111111111)
         self.setcontent(labels,contents)
-        print(222222222)
-
-    def itemDoubleClicked_connect(self,item,column):
-        # sender = self.sender()
-        # print(item.text(column))
-        # print(11)
-        # print(item.text(column))
-        # print(item.isExpanded())
-        item.setExpanded( item.isExpanded())
-        id_ = item.model_data['object'].id
-        self.mself.expanddict[id_] = not(item.isExpanded())
-        # print(self.mself.expanddict)
-    
-    def save_queue(self,item):
-        if not item:
-            return
-        obj = item.model_data['object']
-        if gettype(obj) != 'l':
-            return
-        queue = [[],[]]
-        for citem in self.children(item):
-            cobj = citem.model_data['object']
-            if gettype(cobj) == 'l':
-                queue[0].append(str(cobj.id))
-            elif gettype(cobj) == 'c':
-                queue[1].append(str(cobj.id))
-
-        queue = (','.join(queue[0]),','.join(queue[1]))
-        queue = '|'.join(queue)
-        obj.queue = queue
-        obj.save()
-
-
+        # print(222222222)
 
 
 class LabelTree(QTreeWidget):
@@ -1282,6 +1284,7 @@ class LabelTree(QTreeWidget):
 class Mainwindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.is_show_labels_pre = True
         self.show_label_lst = []
         self.expanddict = {}
         self.content_layout_current_id = None
@@ -1294,7 +1297,6 @@ class Mainwindow(QMainWindow):
         self.cl_bt_le = None
 
         self.load_Expanded()
-        self.initUI()
 
         self.timer = QTimer(self)
         self.timer.setSingleShot(False)
@@ -1302,19 +1304,25 @@ class Mainwindow(QMainWindow):
         self.timer.start(1000 * 60 * 30)
 
 
+
+        MyModels.mself = self
+
         global models
         models = MyModels()
 
         self.get_labels_by_content = models.get_labels_by_content
         self.get_contents_by_label = models.get_contents_by_label
-        self.labeldict = MyQuery(models.labeldict,Label)
-        self.contentdict = MyQuery(models.contentdict,Content)
+        # self.labeldict = MyQuery(models.labeldict,Label)
+        # self.contentdict = MyQuery(models.contentdict,Content)
 
         self.iaa = 1
 
         conn1, self.conn = Pipe()
         Process(target=runn,args = (conn1,self.conn)).start()
         conn1.close()
+
+
+        self.initUI()
 
     def connect_db(self):
         #-------------------重写formysql-------------------
@@ -1349,11 +1357,14 @@ class Mainwindow(QMainWindow):
         
         cl_bt_hbox = QHBoxLayout()
         self.cl_bt_le = QLineEdit('内容')
-        self.cl_bt_bt = QPushButton('新建')
+        self.cl_bt_bt = QPushButton('local')
         self.cl_bt_bt.clicked.connect(self.cl_bt_bt_clicked)
+        
+        if models.local_data and models.mysql_data:
+            cl_bt_hbox.addWidget(self.cl_bt_bt)
+
         # self.cl_bt_le.textChanged.connect(self.cl_bt_le_textChanged)
         cl_bt_hbox.addWidget(self.cl_bt_le)
-        # cl_bt_hbox.addWidget(self.cl_bt_bt)
         # self.content_layout = 
 
 
@@ -1417,6 +1428,8 @@ class Mainwindow(QMainWindow):
 
         # set shortcut
         self.set_shortcut('save','Ctrl+S',self.save_text)
+        # self.set_shortcut('save_all','Ctrl+Shift+S',self.save_text_all)
+
         self.set_shortcut('embark','alt+q',self.exec_test)
         self.set_shortcut('embark2','alt+e',self.embark_shortcut )
         self.set_shortcut('writetime','Ctrl+T',self.shortcut_writetime )
@@ -1439,6 +1452,25 @@ class Mainwindow(QMainWindow):
         self.show_labels_pre()
         self.save_Expanded()
 
+        if models.local_data and models.mysql_data:
+            local_labelset = models.local_data[2][self.content_layout_current_id]
+            mysql_labelset = models.mysql_data[2][self.content_layout_current_id]
+
+            if self.cl_bt_bt.text() == 'mysql':
+                models.local_data[2][self.content_layout_current_id] = mysql_labelset
+
+            elif self.cl_bt_bt.text() == 'local':
+                adds = local_labelset - mysql_labelset
+                dels = mysql_labelset - local_labelset
+                cobj = MyModels(Content,None,self.content_layout_current_id)
+                for add_ in adds:
+                    cobj.labels.add(add_)
+                for del_ in dels:
+                    cobj.labels.remove(del_)
+
+        local_all_data = MyModels().all_data
+        save_all_data(*local_all_data)
+
     def save_Expanded(self):
         filename = os.path.join(CURRENTURL,'expand.dat') 
         with open(filename,'wb') as f:
@@ -1453,7 +1485,11 @@ class Mainwindow(QMainWindow):
 
     def embark_shortcut(self):
         # print(11)
-        cobj = models.Content.objects.get(name='know快捷键')
+        # cobj = models.Content.objects.get(name='know快捷键')
+        cobj = MyModels(Content,None,141)
+        if cobj.name != 'know快捷键':
+            raise ValueError('name is %s not know_setting' % cobj.name)
+
         res1 = re.findall(r'\<sublime\>([\w\W]+)\<sublimeend\>',cobj.text)[0].strip()
         res1 = [   s.split('|')          for s in res1.split('\n')]
         res1 = dict(res1)
@@ -1499,22 +1535,17 @@ class Mainwindow(QMainWindow):
         app.exec_()
 
     def exec_test(self):
-        # return myexec()
-        # import screen_capture
-        # import imp 
-        # imp.reload(screen_capture)
-        # app = QApplication.instance() or QApplication(sys.argv)
-        # screen_capture.WScreenShot.run()
-        # app.exec_()
-        self.iaa += 1
-        if self.iaa > 10:
-            raise ValueError('111')
-        self.conn.send(Label.objects.all())
+        return myexec()
+        print(1)
 
     def show_labels_pre(self):
+        if not self.is_show_labels_pre:
+            return
 
         if self.content_layout_current_id:
-            obj = models.Content.objects.get(id = self.content_layout_current_id)
+            # obj = models.Content.objects.get(id = self.content_layout_current_id)
+            obj = MyModels(Content,None,self.content_layout_current_id)
+
             name = self.cl_bt_le.text()
             text = self.textEdit.toPlainText().replace('\ufffc','')
             change = False
@@ -1588,7 +1619,7 @@ class Mainwindow(QMainWindow):
 
 
         if self.content_layout_current_id:
-            obj = models.Content.objects.get(id = self.content_layout_current_id)
+            obj = MyModels(Content,None,self.content_layout_current_id) #        models.Content.objects.get(id = self.content_layout_current_id)
             self.cl_bt_le.setText(obj.name)
             letextlst = self.le1.text().split()
             text = obj.text
@@ -1610,11 +1641,12 @@ class Mainwindow(QMainWindow):
 
 
 
-            labs = obj.labels.all()
-            strr = labs.values('name')
-            strr = [ s['name'] for s in strr]
-            
+            labs = MyQuery(models.all_data[2][obj.id],Label) #        obj.labels.all()
+            # strr = labs.values('name')
+            # strr = [ s['name'] for s in strr]
             labs = list(labs)
+            
+            strr = [la.name for la in labs]
 
             labs = [ {'id':la.id,
                     'name':la.name,
@@ -1678,25 +1710,35 @@ class Mainwindow(QMainWindow):
             layout.addStretch()
 
     def cl_bt_bt_clicked(self):
-        self.show_labels_pre()
-        sender = self.sender()
+        return myexec()
+        self.is_show_labels_pre = False
+        # print(len(models.local_data[0]))
+        if models.local_data and models.mysql_data:
+            if self.cl_bt_bt.text() == 'mysql':
+                self.cl_bt_bt.setText('local')
+                models.all_data[0] = models.local_data[0]
+                models.all_data[1] = models.local_data[1]
+                models.all_data[2] = models.local_data[2]
+                models.all_data[3] = models.local_data[3]
+            elif self.cl_bt_bt.text() == 'local':
+                self.cl_bt_bt.setText('mysql')
 
-        self.cl_bt_le.setText('new')
-        self.textEdit.setText('new')
-        name = self.cl_bt_le.text()
-        text = self.textEdit.toPlainText()
-        cobj = models.Content.objects.create(name=name,text=text)
-        self.content_layout_current_id = cobj.id
-        self.show_labels()
+                models.all_data[0] = models.mysql_data[0]
+                models.all_data[1] = models.mysql_data[1]
+                models.all_data[2] = models.mysql_data[2]
+                models.all_data[3] = models.mysql_data[3]
+            self.tree.mysender(self.content_layout_current_id)
 
-        item = TreeWidgetItem(self.tree)
-        item.setText(0,cobj.name)
-        item.model_data = {
-                            'id':cobj.id,
-                            'name':cobj.name,
-                            'text':cobj.text,
-                            'object':cobj,
-        }
+
+        self.is_show_labels_pre = True
+        # item = TreeWidgetItem(self.tree)
+        # item.setText(0,cobj.name)
+        # item.model_data = {
+        #                     'id':cobj.id,
+        #                     'name':cobj.name,
+        #                     'text':cobj.text,
+        #                     'object':cobj,
+        # }
 
     def addlabel(self):
 
@@ -1741,8 +1783,7 @@ class Mainwindow(QMainWindow):
         # ql.exec_()
 
     def dia_ok_bt_clicked(self):
-
-        obj = models.Content.objects.get(id=self.content_layout_current_id)
+        obj = MyModels(Content,None,self.content_layout_current_id)
 
         objlabelset = self.get_labels_by_content.get(obj.id,set())
         changedlabelset = []
@@ -1795,7 +1836,8 @@ class Mainwindow(QMainWindow):
         self.dia.close()
 
     def dia_cancel_bt_clicked(self):
-        obj = models.Content.objects.get(id=self.content_layout_current_id)
+        # obj = models.Content.objects.get(id=)
+        obj = MyModels(Content,None,self.content_layout_current_id)
         if self.bt_sender.model_data:
 
 
@@ -1923,23 +1965,30 @@ class Mainwindow(QMainWindow):
 
         text = self.le1.text()
         if text[0] == '#':
-            cobj = models.Content.objects.get(name='know_setting')
+            # cobj = models.Content.objects.get(name='know_setting')
+            cobj = MyModels(Content,None,170)
+            if cobj.name != 'know_setting':
+                raise ValueError('name is %s not know_setting' % cobj.name)
             
             res = re.findall(r'\<knowset\>([\w\W]+)\<knowsetend\>',cobj.text)[0].strip()
             res = [   s.split(' ')          for s in res.split('\n')]
             res = dict(res)
             res = res.get(text[1:])
+            res = int(res)
             if res:
                 # cobjtemp = models.Content.objects.get(id=res)
                 try:
-                    models.Content.objects.get(id=res)
+                    # models.Content.objects.get(id=res)
                     self.label_tree_clicked(res)
                 except models.Content.DoesNotExist:
                     pass
             return
 
         elif text[0] == '@':
-            cobj = models.Content.objects.get(name='know_setting')
+            cobj = MyModels(Content,None,170)
+            if cobj.name != 'know_setting':
+                raise ValueError('name is %s not know_setting' % cobj.name)
+
             res = re.findall(r'\<knowlabelname\>([\w\W]+)\<knowlabelnameend\>',cobj.text)[0].strip()
             res = [   s.split(' ')          for s in res.split('\n')]
             res = dict(res)
@@ -1953,7 +2002,7 @@ class Mainwindow(QMainWindow):
 
             def get_label_children(label_id_set):
                 llen = len(label_id_set)
-                for label in self.labeldict:
+                for label in MyQuery(models.labeldict,Label):
                     # label = self.labeldict[i]
                     if label.pid in label_id_set:
                         label_id_set.add(label.id)
@@ -1969,7 +2018,7 @@ class Mainwindow(QMainWindow):
                 content_id_set_by_text = set()
                 # content_id_set_by_true_text = set()
                 label_id_set = set()
-                for label in self.labeldict:
+                for label in MyQuery(models.labeldict,Label):
                     # label = self.labeldict[i]
                     if text in label.name:
                         label_id_set.add(label.id)
@@ -1982,7 +2031,7 @@ class Mainwindow(QMainWindow):
                 # for id_ in label_id_set:
                 #     content_id_set_by_label |= self.get_contents_by_label.get(id_,set())
 
-                for content in self.contentdict:
+                for content in MyQuery(models.contentdict,Content):
                     id_ = content.id
                     if text in content.name:
                         content_id_set_by_text.add(id_)

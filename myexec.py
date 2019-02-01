@@ -1,60 +1,63 @@
 
 
 
-def get_m(x,bll,has):
+a = {1,5}
+b = {1,2}
 
-    lst = list(range(QS,END+1,1))
+a.update(b)
+print(a)
 
-    totle = sum(lst)
-
-    bl = 2000 / totle
-    bl = bll
-    # print (bl)
-    last_c = 0
-    totle_c = 0
-    for l in lst:
-        last_c = (l-totle_c) *bl
-        totle_c += last_c
-        if round(l-totle_c,0) == x:
-            print(l,round(l-totle_c,0),round(totle_c-has,0))
-
-    return (totle_c)
+print(set(a)-set(b))
+print(set(b)-set(a))
+print(set(b)&set(a))
+exit()
 
 
 
 
 
-def get_start():
-
-    start = 1
-    bc = 0.05
-    last = 0
-    last_now = 0
-    for i in range(200):
-        now = get_m(MB,start,0)
-        if now > MB:
-            start = start*(1-bc)
-            if last == -1:
-                bc = bc / 4
-            last = 1
-        else:
-            start = start*(1+bc)
-            if last == 1:
-                bc = bc / 4
-            last = -1
-        print(now,start)
-        if last_now == now:
-            print(i)
-            break
-        last_now = now
 
 
-MB = 2000
-QS = 200
-END = 5000
 
-# get_start()
+import threading
+import time
 
-has = 0+3
 
-print (round(get_m(2000,0.00022541628,has),-1))
+class Job(threading.Thread):
+
+    def __init__(self, *args, **kwargs):
+        super(Job, self).__init__(*args, **kwargs)
+        self.__flag = threading.Event()     # 用于暂停线程的标识
+        self.__flag.set()       # 设置为True
+        self.__running = threading.Event()      # 用于停止线程的标识
+        self.__running.set()      # 将running设置为True
+
+    def run(self):
+        while self.__running.isSet():
+            self.__flag.wait()      # 为True时立即返回, 为False时阻塞直到内部的标识位为True后返回
+            print (time.time())
+            time.sleep(1)
+
+    def pause(self):
+        self.__flag.clear()     # 设置为False, 让线程阻塞
+
+    def resume(self):
+        self.__flag.set()    # 设置为True, 让线程停止阻塞
+
+    def stop(self):
+        self.__flag.set()       # 将线程从暂停状态恢复, 如何已经暂停的话
+        self.__running.clear()        # 设置为False    
+
+
+
+
+a = Job()
+a.start()
+time.sleep(3)
+a.pause()
+time.sleep(3)
+a.resume()
+time.sleep(3)
+a.pause()
+time.sleep(2)
+a.stop()

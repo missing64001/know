@@ -19,7 +19,6 @@
 #     label
 #     content
 #     create_time
-
 import sys,os
 sys.path.append(r'F:\my\P028_knowledge_system\knowqt\kqj')
 os.environ['DJANGO_SETTINGS_MODULE'] ='kqj.settings'
@@ -33,35 +32,105 @@ from django.db import connection
 from pprint import pprint
 import hashlib
 import pickle
-from gl.gl import gctdec,tprintex,gcts
-from threading import Thread
+from gl.gl import gctdec,tprintex,gcts,CURRENTURL
+from threading import Thread,Lock
+import threading
 from PyQt5.QtCore import QThread,QProcess
 import time
+import traceback
+import inspect
+from concurrent.futures import ThreadPoolExecutor
+import queue
+from functools import wraps
+
 
 LABEL_FIELDS = ('id','name','pid','queue','grade','create_date')
 CONTENT_FIELDS = ('id','name','text','create_date')
 HGFILE_FIELDS = ('id','name','path','create_date')
 get_labels_by_content = {}
 get_contents_by_label = {}
+ALLDATA_FILENAME = os.path.join(CURRENTURL,'alldata.dat')
+
+def setattr_temp(model,name,value):
+    time.sleep(3)
+    obj = model.objects.get(id=self.objid)
+    return setattr(obj,name,value)
 
 
 
-def run(lst):
-    while True:
-        if lst:
-            s = lst.pop()
-            print(s,len(lst))
-            time.sleep(1)
-        time.sleep(0.1)
+def myModels_labels_add(lid,oid):
+    obj = Content.objects.get(id=oid)
+    lobj = Label.objects.get(id=lid)
+    obj.labels.add(lobj)
+
+def myModels_labels_remove(lid,oid):
+    obj = Content.objects.get(id=oid)
+    lobj = Label.objects.get(id=lid)
+    obj.labels.remove(lobj)
+
+
+
+
+
+
+
+def objsave(model,data):
+    obj = model.objects.get(id=data[0])
+    if model == Label:
+        obj.name = data[LABEL_FIELDS.index('name')]
+        obj.pid = data[LABEL_FIELDS.index('pid')]
+        obj.queue = data[LABEL_FIELDS.index('queue')]
+        obj.grade = data[LABEL_FIELDS.index('grade')]
+    elif model == Content:
+        obj.name = data[CONTENT_FIELDS.index('name')]
+        obj.text = data[CONTENT_FIELDS.index('text')]
+    else:
+        raise ValueError(str(model) + '错误的参数类型')
+    obj.save()
+
+
+def run(f2,t):
+    # f2,re1 = lst
+    re2 = f2[0](*f2[1])
+    print('还有备份数据的数量:%s'%t._work_queue.qsize(),end='\r')
+
+
+# class Job(threading.Thread):
+
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.__flag = threading.Event()     # 用于暂停线程的标识
+#         self.__flag.set()       # 设置为True
+#         self.__running = threading.Event()      # 用于停止线程的标识
+#         self.__running.set()      # 将running设置为True
+
+#     def run(self,lst):
+#         while self.__running.isSet():
+#             self.__flag.wait()      # 为True时立即返回, 为False时阻塞直到内部的标识位为True后返回
+#             print (time.time())
+#             time.sleep(1)
+
+#     def pause(self):
+#         self.__flag.clear()     # 设置为False, 让线程阻塞
+
+#     def resume(self):
+#         self.__flag.set()    # 设置为True, 让线程停止阻塞
+
+#     def stop(self):
+#         self.__flag.set()       # 将线程从暂停状态恢复, 如何已经暂停的话
+#         self.__running.clear()        # 设置为False 
 
 def runn(conn1,conn2):
     conn2.close()
-    lst = []
-    Thread(target=run,args=(lst,)).start()
+
+    t = ThreadPoolExecutor(1)
+
     while True:
         try :
             msg = conn1.recv()
-            lst.append(msg)
+            t.submit(run,msg,t)
+            if t._work_queue.qsize() > 1:
+                print('还有备份数据的数量:%s'%t._work_queue.qsize())
         except EOFError:  #抛出无数据时异常
             conn1.close()
             break
@@ -96,20 +165,26 @@ def setattr_data(di,fields,objid,name,value):
     di[objid][fields.index(name)] = value
 
 # 选择哪个运行 后期可以实现
-def whichrun(f1,f2,mustrun=True):
+def whichrun(self,f1,f2,mustrun=True):
     re1 = f1[0](*f1[1])
     if mustrun:
-        re2 = f2[0](*f2[1])
-    else:
-        return re1
-    if re1 != re2:
-        print('re1 != re2',re1,re2)
-    else:
-        print('运行了whichrun' ,end='\r')
-    return re2
+        # re2 = f2[0](*f2[1])
+        self.mself.conn.send(f2)
+
+    return re1
+
+    # else:
+    #     return re1
+    # if re1 != re2:
+    #     print('re1 != re2',re1,re2)
+    # else:
+    #     print('运行了whichrun' ,end='\r')
+    # return re2
 
 class MyModels(object):
     all_data = []
+    mysql_data = []
+    local_data = []
     def __init__(self,model=None,obj=None,objid=None):
         self.model = model
         self.obj = obj
@@ -148,7 +223,7 @@ class MyModels(object):
 
             re1 = (getattr_data,(di,fields,objid,name))
             re2 = (getattr,(self.obj,name))
-            return whichrun(re1,re2,False)
+            return whichrun(self,re1,re2,False)
         elif self.model == models.Content and name in CONTENT_FIELDS:
             fields = CONTENT_FIELDS
             di = self.contentdict
@@ -156,13 +231,17 @@ class MyModels(object):
 
             re1 = (getattr_data,(di,fields,objid,name))
             re2 = (getattr,(self.obj,name))
-            return whichrun(re1,re2,False)
+            return whichrun(self,re1,re2,False)
         elif self.model == models.HGFile and name in HGFILE_FIELDS:
             return getattr(self.obj,name)
 
 
         elif name == 'DoesNotExist':
             return self.model.DoesNotExist
+
+        # elif name in ('__name__',):
+        #     super().__name__
+
         elif name not in ('objects','labels'):
             raise ValueError('name:%s is not in default' % name)
 
@@ -184,14 +263,9 @@ class MyModels(object):
 
             re1 = (setattr_data,(di,fields,objid,name,value))
 
-            def _temp(self,name,value):
-                obj = self.obj
-                if not obj:
-                    obj = self.model.objects.get(id=self.objid)
-                    self.obj = obj
-                return setattr(obj,name,value)
-            re2 = (_temp,(self,name,value))
-            return whichrun(re1,re2)
+
+            re2 = (setattr_temp,(Label,objid,name,value))
+            return whichrun(self,re1,re2,False)
 
 
         elif self.model == models.Content and name in CONTENT_FIELDS:
@@ -201,14 +275,9 @@ class MyModels(object):
 
             re1 = (setattr_data,(di,fields,objid,name,value))
 
-            def _temp(self,name,value):
-                obj = self.obj
-                if not obj:
-                    obj = self.model.objects.get(id=self.objid)
-                    self.obj = obj
-                return setattr(obj,name,value)
-            re2 = (_temp,(self,name,value))
-            return whichrun(re1,re2)
+
+            re2 = (setattr_temp,(Content,objid,name,value))
+            return whichrun(self,re1,re2,False)
 
         elif self.model == models.HGFile and name in HGFILE_FIELDS:
             setattr(self.obj,name,value)
@@ -223,12 +292,36 @@ class MyModels(object):
 
     def get_data(self):
         if not self.all_data:
-            filename = 'alldata.dat'
-            all_data = get_all_data_from_mysql(filename)
-            self.all_data.append(all_data[0])
-            self.all_data.append(all_data[1])
-            self.all_data.append(all_data[2])
-            self.all_data.append(all_data[3])
+            all_data = get_all_data_from_mysql()
+            if os.path.exists(ALLDATA_FILENAME):
+                loacal_all_data = get_all_data_from_local()
+                if get_md5(all_data) != get_md5(loacal_all_data):
+
+                    get_md5_bj(all_data,loacal_all_data)
+                    print(get_md5(all_data))
+                    print(get_md5(loacal_all_data))
+                    print('数据不一致保存到了', save_all_data(*all_data,True))
+                    # raise ValueError('mysql data different from local data')
+                    # all_data = loacal_all_data
+                    self.mysql_data.append(all_data[0])
+                    self.mysql_data.append(all_data[1])
+                    self.mysql_data.append(all_data[2])
+                    self.mysql_data.append(all_data[3])
+
+                    self.local_data.append(loacal_all_data[0])
+                    self.local_data.append(loacal_all_data[1])
+                    self.local_data.append(loacal_all_data[2])
+                    self.local_data.append(loacal_all_data[3])
+                else:
+                    print('数据一致性验证完毕')
+            else:
+                loacal_all_data = all_data
+                print('未获得本地数据')
+
+            self.all_data.append(loacal_all_data[0])
+            self.all_data.append(loacal_all_data[1])
+            self.all_data.append(loacal_all_data[2])
+            self.all_data.append(loacal_all_data[3])
 
         self.labeldict,self.contentdict,self.get_labels_by_content,self.get_contents_by_label = self.all_data
 
@@ -251,7 +344,7 @@ class MyModels(object):
         return allfun(*args,**kw)
 
     def labels_add(self,label):
-
+        a = 1
         def _labels_add(label):
             objid = self.objid
             if hasattr(label,'objid'):
@@ -271,18 +364,9 @@ class MyModels(object):
             else:
                 self.get_contents_by_label[labelid] = {objid}
 
-        def labels_add(label):
-            if label.obj:
-                lobj = label.obj
-            else:
-                lobj = Label.objects.get(id=label.objid)
-            self.obj.labels.add(lobj)
-
-
-
         re1 = (_labels_add,(label,))
-        re2 = (labels_add,(label,))
-        return whichrun(re1,re2)
+        re2 = (myModels_labels_add,(label.objid,self.objid))
+        return whichrun(self,re1,re2)
 
     def labels_remove(self,label):
 
@@ -294,27 +378,20 @@ class MyModels(object):
                 labelid = label.id
 
             labelset = self.get_labels_by_content.get(objid)
-            if labelset:
-                labelset.remove(labelid)
+            if labelset and labelid in labelset:
+                    labelset.remove(labelid)
             else:
                 self.get_labels_by_content[objid] = {labelid}
 
             contentset = self.get_contents_by_label.get(labelid)
-            if contentset:
-                contentset.remove(objid)
+            if contentset and objid in contentset:
+                    contentset.remove(objid)
             else:
                 self.get_contents_by_label[labelid] = {objid}
 
-        def labels_remove(label):
-            if label.obj:
-                lobj = label.obj
-            else:
-                lobj = Label.objects.get(id=label.objid)
-            self.obj.labels.remove(lobj)
-
         re1 = (_labels_remove,(label,))
-        re2 = (labels_remove,(label,))
-        return whichrun(re1,re2)
+        re2 = (myModels_labels_remove,(label.objid,self.objid))
+        return whichrun(self,re1,re2)
 
     def create(self,*args,**kw):
         obj = self.model.objects.create(*args,**kw)
@@ -328,8 +405,11 @@ class MyModels(object):
 
     def save(self):
         re1 = (lambda:None,())
-        re2 = (self.obj.save,())
-        return whichrun(re1,re2)
+        if self.model == Label:
+            re2 = (objsave,(Label,self.labeldict[self.objid]))
+        elif self.model == Content:
+            re2 = (objsave,(Content,self.contentdict[self.objid]))
+        return whichrun(self,re1,re2)
 
     def filter_cid_by_textlst(self,lst):
         resset = set()
@@ -350,19 +430,39 @@ class MyModels(object):
 
     def labels_all(self,*args,**kw):
         data = self.obj.labels.all(*args,**kw)
+
+        print('------------------------')
+        for ins in inspect.stack():
+            print('%s \n lineno:%s  --  %s'%(ins.filename,ins.lineno,''.join(ins.code_context).strip()))
+
         return MyQuery(data)
 
     def objects_all(self,*args,**kw):
         data = self.model.objects.all(*args,**kw)
+        
+        print('------------------------')
+        for ins in inspect.stack():
+            print('%s \n lineno:%s  --  %s'%(ins.filename,ins.lineno,''.join(ins.code_context).strip()))
+
         return MyQuery(data)
 
     def get(self,*args,**kw):
         obj = self.model.objects.get(*args,**kw)
+        
+        print('------------------------')
+        for ins in inspect.stack():
+            print('%s \n lineno:%s  --  %s'%(ins.filename,ins.lineno,''.join(ins.code_context).strip()))
+
         obj = MyModels(self.model,obj)
         return obj
 
     def filter(self,*args,**kw):
         data = self.model.objects.filter(*args,**kw)
+        
+        print('------------------------')
+        for ins in inspect.stack():
+            print('%s \n lineno:%s  --  %s'%(ins.filename,ins.lineno,''.join(ins.code_context).strip()))
+
         return MyQuery(data)
 
 
@@ -426,13 +526,93 @@ def get_md5(lst):
     for l in lst:
         ll = list(l.items())
         ll.sort()
+        if ll and type(ll[0][1]) == set:
+            ll = [ (i[0],sorted(list(i[1]))) for i in ll]
         da = str(ll).encode('utf-8')
         # print(len(da))
         m2.update(da)
     return m2.hexdigest()
 
+def get_md5_bj_old(lst1,lst2):
+    m1 = hashlib.md5()
+    m2 = hashlib.md5()
 
-def get_all_data_from_mysql(filename):
+    print('get_md5_bj be')
+    for l1,l2 in zip(lst1,lst2):
+        ll1 = list(l1.items())
+        ll1.sort()
+        if ll1 and type(ll1[0][1]) == set:
+            ll1 = [ (i[0],sorted(list(i[1]))) for i in ll1]
+        da1 = str(ll1).encode('utf-8')
+        m1.update(da1)
+        print(m1.hexdigest())
+
+        ll2 = list(l2.items())
+        ll2.sort()
+        if ll2 and type(ll2[0][1]) == set:
+            ll2 = [ (i[0],sorted(list(i[1]))) for i in ll2]
+        da2 = str(ll2).encode('utf-8')
+        m2.update(da2)
+        print(m2.hexdigest())
+
+    print('get_md5_bj end')
+
+def get_md5_bj(lst1,lst2):
+    res = []
+    show_id = (set(),set())
+    for i,l1,l2 in zip([0,1,2,3],lst1,lst2):
+        r = []
+        setl1 = set(l1) - set(l2)
+        setl2 = set(l2) - set(l1)
+        setl3 = set(l2) & set(l1)
+
+        for s in setl1:
+            r.append([[s,l1[s]],['XXXXXXXXXXXXX']])
+            if i == 2:
+                show_id[1].add(s)
+                show_id[0].update(l1[s])
+            elif i == 3:
+                show_id[0].add(s)
+                show_id[1].update(l1[s])
+
+        for s in setl2:
+            r.append(['XXXXXXXXXXXXX'],[s,l2[s]])
+            if i == 2:
+                show_id[1].add(s)
+                show_id[0].update(l2[s])
+            elif i == 3:
+                show_id[0].add(s)
+                show_id[1].update(l2[s])
+
+        for s in setl3:
+            if l1[s] != l2[s]:
+                r.append([[s,l1[s]],[s,l2[s]]])
+                if i == 2:
+                    show_id[1].add(s)
+                    show_id[0].update(l1[s])
+                elif i == 3:
+                    show_id[0].add(s)
+                    show_id[1].update(l1[s])
+
+        res.append(r)
+
+
+
+
+    pprint(res)
+    print(show_id)
+
+
+    print('labels:')
+    for i in show_id[0]:
+        print('   ',i,lst1[0][i][1])
+
+
+    print('contents:')
+    for i in show_id[1]:
+        print('   ',i,lst1[1][i][1])
+
+def get_all_data_from_mysql():
     get_labels_by_content = {}
     get_contents_by_label = {}
 
@@ -461,26 +641,31 @@ def get_all_data_from_mysql(filename):
         else:
             contents_set.add(row[0])
     print('finish get_all_data_from_mysql')
-    print(get_md5((labeldict,contentdict,get_labels_by_content,get_contents_by_label)))
+    # print(get_md5((labeldict,contentdict,get_labels_by_content,get_contents_by_label)))
     return labeldict,contentdict,get_labels_by_content,get_contents_by_label
 
 
 
-def get_all_data_from_local(filename):
-    with open(filename,'rb') as f:
+def get_all_data_from_local():
+    with open(ALLDATA_FILENAME,'rb') as f:
         labeldict = pickle.load(f)
         contentdict = pickle.load(f)
         get_labels_by_content = pickle.load(f)
         get_contents_by_label = pickle.load(f)
     return labeldict,contentdict,get_labels_by_content,get_contents_by_label
 
-def save_all_data(filename,labeldict,contentdict,get_labels_by_content,get_contents_by_label):
+def save_all_data(labeldict,contentdict,get_labels_by_content,get_contents_by_label,isnow=False):
+    filename = ALLDATA_FILENAME
+    if isnow:
+        time_now_str = time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
+        filename += time_now_str
     with open(filename,'wb') as f:
         pickle.dump(labeldict,f)
         pickle.dump(contentdict,f)
         pickle.dump(get_labels_by_content,f)
         pickle.dump(get_contents_by_label,f)
 
+    return filename
 
 def main():
     x = models.Content.objects.get(id=3)
@@ -501,9 +686,8 @@ def main():
 
 
 
-    filename = 'alldata.dat'
     gcts(22)
-    all_data = get_all_data_from_local(filename)
+    all_data = get_all_data_from_local()
     gcts(len(all_data),True)
 
     # all_data = get_all_data_from_mysql(filename)

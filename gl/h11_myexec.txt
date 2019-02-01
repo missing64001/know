@@ -1,10 +1,20 @@
-# import screen_capture
-# import imp 
-# imp.reload(screen_capture)
-# app = QApplication.instance() or QApplication(sys.argv)
-# screen_capture.WScreenShot.run()
-# app.exec_()
-0 / 0 
-tcur = self.textEdit.textCursor()
-tcur.setPosition(25,tcur.MoveAnchor)
-self.textEdit.setTextCursor(tcur)
+self.is_show_labels_pre = False
+# print(len(models.local_data[0]))
+if models.local_data and models.mysql_data:
+    if self.cl_bt_bt.text() == 'mysql':
+        self.cl_bt_bt.setText('local')
+        models.all_data[0] = models.local_data[0]
+        models.all_data[1] = models.local_data[1]
+        models.all_data[2] = models.local_data[2]
+        models.all_data[3] = models.local_data[3]
+    elif self.cl_bt_bt.text() == 'local':
+        self.cl_bt_bt.setText('mysql')
+
+        models.all_data[0] = models.mysql_data[0]
+        models.all_data[1] = models.mysql_data[1]
+        models.all_data[2] = models.mysql_data[2]
+        models.all_data[3] = models.mysql_data[3]
+    self.tree.mysender(self.content_layout_current_id)
+
+
+self.is_show_labels_pre = True
