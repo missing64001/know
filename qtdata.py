@@ -4,7 +4,7 @@ import os
 
 from pprint import pprint
 # import sip
-from hmysql import models,Q,timezone
+from hmysql_for_kqj import models,Q,timezone
 import time
 from django.db import connection
 from functools import reduce
