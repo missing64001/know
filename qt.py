@@ -1464,9 +1464,9 @@ class Mainwindow(QMainWindow):
                 dels = mysql_labelset - local_labelset
                 cobj = MyModels(Content,None,self.content_layout_current_id)
                 for add_ in adds:
-                    cobj.labels.add(add_)
+                    cobj.labels.add(MyModels(Label,None,add_))
                 for del_ in dels:
-                    cobj.labels.remove(del_)
+                    cobj.labels.remove(MyModels(Label,None,del_))
 
         local_all_data = MyModels().all_data
         save_all_data(*local_all_data)
@@ -1641,7 +1641,7 @@ class Mainwindow(QMainWindow):
 
 
 
-            labs = MyQuery(models.all_data[2][obj.id],Label) #        obj.labels.all()
+            labs = MyQuery(models.all_data[2].get(obj.id,{}),Label) #        obj.labels.all()
             # strr = labs.values('name')
             # strr = [ s['name'] for s in strr]
             labs = list(labs)

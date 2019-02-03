@@ -92,6 +92,7 @@ def objsave(model,data):
 def run(f2,t):
     # f2,re1 = lst
     re2 = f2[0](*f2[1])
+
     print('还有备份数据的数量:%s'%t._work_queue.qsize(),end='\r')
 
 
@@ -131,6 +132,9 @@ def runn(conn1,conn2):
             t.submit(run,msg,t)
             if t._work_queue.qsize() > 1:
                 print('还有备份数据的数量:%s'%t._work_queue.qsize())
+            while t._work_queue.qsize() > 5:
+                time.sleep(1)
+                print('还有备份数据的数量:%s 大于5个'%t._work_queue.qsize(),end='\r')
         except EOFError:  #抛出无数据时异常
             conn1.close()
             break
@@ -576,7 +580,7 @@ def get_md5_bj(lst1,lst2):
                 show_id[1].update(l1[s])
 
         for s in setl2:
-            r.append(['XXXXXXXXXXXXX'],[s,l2[s]])
+            r.append([['XXXXXXXXXXXXX'],[s,l2[s]]])
             if i == 2:
                 show_id[1].add(s)
                 show_id[0].update(l2[s])
