@@ -1,5 +1,8 @@
-
-import wmi
+try:
+    import wmi
+except Exception:
+    get_computer_info = ''
+    
 import os
 CURRENTURL = os.path.dirname(__file__)
 
