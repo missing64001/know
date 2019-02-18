@@ -89,19 +89,7 @@ def objsave(model,data):
     obj.save()
 
 
-def run(f2,t):
-    # f2,re1 = lst
-    while True:
-        try:
-            re2 = f2[0](*f2[1])
-            break
-        # except OperationalError as e:
-        except:
-            traceback.print_exc()
-            print('还有备份数据的数量:%s'%t._work_queue.qsize())
-            time.sleep(5)
 
-    print('还有备份数据的数量:%s'%t._work_queue.qsize(),end='\r')
 
 
 # class Job(threading.Thread):
@@ -129,6 +117,32 @@ def run(f2,t):
 #         self.__flag.set()       # 将线程从暂停状态恢复, 如何已经暂停的话
 #         self.__running.clear()        # 设置为False 
 
+
+# 选择哪个运行 后期可以实现 多线程发送
+def whichrun(self,f1,f2,mustrun=True):
+
+    re1 = f1[0](*f1[1])
+    if mustrun:
+        self.mself.conn.send(f2)
+
+    return re1
+
+# 多线程
+def run(f2,t):
+    # f2,re1 = lst
+    while True:
+        try:
+            re2 = f2[0](*f2[1])
+            break
+        # except OperationalError as e:
+        except:
+            traceback.print_exc()
+            print('还有备份数据的数量:%s'%t._work_queue.qsize())
+            time.sleep(5)
+
+    print('还有备份数据的数量:%s'%t._work_queue.qsize(),end='\r')
+
+# 多进程接受
 def runn(conn1,conn2):
     conn2.close()
 
@@ -176,30 +190,8 @@ def getattr_data(di,fields,objid,name):
 def setattr_data(di,fields,objid,name,value):
     di[objid][fields.index(name)] = value
 
-# 选择哪个运行 后期可以实现
-def whichrun(self,f1,f2,mustrun=True):
 
-    re1 = f1[0](*f1[1])
-    if mustrun:
-        # re2 = f2[0](*f2[1])
 
-        # print('------------------------')
-        # for ins in inspect.stack():
-        #     print('%s \n lineno:%s  --  %s'%(ins.filename,ins.lineno,''.join(ins.code_context).strip()))
-        # print('++++++++++++++++++++++++')
-        # pprint(f2)
-
-        self.mself.conn.send(f2)
-
-    return re1
-
-    # else:
-    #     return re1
-    # if re1 != re2:
-    #     print('re1 != re2',re1,re2)
-    # else:
-    #     print('运行了whichrun' ,end='\r')
-    # return re2
 
 class MyModels(object):
     all_data = []
