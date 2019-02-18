@@ -261,7 +261,10 @@ class TextEdit(QTextEdit):
     def keyPressEvent(self, event):
         # return myexec()
         # print(event.key())
+        # 
+        
         if event.key() == Qt.Key_Tab:
+            'table'
             if QApplication.keyboardModifiers()==Qt.ControlModifier:
                 print('alt table')
             else:
@@ -309,7 +312,7 @@ class TextEdit(QTextEdit):
 
 
         elif event.key() == Qt.Key_Backspace:
-
+            'Backspace'
             x = self.textCursor()
             if x.selectedText() == '':
                 self.moveCursor(x.PreviousWord,x.KeepAnchor)
@@ -323,6 +326,7 @@ class TextEdit(QTextEdit):
             QTextEdit.keyPressEvent(self,event)
 
         elif event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            'Enter'
             if self.mself.cl_bt_le.text() == '<git>' and self.mself.content_layout_current_id == None:
 
                 self.git_keypress_enter()
@@ -342,17 +346,28 @@ class TextEdit(QTextEdit):
             self.insertPlainText(' '*i)
 
         elif event.key() == 70:
+            'f'
             if QApplication.keyboardModifiers()==Qt.ControlModifier:
-                # print('ctrl+f')
-                self.exec_test()
+                'ctrl + f'
+                history = self.mself.hc.addhistoryex(self.toPlainText())
+                cursor = self.textCursor()
+                if history[0] == -1:
+                    self.moveCursor(cursor.End,cursor.MoveAnchor)
+                    self.insertPlainText(history[1])
+                    cursor.setPosition(history[2],cursor.MoveAnchor)
+                    self.setTextCursor(cursor)
+                else:
+                    cursor.setPosition(history[0],cursor.MoveAnchor)
+                    self.setTextCursor(cursor)
+                    self.insertPlainText(history[1])
+                    self.moveCursor(cursor.Left,cursor.MoveAnchor)
             else:
                 QTextEdit.keyPressEvent(self,event)
 
         # ctrl shift v
         elif event.key() == 86 and QApplication.keyboardModifiers() == Qt.ControlModifier | Qt.ShiftModifier:
-
             clipboard = QApplication.clipboard()
-            s = clipboard.text()
+            s = clipboard.text().replace('\n','')
             self.insertPlainText(s)
 
         else:
@@ -414,18 +429,9 @@ class TextEdit(QTextEdit):
     def exec_test(self,**kw):
         print('exec_test')
         return myexec()
-        history = self.mself.hc.addhistoryex(self.toPlainText())
-        cursor = self.textCursor()
-        if history[0] == -1:
-            self.moveCursor(cursor.End,cursor.MoveAnchor)
-            self.insertPlainText(history[1])
-            cursor.setPosition(history[2],cursor.MoveAnchor)
-            self.setTextCursor(cursor)
-        else:
-            cursor.setPosition(history[0],cursor.MoveAnchor)
-            self.setTextCursor(cursor)
-            self.insertPlainText(history[1])
-            self.moveCursor(cursor.Left,cursor.MoveAnchor)
+        clipboard = QApplication.clipboard()
+        s = clipboard.text().replace('\n','')
+        self.insertPlainText(s)
 
 class TreeWidgetItem(QTreeWidgetItem):
     def __init__(self, *arg, **kw):
@@ -1610,6 +1616,7 @@ class Mainwindow(QMainWindow):
 
     def show_labels(self):
         # 设置 textedit 和 cl_bt_le 的文字 并生成标签
+        # return myexec()
         for bt in self.show_label_lst:
             sip.delete(bt)
         self.show_label_lst = []
@@ -1645,7 +1652,7 @@ class Mainwindow(QMainWindow):
             # strr = labs.values('name')
             # strr = [ s['name'] for s in strr]
             labs = list(labs)
-            
+            # pprint(models.all_data[2].get(obj.id,{}))
             strr = [la.name for la in labs]
 
             labs = [ {'id':la.id,
@@ -1783,9 +1790,10 @@ class Mainwindow(QMainWindow):
         # ql.exec_()
 
     def dia_ok_bt_clicked(self):
+        # return myexec()
         obj = MyModels(Content,None,self.content_layout_current_id)
 
-        objlabelset = self.get_labels_by_content.get(obj.id,set())
+        objlabelset = models.all_data[2].get(obj.id,None)
         changedlabelset = []
 
         add_label_id = None
@@ -1800,8 +1808,12 @@ class Mainwindow(QMainWindow):
 
 
         lobj = self.ltree.get_currentItem_model_data()['object']
-        objlabelset = set(objlabelset)
-        objlabelset.add(lobj.id)
+        # objlabelset = set(objlabelset)
+        if not objlabelset:
+            objlabelset = {lobj.id}
+        else:
+            objlabelset.add(lobj.id)
+        
         if del_label_id == lobj.id:
             del_label_id = None
         else:
@@ -1809,7 +1821,8 @@ class Mainwindow(QMainWindow):
 
         obj.labels.add(lobj)
 
-
+        # print(objlabelset)
+        models.all_data[2][obj.id] = objlabelset
         # 修改label content置顶
         que = QueueDeal(lobj.queue)
         id_ = str(obj.id)
@@ -1821,10 +1834,6 @@ class Mainwindow(QMainWindow):
 
 
         # 根据修改的label移动content
-
-
-
-
         self.contentmove(obj.id,add_label_id,del_label_id)
 
         # self.get_contents_by_label = {}

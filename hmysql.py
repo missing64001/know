@@ -91,7 +91,15 @@ def objsave(model,data):
 
 def run(f2,t):
     # f2,re1 = lst
-    re2 = f2[0](*f2[1])
+    while True:
+        try:
+            re2 = f2[0](*f2[1])
+            break
+        # except OperationalError as e:
+        except:
+            traceback.print_exc()
+            print('还有备份数据的数量:%s'%t._work_queue.qsize())
+            time.sleep(5)
 
     print('还有备份数据的数量:%s'%t._work_queue.qsize(),end='\r')
 
@@ -170,9 +178,17 @@ def setattr_data(di,fields,objid,name,value):
 
 # 选择哪个运行 后期可以实现
 def whichrun(self,f1,f2,mustrun=True):
+
     re1 = f1[0](*f1[1])
     if mustrun:
         # re2 = f2[0](*f2[1])
+
+        # print('------------------------')
+        # for ins in inspect.stack():
+        #     print('%s \n lineno:%s  --  %s'%(ins.filename,ins.lineno,''.join(ins.code_context).strip()))
+        # print('++++++++++++++++++++++++')
+        # pprint(f2)
+
         self.mself.conn.send(f2)
 
     return re1
@@ -562,6 +578,7 @@ def get_md5_bj_old(lst1,lst2):
     print('get_md5_bj end')
 
 def get_md5_bj(lst1,lst2):
+    # all_data,loacal_all_data
     res = []
     show_id = (set(),set())
     for i,l1,l2 in zip([0,1,2,3],lst1,lst2):
@@ -580,6 +597,11 @@ def get_md5_bj(lst1,lst2):
                 show_id[1].update(l1[s])
 
         for s in setl2:
+            if l2[s] == set():
+                print(s)
+                del l2[s]
+                continue
+
             r.append([['XXXXXXXXXXXXX'],[s,l2[s]]])
             if i == 2:
                 show_id[1].add(s)
@@ -615,6 +637,7 @@ def get_md5_bj(lst1,lst2):
     print('contents:')
     for i in show_id[1]:
         print('   ',i,lst1[1][i][1])
+    return res
 
 def get_all_data_from_mysql():
     get_labels_by_content = {}
@@ -672,46 +695,84 @@ def save_all_data(labeldict,contentdict,get_labels_by_content,get_contents_by_la
     return filename
 
 def main():
-    x = models.Content.objects.get(id=3)
-    print(x)
-    print(getattr(x,'pk'))
-    pprint(dir(x))
-    # for name in dir(x):
-    #     print(name,getattr(x,name))
-    # print(list(x))
+    from django.db.utils import OperationalError
+    # from pymysql.err import OperationalError
+    while True:
+        input()
+        try:
+            x = models.Content.objects.get(id=3)
+            print(x)
+        except OperationalError as e:
+            traceback.print_exc()
+
+        except:
+            print('new')
+            traceback.print_exc()
     
+def set_local_data_to_mysql():
+    # m = MyModels()
+    # m.get_data()
+    all_data = get_all_data_from_mysql()
+    loacal_all_data = get_all_data_from_local()
+    res = get_md5_bj(all_data,loacal_all_data)
+    labeldict,contentdict,get_labels_by_content,get_contents_by_label = loacal_all_data
+    # pprint(res[0])
+    labels = []
+    contents = []
+    lc = []
 
-    exit()
+    for rs in res[:1]:
+        for r in rs:
+            labels.append(r[0][0])
+            # print(r[0][0])
+    print(labels)
+    for l in labels:
+        obj = Label.objects.get(id=l)
+        obj.name = labeldict[l][LABEL_FIELDS.index('name')]
+        obj.pid = labeldict[l][LABEL_FIELDS.index('pid')]
+        obj.queue = labeldict[l][LABEL_FIELDS.index('queue')]
+        obj.grade = labeldict[l][LABEL_FIELDS.index('grade')]
+        obj.save()
+
+
+    for rs in res[1:2]:
+        for r in rs:
+            contents.append(r[0][0])
+    print(contents)
+    for i in contents:
+        obj = Content.objects.get(id=i)
+        obj.name = contentdict[i][CONTENT_FIELDS.index('name')]
+        obj.text = contentdict[i][CONTENT_FIELDS.index('text')]
+        obj.save()
+
+    for rs in res[2:3]:
+        for r in rs:
+            lc.append(r[1][0])
+    print(lc)
+    for i in lc:
+        local_labelset = loacal_all_data[2].get(i,set())
+        mysql_labelset = all_data[2].get(i,set())
+        adds = local_labelset - mysql_labelset
+        dels = mysql_labelset - local_labelset
+        # cobj = MyModels(Content,None,i)
+        cobj = Content.objects.get(id=i)
+        for add_ in adds:
+            cobj.labels.add(Label.objects.get(id=add_))
+        for del_ in dels:
+            cobj.labels.remove(Label.objects.get(id=del_))
 
 
 
 
+# C:\Users\Administrator\AppData\Local\Programs\Python\Python35\Lib\site-packages\pymysql\connections.py
+# 744  - self.ping
 
 
 
-
-    gcts(22)
-    all_data = get_all_data_from_local()
-    gcts(len(all_data),True)
-
-    # all_data = get_all_data_from_mysql(filename)
-
-    md5 = get_md5(all_data)
-    gcts(md5)
-    print(md5)
-    tprintex()
-    # save_all_data(filename,*all_data)
-
-
-
-
-
-
-    # pprint(get_labels_by_content)
-
-    
+# objsave = 3
 if __name__ == '__main__':
     main()
+    # set_local_data_to_mysql()
 else:
     # mymodels = MyModels()
     pass

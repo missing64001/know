@@ -1,9 +1,5 @@
-try:
-    import wmi
-    Nowmi = False
-except Exception:
-    Nowmi = True
 
+import wmi
 import os
 CURRENTURL = os.path.dirname(__file__)
 
@@ -47,7 +43,4 @@ def get_disk_info():
 if __name__ == '__main__':
     main()
 
-if Nowmi:
-    get_computer_info = ''
-else:
-    get_computer_info = get_computer_info()
+get_computer_info = get_computer_info()
