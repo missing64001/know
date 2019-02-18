@@ -128,38 +128,52 @@ def whichrun(self,f1,f2,mustrun=True):
     return re1
 
 # 多线程
-def run(f2,t):
+def run():
+    global QUE
+    global RUNN_ALIVE
     # f2,re1 = lst
     while True:
+        f2 = QUE.get()
+
         try:
             re2 = f2[0](*f2[1])
-            break
+            print('未完成数量',QUE.qsize())
         # except OperationalError as e:
         except:
             traceback.print_exc()
-            print('还有备份数据的数量:%s'%t._work_queue.qsize())
-            time.sleep(5)
+            RUNN_ALIVE = False
 
-    print('还有备份数据的数量:%s'%t._work_queue.qsize(),end='\r')
+            qq = queue.Queue()
+            qq.put(f2)
+            while not QUE.empty():
+                qq.put(QUE.get())
+            QUE = qq
+            break
+
+
+
+
 
 # 多进程接受
-def runn(conn1,conn2):
-    conn2.close()
+def runn(conn1,conn2,que):
+    global QUE
+    global RUNN_ALIVE
+    RUNN_ALIVE = True
+    if que:
+        QUE = que
+    else:
+        QUE = queue.Queue()
 
-    t = ThreadPoolExecutor(1)
+    t1 = Thread(target=run)
+    while RUNN_ALIVE:
+        msg = conn1.recv()
+        QUE.put(msg)
+        if not t1.isAlive():
+            t1 = Thread(target=run)
+            t1.start()
 
-    while True:
-        try :
-            msg = conn1.recv()
-            t.submit(run,msg,t)
-            if t._work_queue.qsize() > 1:
-                print('还有备份数据的数量:%s'%t._work_queue.qsize())
-            while t._work_queue.qsize() > 5:
-                time.sleep(1)
-                print('还有备份数据的数量:%s 大于5个'%t._work_queue.qsize(),end='\r')
-        except EOFError:  #抛出无数据时异常
-            conn1.close()
-            break
+    conn2.send(QUE)
+
 
 
 
@@ -687,19 +701,32 @@ def save_all_data(labeldict,contentdict,get_labels_by_content,get_contents_by_la
     return filename
 
 def main():
-    from django.db.utils import OperationalError
-    # from pymysql.err import OperationalError
-    while True:
-        input()
-        try:
-            x = models.Content.objects.get(id=3)
-            print(x)
-        except OperationalError as e:
-            traceback.print_exc()
+    q = queue.Queue()
 
-        except:
-            print('new')
-            traceback.print_exc()
+    for i in range(5):
+        q.put(i)
+
+    while not q.empty():
+        print (q.get())
+
+
+
+
+
+
+    # from django.db.utils import OperationalError
+    # # from pymysql.err import OperationalError
+    # while True:
+    #     input()
+    #     try:
+    #         x = models.Content.objects.get(id=3)
+    #         print(x)
+    #     except OperationalError as e:
+    #         traceback.print_exc()
+
+    #     except:
+    #         print('new')
+    #         traceback.print_exc()
     
 def set_local_data_to_mysql():
     # m = MyModels()

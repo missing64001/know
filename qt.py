@@ -4,7 +4,7 @@ import os
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFrame,QSplitter, QStyleFactory, QApplication
 from PyQt5.QtWidgets import QTreeWidget, QTextEdit, QMainWindow, QTreeWidgetItem, QLineEdit,QPushButton, QLabel
 from PyQt5.QtWidgets import QDialog, QShortcut, QAbstractItemView, QAction ,QMessageBox
-from PyQt5.QtCore import Qt, QTimer, QRegExp
+from PyQt5.QtCore import Qt, QTimer, QRegExp ,QThread
 from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat ,QTextDocumentFragment ,QTextOption ,QClipboard
 
 
@@ -62,7 +62,17 @@ def gettype(obj):
     return
 #-------------------重写formysql-------------------
 
+class ConnThread(QThread):
+    def __init__(self,mself):
+        super().__init__()
+        self.mself = mself
 
+    def run(self):
+        que = None
+        while True:
+            conn1, self.mself.conn = Pipe()
+            Process(target=runn,args = (conn1,self.mself.conn,que)).start()
+            # que = conn1.recv()
 
 class PushButton(QPushButton):
     def __init__(self, *arg, **kw):
@@ -1323,10 +1333,8 @@ class Mainwindow(QMainWindow):
 
         self.iaa = 1
 
-        conn1, self.conn = Pipe()
-        Process(target=runn,args = (conn1,self.conn)).start()
-        conn1.close()
-
+        t1 = ConnThread(self)
+        t1.start()
 
         self.initUI()
 
