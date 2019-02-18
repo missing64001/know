@@ -128,7 +128,7 @@ def whichrun(self,f1,f2,mustrun=True):
     return re1
 
 # 多线程
-def run():
+def run(conn1):
     global QUE
     global RUNN_ALIVE
     # f2,re1 = lst
@@ -136,11 +136,12 @@ def run():
         f2 = QUE.get()
 
         try:
-            re2 = f2[0](*f2[1])
             print('未完成数量',QUE.qsize())
+            re2 = f2[0](*f2[1])
         # except OperationalError as e:
         except:
-            traceback.print_exc()
+            # traceback.print_exc()
+            print('出错了')
             RUNN_ALIVE = False
 
             qq = queue.Queue()
@@ -150,29 +151,35 @@ def run():
             QUE = qq
             break
 
-
+    conn1.close()
 
 
 
 # 多进程接受
-def runn(conn1,conn2,que):
+def runn(conn1,conn2,lst):
+    conn2.close()
     global QUE
     global RUNN_ALIVE
     RUNN_ALIVE = True
-    if que:
-        QUE = que
-    else:
-        QUE = queue.Queue()
+    QUE = queue.Queue()
+    for l in lst:
+        QUE.put(l)
 
     t1 = Thread(target=run)
     while RUNN_ALIVE:
         msg = conn1.recv()
         QUE.put(msg)
         if not t1.isAlive():
-            t1 = Thread(target=run)
+            t1 = Thread(target=run,args=(conn1,))
             t1.start()
 
-    conn2.send(QUE)
+    print('3秒后重新启动mysql处理')
+    time.sleep(3)
+    lst = []
+    while not QUE.empty():
+        lst.append(QUE.get())
+    conn1.send(lst)
+    conn1.close()
 
 
 

@@ -68,11 +68,13 @@ class ConnThread(QThread):
         self.mself = mself
 
     def run(self):
-        que = None
+        lst = []
         while True:
             conn1, self.mself.conn = Pipe()
-            Process(target=runn,args = (conn1,self.mself.conn,que)).start()
-            # que = conn1.recv()
+            Process(target=runn,args = (conn1,self.mself.conn,lst)).start()
+            conn1.close()
+            lst = self.mself.conn.recv()
+            self.mself.conn.close()
 
 class PushButton(QPushButton):
     def __init__(self, *arg, **kw):
