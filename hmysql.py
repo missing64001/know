@@ -136,7 +136,8 @@ def run(conn1):
         f2 = QUE.get()
 
         try:
-            print('未完成数量',QUE.qsize())
+            end = '\n' if QUE.qsize() > 5 else '\r'
+            print('未完成数量',QUE.qsize(),end=end)
             re2 = f2[0](*f2[1])
         # except OperationalError as e:
         except:
@@ -144,14 +145,14 @@ def run(conn1):
             print('出错了')
             RUNN_ALIVE = False
 
-            qq = queue.Queue()
-            qq.put(f2)
+            lst = []
+            lst.append(f2)
             while not QUE.empty():
-                qq.put(QUE.get())
-            QUE = qq
+                lst.append(QUE.get())
+            conn1.send(lst)
+            conn1.close()
+            RUNN_ALIVE = False
             break
-
-    conn1.close()
 
 
 
@@ -165,21 +166,20 @@ def runn(conn1,conn2,lst):
     for l in lst:
         QUE.put(l)
 
-    t1 = Thread(target=run)
+    t1 = Thread(target=run,args=(conn1,))
+    t1.start()
     while RUNN_ALIVE:
-        msg = conn1.recv()
+        try:
+            msg = conn1.recv()
+        except EOFError:
+            break
         QUE.put(msg)
         if not t1.isAlive():
             t1 = Thread(target=run,args=(conn1,))
             t1.start()
 
-    print('3秒后重新启动mysql处理')
-    time.sleep(3)
-    lst = []
-    while not QUE.empty():
-        lst.append(QUE.get())
-    conn1.send(lst)
-    conn1.close()
+    print('10秒后重新启动mysql处理')
+    time.sleep(10)
 
 
 
