@@ -1,3 +1,0 @@
-clipboard = QApplication.clipboard()
-s = clipboard.text().replace('\n','')
-self.insertPlainText(s)
