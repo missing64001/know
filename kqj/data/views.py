@@ -85,7 +85,10 @@ def xs_view(request):
     last20 = {}
     ml = {'jl':('剑来',r'https://tieba.baidu.com/f?kw=%BD%A3%C0%B4&fr=ala0&loc=rec'),
     'ddct':('大道朝天',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E5%A4%A7%E9%81%93%E6%9C%9D%E5%A4%A9&fr=search'),
-    'xxtx':('侠行天下',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search')}
+    'xxtx':('侠行天下',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
+    'cjzj':('重生之超级战舰',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
+    'dqjy':('地球纪元',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
+    }
 
     for name,lst in xsdict.items():
         lst.sort(key=lambda x:x[0])
