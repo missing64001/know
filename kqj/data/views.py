@@ -75,9 +75,9 @@ def xs_view(request):
                 res = res[0]
                 lst = xsdict.get(res[0])
                 if lst:
-                    lst.append((int(res[1]),res[2],os.path.join(curdir,file)))
+                    lst.append((int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file)))
                 else:
-                    xsdict[res[0]] = [(int(res[1]),res[2],os.path.join(curdir,file))]
+                    xsdict[res[0]] = [(int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file))]
 
         break
 

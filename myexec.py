@@ -1,5 +1,10 @@
 
 
+import re
+file = '20190222 ddct0496 第五十七章举世之敌.txt'
+res = re.findall(r'\d+ (.+?)(\d+) (.+?).txt',file)
+res = res[0]
+print(res)
 exit()
 
 
