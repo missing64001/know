@@ -142,16 +142,24 @@ def run(conn1):
         # except OperationalError as e:
         except:
             # traceback.print_exc()
-            print('出错了')
+            print('出错了，并对数据进行备份')
             RUNN_ALIVE = False
 
             lst = []
             lst.append(f2)
             while not QUE.empty():
                 lst.append(QUE.get())
+
+            print('10秒后重新启动mysql处理')
+            filename = os.path.join(CURRENTURL,'gl','errbak.dat')
+            with open(filename,'wb') as f:
+                pickle.dump(lst,f)
+                
+            time.sleep(10)
             conn1.send(lst)
             conn1.close()
             RUNN_ALIVE = False
+
             break
 
 
@@ -178,8 +186,8 @@ def runn(conn1,conn2,lst):
             t1 = Thread(target=run,args=(conn1,))
             t1.start()
 
-    print('10秒后重新启动mysql处理')
-    time.sleep(10)
+    
+    
 
 
 
@@ -427,6 +435,8 @@ class MyModels(object):
         return whichrun(self,re1,re2)
 
     def create(self,*args,**kw):
+
+
         obj = self.model.objects.create(*args,**kw)
 
         if isinstance(obj,models.Label):

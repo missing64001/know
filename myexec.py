@@ -1,19 +1,6 @@
 
 
-
-a = {1,5}
-b = {1,2}
-
-a.update(b)
-print(a)
-
-print(set(a)-set(b))
-print(set(b)-set(a))
-print(set(b)&set(a))
 exit()
-
-
-
 
 
 
