@@ -91,7 +91,7 @@ class run_class(object):
         filename = os.path.join(CURRENTURL, 'ml.txt')
         with open(filename,'r',encoding='utf-8') as f:
             data = f.read()
-
+        data = data.replace('\ufeff','')
         for da in data.strip().split('\n'):
             dalst = da.split(',')
             dd.append([dalst[0],dalst[1]])
@@ -121,6 +121,7 @@ class run_class(object):
 
     def save_mulu(self,url,filename,name):
         self.url = url
+        # print(url)
         self.filename = filename
         self.name = name
         str1 = "<dd><a href=\""
