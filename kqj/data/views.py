@@ -111,9 +111,20 @@ def getxsdata_view(request):
             if res:
                 res = res[0]
                 xsdict[res[0] + str(int(res[1]))] = os.path.join(curdir,file)
-    filename = xsdict[request.GET.get('name')]
-    with open(filename,'r') as f:
-        data = f.read()
+
+    name = request.GET.get('name')
+    name = name.split('-')
+    names = []
+    if len(name) == 3:
+        for i in range(int(name[2])):
+            names.append(name[0] + str(int(res[1])+i))
+
+
+    data = ''
+    for name in names:
+        filename = xsdict[name]
+        with open(filename,'r') as f:
+            data += f.read()
     return HttpResponse(data)
     data = '\n'.join([da.strip() for da in data.split('\n') if da.strip()])
     return render(request,'xsdata.html',{'data':data})
