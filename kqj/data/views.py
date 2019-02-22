@@ -117,7 +117,7 @@ def getxsdata_view(request):
     names = []
     if len(name) == 3:
         for i in range(int(name[2])):
-            names.append(name[0] + str(int(res[1])+i))
+            names.append(name[0] + str(int(name[1])+i))
     else:
         names.append(request.GET.get('name'))
 
