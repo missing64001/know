@@ -129,8 +129,8 @@ def getxsdata_view(request):
         filename = xsdict[name]
         with open(filename,'r') as f:
             data += f.read() + '\n'
+    data = '<br/>'.join([da.strip() for da in data.split('\n') if da.strip()])
     return HttpResponse(data)
-    data = '\n'.join([da.strip() for da in data.split('\n') if da.strip()])
     return render(request,'xsdata.html',{'data':data})
 
 

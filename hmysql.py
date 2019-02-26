@@ -156,7 +156,7 @@ def run(conn1):
                 pickle.dump(lst,f)
                 
             time.sleep(10)
-            conn1.send(lst)
+            conn1.send('err')
             conn1.close()
             RUNN_ALIVE = False
 

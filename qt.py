@@ -72,8 +72,19 @@ class ConnThread(QThread):
         while True:
             conn1, self.mself.conn = Pipe()
             Process(target=runn,args = (conn1,self.mself.conn,lst)).start()
+            lst = []
             conn1.close()
-            lst = self.mself.conn.recv()
+
+            while True:
+                res = self.mself.conn.recv()
+                if res == 'err':
+                    filename = os.path.join(CURRENTURL,'gl','errbak.dat')
+                    with open(filename,'rb') as f:
+                        lst = pickle.load(f)
+                    os.remove(filename)
+                    break
+
+
             self.mself.conn.close()
 
 class PushButton(QPushButton):
@@ -1489,8 +1500,14 @@ class Mainwindow(QMainWindow):
 
     def save_Expanded(self):
         filename = os.path.join(CURRENTURL,'expand.dat') 
-        with open(filename,'wb') as f:
-            pickle.dump(self.expanddict,f)
+
+        for _ in range(3):
+            try:
+                with open(filename,'wb') as f:
+                    pickle.dump(self.expanddict,f)
+                break
+            except PermissionError:
+                time.sleep(2)
 
     def load_Expanded(self):
         filename = os.path.join(CURRENTURL,'expand.dat') 
