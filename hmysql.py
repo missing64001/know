@@ -43,7 +43,6 @@ from concurrent.futures import ThreadPoolExecutor
 import queue
 from functools import wraps
 
-
 LABEL_FIELDS = ('id','name','pid','queue','grade','create_date')
 CONTENT_FIELDS = ('id','name','text','create_date')
 HGFILE_FIELDS = ('id','name','path','create_date')

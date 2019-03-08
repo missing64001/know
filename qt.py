@@ -41,7 +41,6 @@ from multiprocessing import Process,Pipe
 
 
 
-
 # from main import models
 
 
@@ -1354,9 +1353,15 @@ class Mainwindow(QMainWindow):
     def connect_db(self):
         #-------------------重写formysql-------------------
         print('每半小时连接一次服务器',end='\r')
-
-        x = list(models.Content.objects.filter(id = -100))
-        print('每半小时连接一次服务器 成功连接 '+ str(x))
+        try:
+            x = list(models.Content.objects.filter(id = -100))
+            print('每半小时连接一次服务器 成功连接 '+ str(x))
+        except BaseException as e:
+            print('连接中断')
+            self.save_text()
+            print('保存了数据')
+            exit()
+        
 
     def initUI(self):
 
@@ -1568,8 +1573,8 @@ class Mainwindow(QMainWindow):
         app.exec_()
 
     def exec_test(self):
-        return myexec()
-        print(1)
+        # return myexec()
+        self.connect_db()
 
     def show_labels_pre(self):
         if not self.is_show_labels_pre:
