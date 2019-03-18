@@ -5,7 +5,9 @@ import time,datetime
 from pprint import pprint
 
 
-
+def main():
+    a = getres()
+    print(a)
 
 def save_data(data,t):
     for da in data:
@@ -119,11 +121,13 @@ def get_all_amount_by_coin():
     lst = []
     for da in data:
         if da[1]:
-            lst.append([da[0],da[1]/10,da[1]/res *100,int(da[2]),da[1]/int(da[2])])
+            date = MYSQL.get_exec('SELECT create_time from assets_value where name = "%s" group by id desc limit 1;' % da[0])
+            
+            lst.append([da[0],da[1]/10,da[1]/res *100,int(da[2]),da[1]/int(da[2]),'*' if int(date[0][0]) + 20 * 60 < time.time() else ''   ])
     lst.sort(key=lambda x:x[2])
     # pprint(lst)   
     for l in lst:
-        x = ('%10s %10d %7.3f%% %10s %10.4f'% (*l,) )
+        x = ('%10s %10d %7.3f%% %10s %10.4f%s'% (*l,) )
         thelastreslst.append(x)
 
 
@@ -152,5 +156,8 @@ def getres():
     res2 = get_all_amount_by_coin()
 
     res = res2[:3] + ['\n'] + res1 + ['\n'] + res2[3:]
+
     return res
 
+if __name__ == '__main__':
+    main()
