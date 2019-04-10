@@ -2,10 +2,10 @@
 import sys
 import os
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFrame,QSplitter, QStyleFactory, QApplication
-from PyQt5.QtWidgets import QTreeWidget, QTextEdit, QMainWindow, QTreeWidgetItem, QLineEdit,QPushButton, QLabel
+from PyQt5.QtWidgets import QTreeWidget, QTextEdit, QMainWindow, QTreeWidgetItem, QLineEdit,QPushButton, QLabel,QMenu
 from PyQt5.QtWidgets import QDialog, QShortcut, QAbstractItemView, QAction ,QMessageBox
 from PyQt5.QtCore import Qt, QTimer, QRegExp ,QThread
-from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat ,QTextDocumentFragment ,QTextOption ,QClipboard
+from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat ,QTextDocumentFragment ,QTextOption ,QClipboard,QCursor
 
 
 from gl.gl import myexec,get_computer_info,CURRENTURL
@@ -90,7 +90,45 @@ class PushButton(QPushButton):
     def __init__(self, *arg, **kw):
         super().__init__(*arg, **kw)
         self.model_data = None
+        # 窗口标题
+        self.setWindowTitle('爱尚博客')
+        # 定义窗口大小
+        self.resize(400, 400)
+        # 将ContextMenuPolicy设置为Qt.CustomContextMenu
+        # 否则无法使用customContextMenuRequested信号
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        # 创建QMenu信号事件
+        self.customContextMenuRequested.connect(self.showMenu)
 
+
+
+    def showMenu(self, pos):
+
+        obj = self.model_data['object']
+        pid = obj.pid
+
+        strlst = [obj.name]
+        while pid != 1:
+            la = MyModels(Label,None,pid)
+            pid = la.pid
+            strlst.append(la.name)
+
+        self.contextMenu = QMenu(self)
+
+        for s in strlst:
+            t = self.contextMenu.addAction(s)
+            t.triggered.connect(self.Event)
+
+        self.contextMenu.exec_(QCursor.pos()) #在鼠标位置显示
+
+    def Event(self):
+        # QMessageBox.information(self, "提示：",'      您选择了'+self.sender().text())
+        self._zself.le1.setText(self.sender().text())
+        self._zself.search_models()
+        # print(self.model_data)
+
+    def setzself(self,zself):
+        self._zself = zself
 
 class TextEdit(QTextEdit):
     def __init__(self, *arg,mself=None, **kw):
@@ -1710,7 +1748,7 @@ class Mainwindow(QMainWindow):
         # print(strr)
         # print(len(strr))
         
-        bttemp = QPushButton('内asds容')
+        bttemp = QPushButton('新建')
         sumlong = bttemp.fontMetrics().width(strr[0]) + 20
         for i in range(1,len(strr)):
             sumlong += bttemp.fontMetrics().width(strr[i]) + 20
@@ -1741,6 +1779,7 @@ class Mainwindow(QMainWindow):
                 bt.clicked.connect(self.addlabel)
                 # print(j + content_layout_queue[i-1])
                 bt.model_data = labs[j + content_layout_queue[i-1]]
+                bt.setzself(self)
                 # bt.isnew = True
                 layout.addWidget(bt)
                 self.show_label_lst.append(bt)

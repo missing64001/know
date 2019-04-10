@@ -173,7 +173,7 @@ class run_class(object):
         str1 = "<dd><a href=\""
         str2 = ".html\">"
         str3 = "</a></dd>"
-        content = http.urlopen(self.url).read()
+        content = http.urlopen(self.url,timeout=10).read()
         content = content.decode("gbk")
         content1 = content.split("王破来了")[1]
 
@@ -212,7 +212,7 @@ class run_class(object):
 
 
         str_url = self.url + num + ".html"
-        content = http.urlopen(str_url).read()
+        content = http.urlopen(str_url,timeout=10).read()
         # print(content[100])
         content = content.decode("gbk")
         # content = str(content , "utf8")
@@ -235,3 +235,4 @@ class run_class(object):
 x = run_class()
 Timed_restart(x,300*2,"16_get_xiaoshuo")
 # http://www.23wxx.com/0_76/
+# 

@@ -56,6 +56,7 @@ def save_data(n=1):
 
 def get_data():
     def deal_data(name,price,volume):
+
         price = str(price)
         if '.' in price:
             price_int,price_wei = price.split('.')
@@ -79,7 +80,7 @@ def get_data():
             name = name_change.get(m,m)
             data = mytoken_set_cookie('https://public.bqi.com/public/v1/ticker?code=%s&convert=CNY' % name)
             data = json.loads(data.decode())[0]
-            name,price,volume = m,data['price_cny'],data['volume_24h_cny']
+            name,price,volume = m,round(float(data['price_usd'])*6.7160,4),int(data['volume_24h_usd'])*6.7160
             print(name,price,volume,end='\r')
             reslst.append(deal_data(name,price,volume))
         except:
