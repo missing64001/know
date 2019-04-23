@@ -22,7 +22,8 @@ elif bios[0] == 2:
 from imp import reload
 from pprint import pprint
 import sip
-from hmysql import Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,MyQuery,save_all_data,      Label,Content ,runn
+from hmysql import Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,MyQuery,save_all_data,      Label,Content ,runn,model_create_get_mysqldata_and_set_in_main_process
+
 import time
 from django.db import connection
 from functools import reduce
@@ -76,7 +77,7 @@ class ConnThread(QThread):
                 with open(filename,'rb') as f:
                     lst = pickle.load(f)
                     REPLACE = pickle.load(f)
-                pprint(lst)
+                pprint(('xxdfdsdg',lst))
                 if input('如果读取数据输入y') in 'yY':
                     os.remove(filename)
                 else:
@@ -93,6 +94,17 @@ class ConnThread(QThread):
                         REPLACE = pickle.load(f)
                     os.remove(filename)
                     break
+                elif res and 'create_id' in res:
+                    model_create_get_mysqldata_and_set_in_main_process(res)
+                    id_ = res['create_id'][1]
+                    objid = res['create_id'][2]
+                    if id_ in self.mself.tree.label_item_dict:
+                        self.mself.tree.label_item_dict[objid] = self.mself.tree.label_item_dict.pop(id_)
+                        for item in self.mself.tree.label_item_dict[objid]:
+                            self.mself.tree.save_queue(item)
+                        self.mself.tree.content_item_dict[objid] = self.mself.tree.content_item_dict.pop(id_)
+                        for item in self.mself.tree.content_item_dict[objid]:
+                            self.mself.tree.save_queue(item)
 
 
             self.mself.conn.close()
@@ -973,7 +985,7 @@ class MyTree(QTreeWidget):
         # print(self.mself.expanddict)
     
     def save_queue(self,item):
-        print('save_queue')
+        # print('save_queue')
         if not item:
             return
         obj = item.model_data['object']
@@ -1359,7 +1371,6 @@ class LabelTree(QTreeWidget):
 
 
 class Mainwindow(QMainWindow):
-
     def __init__(self):
         super().__init__()
         self.is_show_labels_pre = True
@@ -1412,14 +1423,6 @@ class Mainwindow(QMainWindow):
             self.save_text()
             print('出错了。。。。。。。。。。。。。。。。。。。。。。')
             exit()
-            time.sleep(3)
-            import hmysql
-            reload(hmysql)
-            from hmysql import Q,timezone,LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,MyQuery,save_all_data,      Label,Content ,runn
-            try:
-                models = MyModels()
-            except BaseException:
-                self.connect_db()
 
     def initUI(self):
 
@@ -1535,7 +1538,6 @@ class Mainwindow(QMainWindow):
         save.setShortcut(shortcut)
         save.setStatusTip(name + ' application')
         save.triggered.connect(fun)
-
         self.file.addAction(save)
 
     def save_text(self):
@@ -1829,14 +1831,6 @@ class Mainwindow(QMainWindow):
 
 
         self.is_show_labels_pre = True
-        # item = TreeWidgetItem(self.tree)
-        # item.setText(0,cobj.name)
-        # item.model_data = {
-        #                     'id':cobj.id,
-        #                     'name':cobj.name,
-        #                     'text':cobj.text,
-        #                     'object':cobj,
-        # }
 
     def addlabel(self):
 
@@ -1878,7 +1872,6 @@ class Mainwindow(QMainWindow):
 
         # self.dia.show()
         self.dia.exec()
-        # ql.exec_()
 
     def dia_ok_bt_clicked(self):
         # return myexec()
@@ -1954,20 +1947,6 @@ class Mainwindow(QMainWindow):
                 self.contentmove(obj.id,-1,del_label_id)
         # 
         self.dia.close()
-
-
-
-        #     bt = PushButton('新建')
-        #     width = bt.fontMetrics().width('新建') + 10
-        #     bt.setMinimumSize(width,20)
-        #     bt.setMaximumSize(width,20)
-        #     bt.clicked.connect(self.addlabel)
-
-        # self.bt_sender.model_data = self.ltree.get_currentItem_model_data()
-        # self.bt_sender.setText(self.bt_sender.model_data['name'])
-        # width = self.bt_sender.fontMetrics().width(self.bt_sender.model_data['name']) + 10
-        # self.bt_sender.setMinimumSize(width,20)
-        # self.bt_sender.setMaximumSize(width,20)
 
     def contentmove(self,objid,add_label_id,del_label_id,pitem = None):
         if not add_label_id and not del_label_id:
@@ -2156,51 +2135,6 @@ class Mainwindow(QMainWindow):
             # print('是不是可以把 content_id_set_by_label 删除')
             
             return content_id_set_by_text,label_id_set
-
-
-
-        # 不需要了
-        # def set_all_data():
-        #     self.get_labels_by_content = {}
-        #     self.get_contents_by_label = {}
-        #     self.labeldict = {}
-        #     self.contentdict = {}
-
-
-        #     def set_content_labels():
-        #         cursor = connection.cursor()
-        #         sql = 'select content_id,label_id from data_content_labels;'
-        #         cursor.execute(sql)
-        #         rows = cursor.fetchall()
-
-        #         for row in rows:
-        #             labels_set = self.get_labels_by_content.get(row[0])
-        #             if not labels_set:
-        #                 self.get_labels_by_content[row[0]] = {row[1]}
-        #             else:
-        #                 labels_set.add(row[1])
-
-        #             contents_set = self.get_contents_by_label.get(row[1])
-        #             if not contents_set:
-        #                 self.get_contents_by_label[row[1]] = {row[0]}
-        #             else:
-        #                 contents_set.add(row[0])
-
-        #     labelall = models.Label.objects.all()
-        #     contentall = models.Content.objects.all()
-            
-
-        #     for label in labelall:
-        #         self.labeldict[label.id] = label
-            
-
-        #     for content in contentall:
-        #         self.contentdict[content.id] = content
-
-            
-        #     set_content_labels()
-
-        # set_all_data()
 
 
 

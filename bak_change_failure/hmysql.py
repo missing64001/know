@@ -101,16 +101,18 @@ def objsave(model,data):
 
 def model_create(model,id_,*args,**kw):
     obj = model.objects.create(*args,**kw)
+    mysql_data = get_model_all_data(obj)
+    REPLACE.update({id_:obj.id})
+
+    return {'create_id':(model,id_,obj.id,mysql_data)}
+
+
+def model_create_get_mysqldata_and_set_in_main_process(dit):
+    model,id_,objid,mysql_data = dit['create_id']
+
     self = MyModels(model,None,1)
-    print(id(self.contentdict))
-    a = max(self.contentdict)
-    print(a)
-
-    
-
-    if isinstance(obj,models.Label):
-        data = self.labeldict.pop(id_)
-        mysql_data = get_model_all_data(obj)
+    if model == models.Label:
+        data = self.labeldict[id_]
         data[0] = mysql_data[0]
         data[-1] = mysql_data[-1]
         self.labeldict[data[0]] = data
@@ -118,30 +120,32 @@ def model_create(model,id_,*args,**kw):
         if id_ in self.get_contents_by_label:
             self.get_contents_by_label[data[0]] = self.get_contents_by_label.pop(id_)
 
-        for labelset in self.get_labels_by_content:
+        for content in self.get_labels_by_content:
+            labelset = self.get_labels_by_content[content]
             for cid in labelset.copy():
                 if id_ == cid:
-                    labelset.reomve(id_)
+                    labelset.remove(id_)
                     labelset.add(data[0])
 
-    elif isinstance(obj,models.Content):
+    elif model == models.Content:
 
         
-        data = self.contentdict.pop(id_)
-        mysql_data = get_model_all_data(obj)
+        data = self.contentdict[id_]
         data[0] = mysql_data[0]
         data[-1] = mysql_data[-1]
-        self.contentdict[data[0]]
+        self.contentdict[data[0]] = data
 
         if id_ in self.get_labels_by_content:
             self.get_labels_by_content[data[0]] = self.get_labels_by_content.pop(id_)
 
-        for contentset in self.get_contents_by_label:
+        for label in self.get_contents_by_label:
+            contentset = self.get_contents_by_label[label]
             for cid in contentset.copy():
                 if id_ == cid:
-                    contentset.reomve(id_)
+                    contentset.remove(id_)
                     contentset.add(data[0])
-    REPLACE.update({id_:obj.id})
+    REPLACE.update({id_:objid})
+    print(222222222,REPLACE)
 
 
 
@@ -198,11 +202,16 @@ def run(conn1):
             end = '\n' if QUE.qsize() > 5 else '\r'
             print('未完成数量',QUE.qsize(),'运行中。。。',end=end)
             f2 = (f2[0],tuple([ REPLACE.get(i,i) if type(i) == int else i  for i in f2[1]]),f2[2])
+            print(REPLACE,1111111111111111111111)
 
             for i in f2[1]:
                 if type(i) == int and i >= 999000000000 and f2[0] != model_create:
                     raise ValueError('f2的参数出错 %s' % str(f2))
             re2 = f2[0](*f2[1],**f2[2])
+            if type(re2) is dict and 'create_id' in re2:
+                conn1.send(re2)
+                time.sleep(3)
+
             print('运行完成   ',end='\r')
         # except OperationalError as e:
         except:
@@ -501,19 +510,53 @@ class MyModels(object):
         return whichrun(self,re1,re2)
 
     def create(self,*args,**kw):
+        id_ = 999000000000 + random.randint(1,999999999)
+        while id_ in self.labeldict or id_ in self.contentdict or id_ in REPLACE:
+            id_ = 999000000000 + random.randint(1,999999999)
 
-        def model_create(self,*args,**kw):
-            obj = self.model.objects.create(*args,**kw)
+        def _create(id_,*args,**kw):
+            # LABEL_FIELDS = ('id','name','pid','queue','grade','create_date')
+            # CONTENT_FIELDS = ('id','name','text','create_date')
+            if self.model == models.Label:
+                name = kw.get('name','new')
+                pid = kw.get('pid',1)
+                grade = kw.get('grade',10)
+                self.labeldict[id_] = [id_,name,pid,'',grade,datetime.datetime.now()]
+            elif self.model == models.Content:
+                # (name=name,text=text)
+                name = kw.get('name','new')
+                text = kw.get('text','new')
+                self.contentdict[id_] = [id_,name,text,datetime.datetime.now()]
 
-            if isinstance(obj,models.Label):
-                self.labeldict[obj.id] = get_model_all_data(obj)
-            elif isinstance(obj,models.Content):
-                self.contentdict[obj.id] = get_model_all_data(obj)
-            return MyModels(self.model,obj)
+            else:
+                raise ValueError('wrong model:%s %s' % (self.model,models.Label))
+            return MyModels(self.model,None,id_)
 
 
 
-        return model_create(self,*args,**kw)
+
+
+        # def model_create(self,id_,*args,**kw):
+        #     obj = self.model.objects.create(*args,**kw)
+
+        #     if isinstance(obj,models.Label):
+        #         self.labeldict[obj.id] = get_model_all_data(obj)
+        #     elif isinstance(obj,models.Content):
+        #         self.contentdict[obj.id] = get_model_all_data(obj)
+        #     return MyModels(self.model,obj)
+
+
+
+        # return model_create(self,id_,*args,**kw)
+
+
+        re1 = (_create,(id_,*args),kw)
+        re2 = (model_create,(self.model,id_,*args),kw)
+        return whichrun(self,re1,re2)
+
+
+        
+
 
 
 
