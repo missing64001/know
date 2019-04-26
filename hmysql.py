@@ -45,6 +45,7 @@ import queue
 from functools import wraps
 import random
 import datetime
+from multiprocessing import Process,Pipe
 
 
 
@@ -54,7 +55,7 @@ HGFILE_FIELDS = ('id','name','path','create_date')
 get_labels_by_content = {}
 get_contents_by_label = {}
 ALLDATA_FILENAME = os.path.join(CURRENTURL,'alldata.dat')
-REPLACE = {}
+# REPLACE = {}
 
 '''
     函数内部的函数不能通过pickle进行传递 所以多线程的函数需要进行外部定义
@@ -99,50 +100,105 @@ def objsave(model,data):
 
 
 
-def model_create(model,id_,*args,**kw):
-    obj = model.objects.create(*args,**kw)
-    self = MyModels(model,None,1)
-    print(id(self.contentdict))
-    a = max(self.contentdict)
-    print(a)
+# def model_create(model,id_,*args,**kw):
+#     obj = model.objects.create(*args,**kw)
+#     self = MyModels(model,None,1)
+#     print(id(self.contentdict))
+#     a = max(self.contentdict)
+#     print(a)
 
     
 
-    if isinstance(obj,models.Label):
-        data = self.labeldict.pop(id_)
-        mysql_data = get_model_all_data(obj)
-        data[0] = mysql_data[0]
-        data[-1] = mysql_data[-1]
-        self.labeldict[data[0]] = data
+#     if isinstance(obj,models.Label):
+#         data = self.labeldict.pop(id_)
+#         mysql_data = get_model_all_data(obj)
+#         data[0] = mysql_data[0]
+#         data[-1] = mysql_data[-1]
+#         self.labeldict[data[0]] = data
 
-        if id_ in self.get_contents_by_label:
-            self.get_contents_by_label[data[0]] = self.get_contents_by_label.pop(id_)
+#         if id_ in self.get_contents_by_label:
+#             self.get_contents_by_label[data[0]] = self.get_contents_by_label.pop(id_)
 
-        for labelset in self.get_labels_by_content:
-            for cid in labelset.copy():
-                if id_ == cid:
-                    labelset.reomve(id_)
-                    labelset.add(data[0])
+#         for labelset in self.get_labels_by_content:
+#             for cid in labelset.copy():
+#                 if id_ == cid:
+#                     labelset.reomve(id_)
+#                     labelset.add(data[0])
 
-    elif isinstance(obj,models.Content):
+#     elif isinstance(obj,models.Content):
 
         
-        data = self.contentdict.pop(id_)
-        mysql_data = get_model_all_data(obj)
-        data[0] = mysql_data[0]
-        data[-1] = mysql_data[-1]
-        self.contentdict[data[0]]
+#         data = self.contentdict.pop(id_)
+#         mysql_data = get_model_all_data(obj)
+#         data[0] = mysql_data[0]
+#         data[-1] = mysql_data[-1]
+#         self.contentdict[data[0]]
 
-        if id_ in self.get_labels_by_content:
-            self.get_labels_by_content[data[0]] = self.get_labels_by_content.pop(id_)
+#         if id_ in self.get_labels_by_content:
+#             self.get_labels_by_content[data[0]] = self.get_labels_by_content.pop(id_)
 
-        for contentset in self.get_contents_by_label:
-            for cid in contentset.copy():
-                if id_ == cid:
-                    contentset.reomve(id_)
-                    contentset.add(data[0])
-    REPLACE.update({id_:obj.id})
+#         for contentset in self.get_contents_by_label:
+#             for cid in contentset.copy():
+#                 if id_ == cid:
+#                     contentset.reomve(id_)
+#                     contentset.add(data[0])
+    # REPLACE.update({id_:obj.id})
 
+def run_for_create(conn1):
+    while True:
+        try:
+            create,args,kw = conn1.recv()
+            obj = create(*args,**kw)
+            data = get_model_all_data(obj)
+            conn1.send(data)
+        except Exception:
+            traceback.print_exc()
+            time.sleep(3)
+            print('创建失败进行重启')
+            conn1.send('err')
+            conn1.close()
+            break
+
+class ConnThread_for_create(QThread):
+    def __init__(self):
+        super().__init__()
+        self.que = queue.Queue()
+        self.queres = queue.Queue()
+        self.isrun = False
+
+    def run(self):
+        self.isrun = True
+        model = None
+        args = None
+        while True:
+            conn1, self.conn = Pipe()
+            Process(target=run_for_create,args = (conn1,)).start()
+            conn1.close()
+            if model and args:
+                self.que.put((model,args))
+                # print('出现错误')
+            while True:
+                model,args = self.que.get()
+                self.conn.send(args)
+                data = self.conn.recv()
+                if data == 'err':
+                    break
+                else:
+                    if model == models.Label:
+                        self.mself.labeldict[data[0]] = data
+                        res = MyModels(model,None,data[0])
+                    elif model == models.Content:
+                        self.mself.contentdict[data[0]] = data
+                        res = MyModels(model,None,data[0])
+                    elif model == models.HGFile:
+                        res = data[0]
+                    
+                    self.queres.put(res)
+
+            self.conn.close()
+
+    def set_mself(self,mself):
+        self.mself = mself
 
 
 
@@ -197,11 +253,12 @@ def run(conn1):
         try:
             end = '\n' if QUE.qsize() > 5 else '\r'
             print('未完成数量',QUE.qsize(),'运行中。。。',end=end)
-            f2 = (f2[0],tuple([ REPLACE.get(i,i) if type(i) == int else i  for i in f2[1]]),f2[2])
+            # f2 = (f2[0],tuple([ REPLACE.get(i,i) if type(i) == int else i  for i in f2[1]]),f2[2])
 
-            for i in f2[1]:
-                if type(i) == int and i >= 999000000000 and f2[0] != model_create:
-                    raise ValueError('f2的参数出错 %s' % str(f2))
+            # for i in f2[1]:
+            #     if type(i) == int and i >= 999000000000 and f2[0] != model_create:
+            #         raise ValueError('f2的参数出错 %s' % str(f2))
+
             re2 = f2[0](*f2[1],**f2[2])
             print('运行完成   ',end='\r')
         # except OperationalError as e:
@@ -218,7 +275,7 @@ def run(conn1):
             filename = os.path.join(CURRENTURL,'gl','errbak.dat')
             with open(filename,'wb') as f:
                 pickle.dump(lst,f)
-                pickle.dump(REPLACE,f)
+                # pickle.dump(REPLACE,f)
             
             print('10秒后重新启动mysql处理')
             time.sleep(10)
@@ -231,8 +288,8 @@ def run(conn1):
 
 
 # 多进程接受
-def runn(conn1,conn2,lst,replace):
-    REPLACE.update(replace)
+def runn(conn1,conn2,lst):
+    # REPLACE.update(replace)
     conn2.close()
     global QUE
     global RUNN_ALIVE
@@ -293,6 +350,8 @@ class MyModels(object):
     all_data = []
     mysql_data = []
     local_data = []
+    ThreadCreate = ConnThread_for_create()
+
     def __init__(self,model=None,obj=None,objid=None):
         self.model = model
         self.obj = obj
@@ -311,8 +370,11 @@ class MyModels(object):
         self.get_labels_by_content = None
         self.get_contents_by_label = None
 
+        if not self.ThreadCreate.isrun:
+            self.ThreadCreate.set_mself(self)
+            self.ThreadCreate.start()
+
         self.get_data()
-        
 
     def __getattr__(self,name):
         # print(name)
@@ -393,10 +455,6 @@ class MyModels(object):
 
         else:
             return super().__setattr__(name,value)
-        
-
-
-        
 
     def get_data(self):
         if not self.all_data:
@@ -502,19 +560,17 @@ class MyModels(object):
 
     def create(self,*args,**kw):
 
-        def model_create(self,*args,**kw):
-            obj = self.model.objects.create(*args,**kw)
-
-            if isinstance(obj,models.Label):
-                self.labeldict[obj.id] = get_model_all_data(obj)
-            elif isinstance(obj,models.Content):
-                self.contentdict[obj.id] = get_model_all_data(obj)
-            return MyModels(self.model,obj)
+        # def model_create(self,*args,**kw):
 
 
+        # return model_create(self,*args,**kw)
 
-        return model_create(self,*args,**kw)
+        print('新建item中...',end = '\r')
+        self.ThreadCreate.que.put((self.model,(self.model.objects.create,args,kw)))
+        data = self.ThreadCreate.queres.get()
+        print('新建item完成',end = '\r')
 
+        return data
 
 
     def save(self):
@@ -536,11 +592,6 @@ class MyModels(object):
             else:
                 resset.add(i)
         return resset
-
-
-
-
-
 
     def labels_all(self,*args,**kw):
         data = self.obj.labels.all(*args,**kw)
@@ -631,6 +682,8 @@ def get_model_all_data(obj):
         field_names = LABEL_FIELDS
     elif isinstance(obj,models.Content):
         field_names = CONTENT_FIELDS
+    elif isinstance(obj,models.HGFile):
+        return [obj.id]
     for name in field_names:
         lst.append(getattr(obj,name))
     return lst
@@ -716,6 +769,7 @@ def get_md5_bj(lst1,lst2):
                     show_id[1].update(l1[s])
 
         res.append(r)
+    pprint(res)
 
 def randomstr(n):
     src = str(time.time())

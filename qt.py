@@ -19,7 +19,6 @@ elif bios[0] == 1:
 elif bios[0] == 2:
     file_exe = r'start /b H:\Desktop\lj\sublimetextbuild3143\sublime_text'
         
-from imp import reload
 from pprint import pprint
 import sip
 from hmysql import Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,MyQuery,save_all_data,      Label,Content ,runn
@@ -35,6 +34,8 @@ from func.hcalendar import HCalendar
 import subprocess
 import screen_capture
 from multiprocessing import Process,Pipe
+from func.passworkdialog import PasswdDialog
+from func.hgcrypto import mmCrypto
 
 # sys.setrecursionlimit(150) # set the maximum depth as 1500
 
@@ -68,20 +69,20 @@ class ConnThread(QThread):
 
     def run(self):
         lst = []
-        REPLACE = {}
+        # REPLACE = {}
         while True:
             conn1, self.mself.conn = Pipe()
             filename = os.path.join(CURRENTURL,'gl','errbak.dat')
             if os.path.exists(filename):
                 with open(filename,'rb') as f:
                     lst = pickle.load(f)
-                    REPLACE = pickle.load(f)
+                    # REPLACE = pickle.load(f)
                 pprint(lst)
                 if input('如果读取数据输入y') in 'yY':
                     os.remove(filename)
                 else:
                     lst = []
-            Process(target=runn,args = (conn1,self.mself.conn,lst,REPLACE)).start()
+            Process(target=runn,args = (conn1,self.mself.conn,lst)).start()
             lst = []
             conn1.close()
 
@@ -90,7 +91,7 @@ class ConnThread(QThread):
                 if res == 'err':
                     with open(filename,'rb') as f:
                         lst = pickle.load(f)
-                        REPLACE = pickle.load(f)
+                        # REPLACE = pickle.load(f)
                     os.remove(filename)
                     break
 
@@ -111,10 +112,9 @@ class PushButton(QPushButton):
         # 创建QMenu信号事件
         self.customContextMenuRequested.connect(self.showMenu)
 
-
-
     def showMenu(self, pos):
-
+        if not self.model_data:
+            return
         obj = self.model_data['object']
         pid = obj.pid
 
@@ -149,6 +149,8 @@ class TextEdit(QTextEdit):
         # self.setWordWrapMode(QTextOption.NoWrap)
         self.setFrameStyle(QFrame.WinPanel)
         self.ismyInsertPlainText = True
+        # self.password = None
+        self.mmcrypto = mmCrypto()
 
     def __func_arg__(self):
         self.git_cwd = 'all'
@@ -159,13 +161,16 @@ class TextEdit(QTextEdit):
     def insertFromMimeData(self,source):
         # print('insertFromMimeData')
         # return myexec()
+        # 
+        # 
+        os.path.join(CURRENTURL,'kqj','data','static','pic')
         if source.hasImage():
             xx = source.imageData()
-            hgfile = models.HGFile.objects.create(name='qt')
+            hgfileid = models.HGFile.objects.create(name='qt')
 
-            path = os.path.join('static','pic',str(hgfile.id)+'.png')
+            path = os.path.join('static','pic',str(hgfileid)+'.png')
 
-            hgfile.path = path
+            # hgfile.path = path
 
             zz = xx.save(os.path.join(CURRENTURL,'kqj','data',path))
             fname = os.path.join(CURRENTURL,'kqj','data',path)
@@ -173,7 +178,7 @@ class TextEdit(QTextEdit):
             fragment = QTextDocumentFragment.fromHtml("<img src='%s'>" % fname)
             self.textCursor().insertFragment(fragment);
 
-            self.insertPlainText('<hgpic=%s>' % hgfile.id)
+            self.insertPlainText('<hgpic=%s>' % hgfileid)
         elif self.ismyInsertPlainText:
             self.insertPlainText(source.text())
         else:
@@ -441,8 +446,32 @@ class TextEdit(QTextEdit):
             s = clipboard.text().replace('\n','')
             self.insertPlainText(s)
 
+
+        # about crypto
+        # elif event.key() == 77 and QApplication.keyboardModifiers() == Qt.ControlModifier:
+        #     self.ctrl_M()
+
+
+        elif event.key() == 77 and QApplication.keyboardModifiers() == Qt.ControlModifier | Qt.ShiftModifier:
+            self.shift_M()
+
+
         else:
             QTextEdit.keyPressEvent(self,event)
+
+    def ctrl_M(self):
+        pwd = PasswdDialog()
+        r = pwd.exec_()
+        if r:
+            self.mmcrypto.set_password(pwd.text)
+
+    def shift_M(self):
+        text = '\n<mmde>\n    \n<mm>\n'
+        self.insertPlainText(text)
+
+        cursor = self.textCursor()
+        for _ in range(6):
+            self.moveCursor(cursor.Left,cursor.MoveAnchor)
 
     def git_keypress_enter(self):
         # return myexec()
@@ -1376,10 +1405,13 @@ class Mainwindow(QMainWindow):
 
         self.load_Expanded()
 
-        self.timer = QTimer(self)
-        self.timer.setSingleShot(False)
-        self.timer.timeout.connect(self.connect_db) 
-        self.timer.start(1000 * 60 * 30)
+
+
+
+        # self.timer = QTimer(self)
+        # self.timer.setSingleShot(False)
+        # self.timer.timeout.connect(self.connect_db) 
+        # self.timer.start(1000 * 60 * 30)
 
 
 
@@ -1411,15 +1443,7 @@ class Mainwindow(QMainWindow):
             print('连接中断，再次进行连接')
             self.save_text()
             print('出错了。。。。。。。。。。。。。。。。。。。。。。')
-            exit()
-            time.sleep(3)
-            import hmysql
-            reload(hmysql)
-            from hmysql import Q,timezone,LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,MyQuery,save_all_data,      Label,Content ,runn
-            try:
-                models = MyModels()
-            except BaseException:
-                self.connect_db()
+            return
 
     def initUI(self):
 
@@ -1526,6 +1550,7 @@ class Mainwindow(QMainWindow):
         self.set_shortcut('writetime','alt+T',self.shortcut_writetime )
         self.set_shortcut('git','alt+G',self.shortcut_git )
         self.set_shortcut('shotscreen','alt+B',self.shortcut_shotscreen )
+        self.set_shortcut('setmm','ctrl+m',self.setmm )
 
         self.show()
         self.show_labels()
@@ -1614,7 +1639,6 @@ class Mainwindow(QMainWindow):
         x = ' '.join(x)
         x = x + '\n' + self.textEdit.git_cwd
  
-
         self.content_layout_current_id = None
 
         # x = os.getcwd()
@@ -1630,6 +1654,12 @@ class Mainwindow(QMainWindow):
         screen_capture.WScreenShot.run()
         app.exec_()
 
+    def setmm(self):
+        id_ = self.content_layout_current_id
+        self.label_tree_clicked(395)
+        self.textEdit.ctrl_M()
+        self.label_tree_clicked(id_)
+
     def exec_test(self):
         # return myexec()
         self.connect_db()
@@ -1643,6 +1673,8 @@ class Mainwindow(QMainWindow):
             obj = MyModels(Content,None,self.content_layout_current_id)
 
             name = self.cl_bt_le.text()
+
+            # 应该是为了删除图片的残留
             text = self.textEdit.toPlainText().replace('\ufffc','')
             change = False
             if name != obj.name:
@@ -1654,12 +1686,15 @@ class Mainwindow(QMainWindow):
                     except RuntimeError:
                         # print('RuntimeError again')
                         pass
+            # 进行加密
+            text = self.textEdit.mmcrypto.mEncrypt(text)
 
             if text != obj.text:
                 change = True
                 obj.text = text
 
             if change:
+
                 obj.save()
                 print('数据保存完成',end='\r')
 
@@ -1720,6 +1755,10 @@ class Mainwindow(QMainWindow):
             self.cl_bt_le.setText(obj.name)
             letextlst = self.le1.text().split()
             text = obj.text
+
+            # 解密
+            text = self.textEdit.mmcrypto.mDecrypt(text)
+
             self.textEdit.setText(text)
             self.set_textEdit()
 
@@ -2337,3 +2376,4 @@ if __name__ == '__main__':
     # app = QApplication(sys.argv)
     # ex = Example()
     # sys.exit(app.exec_())
+
