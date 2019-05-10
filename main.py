@@ -21,7 +21,7 @@ def main():
     finally:
         # print('备份了数据')
         # os.system(r'F:\my\package\mysqldump.exe -h120.79.41.9 -uknow -pknow know  > F:\my\P028_knowledge_system\knowqt\baksql\%d.sql' % int(time.time()))
-        
+        return
         local_all_data = MyModels().all_data
         mysql_all_data = get_all_data_from_mysql()
 

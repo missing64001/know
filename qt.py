@@ -660,7 +660,6 @@ class MyTree(QTreeWidget):
         else:
             return [ self.topLevelItem(i) for i in range(self.topLevelItemCount())]
 
-
     def h_sort(self):
         def _sort(item):
             #首项的顺序先不排序
@@ -785,7 +784,6 @@ class MyTree(QTreeWidget):
         if item.text(0) == '<日历>':
             time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
             mself.textEdit.setText('finish|\n\n<time>\nstart|%s\nend|%s\ninterval|1hours/1days/1weeks/1months/1years/1nyear（农历年）\ntimes|\n</time>'%(time_now_str,time_now_str))
-
 
     def mytree_item_clicked(self):
         item = self.currentItem()
@@ -1002,7 +1000,7 @@ class MyTree(QTreeWidget):
         # print(self.mself.expanddict)
     
     def save_queue(self,item):
-        print('save_queue')
+        print('save_queue',end='\r')
         if not item:
             return
         obj = item.model_data['object']
@@ -1550,10 +1548,17 @@ class Mainwindow(QMainWindow):
         self.set_shortcut('writetime','alt+T',self.shortcut_writetime )
         self.set_shortcut('git','alt+G',self.shortcut_git )
         self.set_shortcut('shotscreen','alt+B',self.shortcut_shotscreen )
-        self.set_shortcut('setmm','ctrl+m',self.setmm )
+        self.set_shortcut('setmm','ctrl+m',self.shortcut_setmm )
+        self.set_shortcut('examine_data','ctrl+E',self.shortcut_examine_data )
+
 
         self.show()
         self.show_labels()
+
+    def closeEvent(self, event):
+        models = MyModels()
+        models.check_data()
+        super().closeEvent(event)
 
     def set_shortcut(self,name,shortcut,fun):
         save = QAction(QIcon(''),  name,  self)
@@ -1654,11 +1659,15 @@ class Mainwindow(QMainWindow):
         screen_capture.WScreenShot.run()
         app.exec_()
 
-    def setmm(self):
+    def shortcut_setmm(self):
         id_ = self.content_layout_current_id
-        self.label_tree_clicked(395)
+        self.label_tree_clicked(1236)
         self.textEdit.ctrl_M()
         self.label_tree_clicked(id_)
+
+    def shortcut_examine_data(self):
+        models = MyModels()
+        models.check_data()
 
     def exec_test(self):
         # return myexec()
@@ -1760,11 +1769,12 @@ class Mainwindow(QMainWindow):
             text = self.textEdit.mmcrypto.mDecrypt(text)
 
             self.textEdit.setText(text)
+
+            # 读取服务器上的数据
+            if self.content_layout_current_id == 395:
+                self.textEdit.setText(obj.get_content395())
+                
             self.set_textEdit()
-
-
-
-
 
             createddate = obj.create_date + datetime.timedelta(hours=8)
             createddate = createddate.strftime('%Y-%m-%d %H:%M:%S')
@@ -2172,11 +2182,10 @@ class Mainwindow(QMainWindow):
 
                 for content in MyQuery(models.contentdict,Content):
                     id_ = content.id
-                    if text in content.name:
+                    if text.lower() in content.name.lower():
                         content_id_set_by_text.add(id_)
-                    elif text in content.text:
+                    elif text.lower() in content.text.lower():
                         content_id_set_by_text.add(id_)
-
 
 
                 # content_id_set_by_label_lst.append(content_id_set_by_label)

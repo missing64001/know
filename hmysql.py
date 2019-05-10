@@ -46,6 +46,7 @@ from functools import wraps
 import random
 import datetime
 from multiprocessing import Process,Pipe
+from django.db.utils import OperationalError
 
 
 
@@ -65,8 +66,6 @@ def setattr_temp(model,name,value):
     time.sleep(3)
     obj = model.objects.get(id=self.objid)
     return setattr(obj,name,value)
-
-
 
 def myModels_labels_add(lid,oid):
     obj = Content.objects.get(id=oid)
@@ -147,10 +146,24 @@ def objsave(model,data):
 def run_for_create(conn1):
     while True:
         try:
-            create,args,kw = conn1.recv()
-            obj = create(*args,**kw)
-            data = get_model_all_data(obj)
-            conn1.send(data)
+            getrecv = conn1.recv()
+            if getrecv == 'content395':
+                obj = Content.objects.get(id=395)
+                conn1.send(obj.text)
+            elif getrecv == 'mysql_all_data':
+                mysql_all_data = get_all_data_from_mysql()
+                conn1.send(mysql_all_data)
+            else:
+                create,args,kw = getrecv
+                obj = create(*args,**kw)
+                data = get_model_all_data(obj)
+                conn1.send(data)
+        except OperationalError as e:
+            time.sleep(3)
+            print('创建失败进行重启')
+            conn1.send('err')
+            conn1.close()
+            break
         except Exception:
             traceback.print_exc()
             time.sleep(3)
@@ -178,22 +191,31 @@ class ConnThread_for_create(QThread):
                 self.que.put((model,args))
                 # print('出现错误')
             while True:
-                model,args = self.que.get()
-                self.conn.send(args)
-                data = self.conn.recv()
-                if data == 'err':
-                    break
+                queget = self.que.get()
+                if queget in ('content395','mysql_all_data'):
+                    self.conn.send(queget)
+                    data = self.conn.recv()
+                    if data == 'err':
+                        break
+                    else:
+                        self.queres.put(data)
                 else:
-                    if model == models.Label:
-                        self.mself.labeldict[data[0]] = data
-                        res = MyModels(model,None,data[0])
-                    elif model == models.Content:
-                        self.mself.contentdict[data[0]] = data
-                        res = MyModels(model,None,data[0])
-                    elif model == models.HGFile:
-                        res = data[0]
-                    
-                    self.queres.put(res)
+                    model,args = queget
+                    self.conn.send(args)
+                    data = self.conn.recv()
+                    if data == 'err':
+                        break
+                    else:
+                        if model == models.Label:
+                            self.mself.labeldict[data[0]] = data
+                            res = MyModels(model,None,data[0])
+                        elif model == models.Content:
+                            self.mself.contentdict[data[0]] = data
+                            res = MyModels(model,None,data[0])
+                        elif model == models.HGFile:
+                            res = data[0]
+                        
+                        self.queres.put(res)
 
             self.conn.close()
 
@@ -277,8 +299,8 @@ def run(conn1):
                 pickle.dump(lst,f)
                 # pickle.dump(REPLACE,f)
             
-            print('10秒后重新启动mysql处理')
-            time.sleep(10)
+            print('3秒后重新启动mysql处理')
+            time.sleep(3)
             print('重新启动mysql')
             conn1.send('err')
             conn1.close()
@@ -491,6 +513,28 @@ class MyModels(object):
 
         self.labeldict,self.contentdict,self.get_labels_by_content,self.get_contents_by_label = self.all_data
 
+    def check_data(self):
+        print('get_mysql_all_data...',end = '\r')
+        self.ThreadCreate.que.put('mysql_all_data')
+        all_data = self.ThreadCreate.queres.get()
+        print('get_mysql_all_data完成',end = '\r')
+
+
+        # all_data = get_all_data_from_mysql()
+        if os.path.exists(ALLDATA_FILENAME):
+            loacal_all_data = get_all_data_from_local()
+            if get_md5(all_data) != get_md5(loacal_all_data):
+
+                get_md5_bj(all_data,loacal_all_data)
+                print(get_md5(all_data))
+                print(get_md5(loacal_all_data))
+                print('数据不一致保存到了')
+            else:
+                print('数据一致性验证完毕')
+        else:
+            loacal_all_data = all_data
+            print('未获得本地数据')
+
     def add(self,*args,**kw):
         if not self.lastcommand:
             raise ValueError('lastcommand is None,can\'t add')
@@ -572,6 +616,13 @@ class MyModels(object):
 
         return data
 
+    def get_content395(self):
+
+        print('get_content395...',end = '\r')
+        self.ThreadCreate.que.put('content395')
+        data = self.ThreadCreate.queres.get()
+        print('get_content395完成',end = '\r')
+        return data
 
     def save(self):
         re1 = (lambda:None,())
@@ -736,7 +787,7 @@ def get_md5_bj(lst1,lst2):
         setl3 = set(l2) & set(l1)
 
         for s in setl1:
-            r.append([[s,l1[s]],['XXXXXXXXXXXXX']])
+            r.append([[s,l1[s]],['XXXXXX空白没有数据XXXXXXX']])
             if i == 2:
                 show_id[1].add(s)
                 show_id[0].update(l1[s])
@@ -750,7 +801,7 @@ def get_md5_bj(lst1,lst2):
                 del l2[s]
                 continue
 
-            r.append([['XXXXXXXXXXXXX'],[s,l2[s]]])
+            r.append([['XXXXXX空白没有数据XXXXXXX'],[s,l2[s]]])
             if i == 2:
                 show_id[1].add(s)
                 show_id[0].update(l2[s])
