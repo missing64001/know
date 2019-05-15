@@ -32,7 +32,6 @@ M = ['BTS','HTB','CYB','SEER','HT','ETH','OCT','YOYOW','EOS','FIL6','ABT','WAL',
 name_change = {
     'ETH':'ethereum',
     'BTS':'bitshares',
-    'CYB':'cybex',
     'OCT':'oraclechain',
     'FIL6':'filecoin',
     'ABT':'arcblock',
@@ -81,6 +80,8 @@ def get_data():
 
     for m in M:
         try:
+            if m == 'CYB':
+                reslst.append(deal_data(*get_cyb()))
             name = name_change.get(m,m)
             data = mytoken_set_cookie('https://public.bqi.com/public/v1/ticker?code=%s&convert=CNY' % name)
             data = json.loads(data.decode())[0]
@@ -95,7 +96,20 @@ def get_data():
 
     return reslst
 
-def mytoken_set_cookie(url):
+def get_cyb():
+
+    data = mytoken_set_cookie('https://www.mytoken.io/currency/cyb/821689818?legal_currency=CNY')
+    text = data.decode()
+    from lxml import etree
+    html = etree.HTML(text)
+    price = html.xpath('//*[@id="__layout"]/div/div[1]/section/div[1]/div[1]/div[2]/div[2]/div[1]/text()')[0]
+    volume = html.xpath('//*[@id="__layout"]/div/div[1]/section/div[1]/div[1]/div[3]/div[2]/div[2]/p/text()')[0]
+    volume = volume.replace('¥','').replace(',','')
+    # volume = round(float(volume)*6.9,2)
+    return 'CYB',price,volume
+
+def mytoken_set_cookie(url,t=0):
+    t += 1
     headers = {
     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
     }
@@ -107,7 +121,8 @@ def mytoken_set_cookie(url):
         response = request.urlopen(req,timeout = 20)
     except timeout as e:
         print('timeout')
-        return mytoken_set_cookie(url)
+        if t < 4:
+            return mytoken_set_cookie(url,t)
 
     return response.read()
 
