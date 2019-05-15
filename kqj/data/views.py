@@ -139,9 +139,6 @@ def getxsdata_view(request):
 
 def get_xs_all_lst(abname):
 
-    if not get_user_group(request.user,'super'):
-        return HttpResponseRedirect('/admin/login/?next=/')
-
     directory = os.path.dirname(os.path.dirname(CURRENTURL))
     directory = os.path.join(directory,'func','xiaoshuo','day')
 
