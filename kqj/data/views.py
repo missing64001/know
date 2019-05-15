@@ -83,11 +83,12 @@ def xs_view(request):
 
     # pprint(xsdict)
     last20 = {}
-    ml = {'jl':('剑来',r'https://tieba.baidu.com/f?kw=%BD%A3%C0%B4&fr=ala0&loc=rec'),
-    'ddct':('大道朝天',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E5%A4%A7%E9%81%93%E6%9C%9D%E5%A4%A9&fr=search'),
-    'xxtx':('侠行天下',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
-    'cjzj':('重生之超级战舰',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
-    'dqjy':('地球纪元',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
+    ml = {
+    # 'jl':('剑来',r'https://tieba.baidu.com/f?kw=%BD%A3%C0%B4&fr=ala0&loc=rec'),
+    'ddct':('大道朝天',r'http://120.79.41.9:8888/getxsdata?name=ddct'),
+    'xxtx':('侠行天下',r'http://120.79.41.9:8888/getxsdata?name=xxtx'),
+    # 'cjzj':('重生之超级战舰',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
+    # 'dqjy':('地球纪元',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
     }
 
     for name,lst in xsdict.items():
@@ -95,8 +96,8 @@ def xs_view(request):
         data = ml.get(name)
         if data:
             last20[(name,data[0],data[1])] = lst[:-6:-1]
-        else:
-            last20[(name,name,'#')] = lst[:-6:-1]
+        # else:
+        #     last20[(name,name,'#')] = lst[:-6:-1]
         
 
 
@@ -116,6 +117,9 @@ def getxsdata_view(request):
                 xsdict[res[0] + str(int(res[1]))] = os.path.join(curdir,file)
 
     name = request.GET.get('name')
+    if name in ('ddct','xxtx'):
+        return get_xs_all_lst(name)
+
     name = name.split('-')
     names = []
     if len(name) == 3:
@@ -132,6 +136,52 @@ def getxsdata_view(request):
     data = '<br/>'.join([da.strip() for da in data.split('\n') if da.strip()])
     return HttpResponse(data)
     return render(request,'xsdata.html',{'data':data})
+
+def get_xs_all_lst(abname):
+
+    if not get_user_group(request.user,'super'):
+        return HttpResponseRedirect('/admin/login/?next=/')
+
+    directory = os.path.dirname(os.path.dirname(CURRENTURL))
+    directory = os.path.join(directory,'func','xiaoshuo','day')
+
+    xsdict = {}
+    for curdir,subdirs,files in os.walk(directory):
+        for file in files:
+            res = re.findall(r'\d+ (.+?)(\d+) (.+?).txt',file)
+            if res:
+                res = res[0]
+                lst = xsdict.get(res[0])
+                if lst:
+                    lst.append((int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file)))
+                else:
+                    xsdict[res[0]] = [(int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file))]
+
+        break
+
+    # pprint(xsdict)
+    last20 = {}
+    ml = {
+    # 'jl':('剑来',r'https://tieba.baidu.com/f?kw=%BD%A3%C0%B4&fr=ala0&loc=rec'),
+    'ddct':('大道朝天',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E5%A4%A7%E9%81%93%E6%9C%9D%E5%A4%A9&fr=search'),
+    'xxtx':('侠行天下',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
+    # 'cjzj':('重生之超级战舰',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
+    # 'dqjy':('地球纪元',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
+    }
+
+    for name,lst in xsdict.items():
+        if name != abname:
+            continue
+        lst.sort(key=lambda x:x[0])
+        data = ml.get(name)
+        if data:
+            last20[(name,data[0],data[1])] = lst
+        
+
+
+
+    return render(request,'xiaoshuo.html',{'xss':last20.items()})
+
 
 
 def asset_view(request):
