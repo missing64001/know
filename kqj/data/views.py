@@ -118,7 +118,7 @@ def getxsdata_view(request):
 
     name = request.GET.get('name')
     if name in ('ddct','xxtx'):
-        return get_xs_all_lst(name)
+        return get_xs_all_lst(request,name)
 
     name = name.split('-')
     names = []
@@ -137,7 +137,7 @@ def getxsdata_view(request):
     return HttpResponse(data)
     return render(request,'xsdata.html',{'data':data})
 
-def get_xs_all_lst(abname):
+def get_xs_all_lst(request,abname):
 
     directory = os.path.dirname(os.path.dirname(CURRENTURL))
     directory = os.path.join(directory,'func','xiaoshuo','day')
@@ -172,7 +172,7 @@ def get_xs_all_lst(abname):
         lst.sort(key=lambda x:x[0])
         data = ml.get(name)
         if data:
-            last20[(name,data[0],data[1])] = lst
+            last20[(name,data[0],data[1])] = lst[::-1]
         
 
 
