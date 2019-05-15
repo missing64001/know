@@ -87,6 +87,7 @@ def xs_view(request):
     # 'jl':('剑来',r'https://tieba.baidu.com/f?kw=%BD%A3%C0%B4&fr=ala0&loc=rec'),
     'ddct':('大道朝天',r'http://120.79.41.9:8888/getxsdata?name=ddct'),
     'xxtx':('侠行天下',r'http://120.79.41.9:8888/getxsdata?name=xxtx'),
+    'gmzz':('侠行天下',r'http://120.79.41.9:8888/getxsdata?name=gmzz'),
     # 'cjzj':('重生之超级战舰',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
     # 'dqjy':('地球纪元',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
     }
@@ -162,6 +163,7 @@ def get_xs_all_lst(request,abname):
     # 'jl':('剑来',r'https://tieba.baidu.com/f?kw=%BD%A3%C0%B4&fr=ala0&loc=rec'),
     'ddct':('大道朝天',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E5%A4%A7%E9%81%93%E6%9C%9D%E5%A4%A9&fr=search'),
     'xxtx':('侠行天下',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
+    'gmzz':('诡秘之主',r'https://tieba.baidu.com/p/5789305185?red_tag=0917054129'),
     # 'cjzj':('重生之超级战舰',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
     # 'dqjy':('地球纪元',r'https://tieba.baidu.com/f?ie=utf-8&kw=%E4%BE%A0%E8%A1%8C%E5%A4%A9%E4%B8%8B&fr=search'),
     }
