@@ -118,7 +118,7 @@ def getxsdata_view(request):
                 xsdict[res[0] + str(int(res[1]))] = os.path.join(curdir,file)
 
     name = request.GET.get('name')
-    if name in ('ddct','xxtx'):
+    if name in ('ddct','xxtx','gmzz'):
         return get_xs_all_lst(request,name)
 
     name = name.split('-')
