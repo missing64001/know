@@ -1357,6 +1357,8 @@ class LabelTree(QTreeWidget):
         self.setCurrentItem(nitem)
         self.editItem(nitem,0)
 
+
+
     def add_next_item(self):
         item = self.currentItem()
         nitem = TreeWidgetItem()
@@ -1383,6 +1385,15 @@ class LabelTree(QTreeWidget):
         # nitem.setFlags(Qt.ItemIsEditable | Qt.ItemIsEnabled)
         self.setCurrentItem(nitem)
         self.editItem(nitem,0)
+
+        # 修改 parent 排序
+        if pid != 1:
+            pitem = item.parent()
+            lobj = pitem.model_data['object']
+            que = QueueDeal(lobj.queue)
+            que.queue[0] = [ str(pitem.child(i).model_data['object'].id) for i in range(pitem.childCount())]
+            lobj.queue = que.queue2str()
+            lobj.save()
 
 
 class Mainwindow(QMainWindow):
@@ -1556,8 +1567,7 @@ class Mainwindow(QMainWindow):
         self.show_labels()
 
     def closeEvent(self, event):
-        models = MyModels()
-        models.check_data()
+        self.shortcut_examine_data()
         super().closeEvent(event)
 
     def set_shortcut(self,name,shortcut,fun):
@@ -1667,6 +1677,8 @@ class Mainwindow(QMainWindow):
 
     def shortcut_examine_data(self):
         models = MyModels()
+        local_all_data = models.all_data
+        save_all_data(*local_all_data)
         models.check_data()
 
     def exec_test(self):
@@ -1707,57 +1719,12 @@ class Mainwindow(QMainWindow):
                 obj.save()
                 print('数据保存完成',end='\r')
 
-    def set_textEdit(self):
-
-        # 设置字体颜色
-        letextlst = self.le1.text().split()
-        x = self.textEdit.textCursor()
-        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
-        self.textEdit.moveCursor(x.End,x.KeepAnchor)
-        find_cursor = self.textEdit.textCursor()
-        plainFormat = QTextCharFormat(find_cursor.charFormat())
-        colorFormat = plainFormat
-        colorFormat.setForeground(Qt.black)
-        self.textEdit.mergeCurrentCharFormat(colorFormat)
-
-        for to_find_text in letextlst:
-
-            x = self.textEdit.textCursor()
-            self.textEdit.moveCursor(x.Start,x.MoveAnchor)
-
-            while self.textEdit.find(to_find_text):
-                find_cursor = self.textEdit.textCursor()
-                plainFormat = QTextCharFormat(find_cursor.charFormat())
-                colorFormat = plainFormat
-                colorFormat.setForeground(Qt.red)
-                self.textEdit.mergeCurrentCharFormat(colorFormat)
-
-        # 设置图片
-        x = self.textEdit.textCursor()
-        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
-
-        while self.textEdit.find(QRegExp('<hgpic=\\d+>')):
-
-            id_ = self.textEdit.textCursor().selectedText()
-            id_ = re.findall('<hgpic=(\\d+)>',id_)[0]
-            fname = os.path.join(CURRENTURL,'kqj','data','static','pic',id_)
-            fragment = QTextDocumentFragment.fromHtml("<img src='%s'>" % fname)
-
-            self.textEdit.moveCursor(x.Left,x.MoveAnchor)
-            self.textEdit.textCursor().insertFragment(fragment);
-            self.textEdit.find(QRegExp('<hgpic=\\d+>'))
-        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
-
     def show_labels(self):
         # 设置 textedit 和 cl_bt_le 的文字 并生成标签
         # return myexec()
         for bt in self.show_label_lst:
             sip.delete(bt)
         self.show_label_lst = []
-
-
-
-
 
         if self.content_layout_current_id:
             obj = MyModels(Content,None,self.content_layout_current_id) #        models.Content.objects.get(id = self.content_layout_current_id)
@@ -1856,8 +1823,49 @@ class Mainwindow(QMainWindow):
             self.show_label_lst.append(layout)
             layout.addStretch()
 
+    def set_textEdit(self):
+
+        # 设置字体颜色
+        letextlst = self.le1.text().split()
+        x = self.textEdit.textCursor()
+        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+        self.textEdit.moveCursor(x.End,x.KeepAnchor)
+        find_cursor = self.textEdit.textCursor()
+        plainFormat = QTextCharFormat(find_cursor.charFormat())
+        colorFormat = plainFormat
+        colorFormat.setForeground(Qt.black)
+        self.textEdit.mergeCurrentCharFormat(colorFormat)
+
+        for to_find_text in letextlst:
+
+            x = self.textEdit.textCursor()
+            self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+
+            while self.textEdit.find(to_find_text):
+                find_cursor = self.textEdit.textCursor()
+                plainFormat = QTextCharFormat(find_cursor.charFormat())
+                colorFormat = plainFormat
+                colorFormat.setForeground(Qt.red)
+                self.textEdit.mergeCurrentCharFormat(colorFormat)
+
+        # 设置图片
+        x = self.textEdit.textCursor()
+        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+
+        while self.textEdit.find(QRegExp('<hgpic=\\d+>')):
+
+            id_ = self.textEdit.textCursor().selectedText()
+            id_ = re.findall('<hgpic=(\\d+)>',id_)[0]
+            fname = os.path.join(CURRENTURL,'kqj','data','static','pic',id_)
+            fragment = QTextDocumentFragment.fromHtml("<img src='%s'>" % fname)
+
+            self.textEdit.moveCursor(x.Left,x.MoveAnchor)
+            self.textEdit.textCursor().insertFragment(fragment);
+            self.textEdit.find(QRegExp('<hgpic=\\d+>'))
+        self.textEdit.moveCursor(x.Start,x.MoveAnchor)
+
     def cl_bt_bt_clicked(self):
-        return myexec()
+        # return myexec()
         self.is_show_labels_pre = False
         # print(len(models.local_data[0]))
         if models.local_data and models.mysql_data:
@@ -1982,13 +1990,13 @@ class Mainwindow(QMainWindow):
 
         # 设置lobj的排序
         self.show_labels()
+        self.search_models()
         self.dia.close()
 
     def dia_cancel_bt_clicked(self):
         # obj = models.Content.objects.get(id=)
         obj = MyModels(Content,None,self.content_layout_current_id)
         if self.bt_sender.model_data:
-
 
 
 
@@ -2063,51 +2071,6 @@ class Mainwindow(QMainWindow):
         self.show_labels_pre()
         self.content_layout_current_id = id
         self.show_labels()
-
-    # 旧的
-    def search_models_none(self):
-        def labels_children(labels):
-            ls = set()
-            for l in labels:
-                ls |= set([l.id for l in models.Label.objects.filter(pid=l)])
-            return labels | labels_children(ls) if ls else labels
-
-        text = self.le1.text()
-
-        # objsall = models.Content.objects.filter(id=-1111)
-        cidset = set()
-        if not text:
-            labelobjs = None
-        else:
-            for te in text.split(' '):
-                #-------------------重写formysql-------------------
-
-
-
-
-
-
-                cobjs = models.Content.objects.filter(Q(name__contains=te) | Q(text__contains=te) ) #| Q(labels__name__contains=te)
-
-
-
-
-
-
-                labels = models.Label.objects.filter(name__contains=te)
-
-                labels = labels_children(set([l.id for l in labels]))
-                # cobjs |= models.Content.objects.filter(labels__id__in=labels)
-                
-                labelobjs = models.Label.objects.filter(id__in=labels)
-                #-------------------重写formysql-------------------
-                # if objsall:
-                #     objsall = objsall & cobjs
-                # else:
-                #     objsall = cobjs
-            cidset = models.filter_cid_by_textlst(te)
-
-        self.tree.setitem(labelobjs,cidset) #labelobjs
 
     def search_models(self):
 
@@ -2264,6 +2227,50 @@ class Mainwindow(QMainWindow):
         self.hc.h_sort_by_tree(self.tree)
         # self.tree.setcontent(set(),content_id_set_by_true_text,self,False)
 
+    # 旧的
+    def search_models_none(self):
+        def labels_children(labels):
+            ls = set()
+            for l in labels:
+                ls |= set([l.id for l in models.Label.objects.filter(pid=l)])
+            return labels | labels_children(ls) if ls else labels
+
+        text = self.le1.text()
+
+        # objsall = models.Content.objects.filter(id=-1111)
+        cidset = set()
+        if not text:
+            labelobjs = None
+        else:
+            for te in text.split(' '):
+                #-------------------重写formysql-------------------
+
+
+
+
+
+
+                cobjs = models.Content.objects.filter(Q(name__contains=te) | Q(text__contains=te) ) #| Q(labels__name__contains=te)
+
+
+
+
+
+
+                labels = models.Label.objects.filter(name__contains=te)
+
+                labels = labels_children(set([l.id for l in labels]))
+                # cobjs |= models.Content.objects.filter(labels__id__in=labels)
+                
+                labelobjs = models.Label.objects.filter(id__in=labels)
+                #-------------------重写formysql-------------------
+                # if objsall:
+                #     objsall = objsall & cobjs
+                # else:
+                #     objsall = cobjs
+            cidset = models.filter_cid_by_textlst(te)
+
+        self.tree.setitem(labelobjs,cidset) #labelobjs
 
 class QueueDeal(object):
     """docstring for QueueDeal"""

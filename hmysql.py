@@ -183,12 +183,13 @@ class ConnThread_for_create(QThread):
         self.isrun = True
         model = None
         args = None
+        queget = None
         while True:
             conn1, self.conn = Pipe()
             Process(target=run_for_create,args = (conn1,)).start()
             conn1.close()
-            if model and args:
-                self.que.put((model,args))
+            if queget:
+                self.que.put(queget)
                 # print('出现错误')
             while True:
                 queget = self.que.get()

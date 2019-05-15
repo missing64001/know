@@ -28,13 +28,17 @@ from hmysql import MYSQL
 import traceback
 import json
 
-M = ['BTS','HTB','CYB','SEER','HT','ETH','OCT','YOYOW','EOS','FIL6']
+M = ['BTS','HTB','CYB','SEER','HT','ETH','OCT','YOYOW','EOS','FIL6','ABT','WAL','THETA']
 name_change = {
     'ETH':'ethereum',
     'BTS':'bitshares',
     'CYB':'cybex',
     'OCT':'oraclechain',
-    'FIL6':'ipfs',
+    'FIL6':'filecoin',
+    'ABT':'arcblock',
+    'WAL':'whaletoken',
+    'THETA':'thetatoken',
+
 }
 
 def main():
@@ -80,7 +84,9 @@ def get_data():
             name = name_change.get(m,m)
             data = mytoken_set_cookie('https://public.bqi.com/public/v1/ticker?code=%s&convert=CNY' % name)
             data = json.loads(data.decode())[0]
-            name,price,volume = m,round(float(data['price_usd'])*6.7160,4),int(data['volume_24h_usd'])*6.7160
+            name,price,volume = m,float(data['price_cny']),int(data['volume_24h_cny'])
+            if not price:
+                name,price,volume = m,round(float(data['price_usd'])*6.7160,4),int(data['volume_24h_usd'])*6.7160
             print(name,price,volume,end='\r')
             reslst.append(deal_data(name,price,volume))
         except:
