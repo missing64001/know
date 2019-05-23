@@ -1567,8 +1567,8 @@ class Mainwindow(QMainWindow):
         self.show_labels()
 
     def closeEvent(self, event):
-        self.shortcut_examine_data()
-        super().closeEvent(event)
+        if self.shortcut_examine_data():
+            super().closeEvent(event)
 
     def set_shortcut(self,name,shortcut,fun):
         save = QAction(QIcon(''),  name,  self)
@@ -1679,7 +1679,7 @@ class Mainwindow(QMainWindow):
         models = MyModels()
         local_all_data = models.all_data
         save_all_data(*local_all_data)
-        models.check_data()
+        return models.check_data()
 
     def exec_test(self):
         # return myexec()

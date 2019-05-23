@@ -532,6 +532,7 @@ class MyModels(object):
                 print('数据不一致保存到了')
             else:
                 print('数据一致性验证完毕')
+                return True
         else:
             loacal_all_data = all_data
             print('未获得本地数据')
