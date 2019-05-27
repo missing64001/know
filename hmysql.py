@@ -33,7 +33,7 @@ from django.db import connection
 from pprint import pprint
 import hashlib
 import pickle
-from gl.gl import gctdec,tprintex,gcts,CURRENTURL
+from gl.gl import gctdec,tprintex,gcts,CURRENTURL,open
 from threading import Thread,Lock
 import threading
 from PyQt5.QtCore import QThread,QProcess

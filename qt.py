@@ -8,7 +8,7 @@ from PyQt5.QtCore import Qt, QTimer, QRegExp ,QThread
 from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat ,QTextDocumentFragment ,QTextOption ,QClipboard,QCursor
 
 
-from gl.gl import myexec,get_computer_info,CURRENTURL
+from gl.gl import myexec,get_computer_info,CURRENTURL,open
 
 
 bios = get_computer_info
@@ -38,7 +38,6 @@ from func.passworkdialog import PasswdDialog
 from func.hgcrypto import mmCrypto
 
 # sys.setrecursionlimit(150) # set the maximum depth as 1500
-
 
 
 
