@@ -38,6 +38,7 @@ from multiprocessing import Process,Pipe
 from func.passworkdialog import PasswdDialog
 from func.hgcrypto import mmCrypto
 from func.myexcept import *
+from func.labelhistory import LabelHistory
 from xpinyin import Pinyin
 
 
@@ -106,7 +107,7 @@ class PushButton(QPushButton):
         super().__init__(*arg, **kw)
         self.model_data = None
         # 窗口标题
-        self.setWindowTitle('爱尚博客')
+        self.setWindowTitle(' ')
         # 定义窗口大小
         self.resize(400, 400)
         # 将ContextMenuPolicy设置为Qt.CustomContextMenu
@@ -128,6 +129,8 @@ class PushButton(QPushButton):
             strlst.append(la.name)
 
         self.contextMenu = QMenu(self)
+
+        # pprint(dir(self.contextMenu))
 
         for s in strlst:
             t = self.contextMenu.addAction(s)
@@ -548,7 +551,7 @@ class TextEdit(QTextEdit):
         return self.quote_read(text,n+1)
 
     def quote_recovery(self,text):
-        res = re.findall(r'<quoteb:(\d+)>([\w\W]+)<quotee:(\d+)>(\n)',text)
+        res = re.findall(r'<quoteb:(\d+)>([\w\W]+?)<quotee:(\d+)>(\n)',text)
         for r in res:
             if r[0] == r[2]:
                 replacetext = '<quoteb:%s>%s<quotee:%s>%s' % r
@@ -1454,7 +1457,7 @@ class Mainwindow(QMainWindow):
         self.tree = None
         self.textEdit = None
         self.cl_bt_le = None
-        self.pin = None
+        self.pin = Pinyin()
 
         self.load_Expanded()
 
@@ -1605,6 +1608,13 @@ class Mainwindow(QMainWindow):
         self.set_shortcut('shotscreen','alt+B',self.shortcut_shotscreen )
         self.set_shortcut('setmm','ctrl+m',self.shortcut_setmm )
         self.set_shortcut('examine_data','ctrl+E',self.shortcut_examine_data )
+
+
+
+        # 设置 le1的上下文菜单
+        self.le1.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.le1.customContextMenuRequested.connect(self.showLe1Menu)
+        self.labelhistory = LabelHistory()
 
 
         self.show()
@@ -2127,10 +2137,10 @@ class Mainwindow(QMainWindow):
         self.show_labels()
 
     def search_models(self):
-        if not self.pin:
-            self.pin = Pinyin()
 
         text = self.le1.text()
+        self.labelhistory.addHistory(text)
+
         if text[0] == '#':
             # cobj = models.Content.objects.get(name='know_setting')
             cobj = MyModels(Content,None,170)
@@ -2282,6 +2292,20 @@ class Mainwindow(QMainWindow):
 
         self.hc.h_sort_by_tree(self.tree)
         # self.tree.setcontent(set(),content_id_set_by_true_text,self,False)
+
+    def showLe1Menu(self, pos):
+        strlst = self.labelhistory.getSort()
+        self.contextMenu = QMenu(self)
+
+        for s in strlst:
+            t = self.contextMenu.addAction(s)
+            t.triggered.connect(self.pushLe1Menu)
+
+        self.contextMenu.exec_(QCursor.pos()) #在鼠标位置显示
+
+    def pushLe1Menu(self):
+        self.le1.setText(self.sender().text())
+        self.search_models()
 
     # 旧的
     def search_models_none(self):

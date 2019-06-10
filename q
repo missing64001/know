@@ -1,0 +1,725 @@
+[33mcommit b9cb2c5b9cf6d47d05753471438bfe9a59f9f3c2[m[33m ([m[1;36mHEAD -> [m[1;32mfeature1_local_search[m[33m, [m[1;31morigin/feature1_local_search[m[33m)[m
+Author: missing <327770692@qq.com>
+Date:   Mon Jun 10 10:41:57 2019 +0800
+
+    1 mysql断开连接的出错拦截\n2 content的引用功能\n3 优化label的选择可直接输入id\n4 拼音的搜索
+
+[33mcommit 1fe89bbfc42d2a2e564eca98f85713f84d2c0f59[m
+Author: missing <327770692@qq.com>
+Date:   Mon May 27 11:48:48 2019 +0800
+
+    替换了 open
+
+[33mcommit cd3003fbd642c4d4229ed850bb7e5c674c502a30[m
+Author: missing <327770692@qq.com>
+Date:   Thu May 23 11:15:15 2019 +0800
+
+    关闭时自动判断数据是否一致
+
+[33mcommit bba2c24e017a35f0df955ce0b53b8cfb63a1b35e[m[33m ([m[1;32mmaster[m[33m, [m[1;32mfeaturev1_local_search[m[33m, [m[1;32maaa[m[33m)[m
+Author: missing <327770692@qq.com>
+Date:   Fri May 17 11:51:51 2019 +0800
+
+    save data
+
+[33mcommit 20272b2f7d802fc13521901bf405972e586afb64[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: missing <327770692@qq.com>
+Date:   Wed May 15 16:20:02 2019 +0800
+
+    add gmzz
+
+[33mcommit 386345d3222e492b050484bac45b7f823afd2abc[m
+Author: missing <327770692@qq.com>
+Date:   Wed May 15 16:18:43 2019 +0800
+
+    add gmzz
+
+[33mcommit c86eaf89eff5e9136f6d7da03b61e12fd4a0384b[m
+Author: missing <327770692@qq.com>
+Date:   Wed May 15 16:16:24 2019 +0800
+
+    add gmzz
+
+[33mcommit 97ae39ea6e726a98b9c7b66ef5de27a1609e846a[m
+Author: missing <327770692@qq.com>
+Date:   Wed May 15 12:52:12 2019 +0800
+
+    设置 cyb的获取
+
+[33mcommit f38cae60fafa42e44a7f32d1c6071c8f027c4633[m
+Author: missing <327770692@qq.com>
+Date:   Wed May 15 11:20:28 2019 +0800
+
+    fixed
+
+[33mcommit 05e53002ff6d432be648f87b06fddde08f511d96[m
+Author: missing <327770692@qq.com>
+Date:   Wed May 15 11:06:20 2019 +0800
+
+    fixed
+
+[33mcommit 867325027bbe2967d48725de15d03362ed3a01a9[m
+Author: missing <327770692@qq.com>
+Date:   Wed May 15 10:55:26 2019 +0800
+
+    xs fixed
+
+[33mcommit 74b572a70505d637a595ffcce356392d27213746[m
+Author: missing <327770692@qq.com>
+Date:   Wed May 15 10:36:53 2019 +0800
+
+    整理资金
+
+[33mcommit e6dd2f917bb1db5a775c7a7548b8b9e42f3a90e7[m
+Author: missing <327770692@qq.com>
+Date:   Fri May 10 14:49:47 2019 +0800
+
+    优化退出 优化快速传递消息 调高效率
+
+[33mcommit b1c5950d6d1ff16881d72a45b0830a9d25f37d86[m
+Author: missing <327770692@qq.com>
+Date:   Fri Apr 26 17:20:15 2019 +0800
+
+    需要半小时保存的问题解决了 优化了设置密码的问题
+
+[33mcommit 95862df0cee200847fc267ae443541ae5a46619c[m
+Author: missing <327770692@qq.com>
+Date:   Tue Apr 23 14:57:12 2019 +0800
+
+    替换多进程的create出现错误
+
+[33mcommit 47dbddc3b5c4c83abc476df25186e7b1e9d5d5b4[m
+Author: missing <327770692@qq.com>
+Date:   Wed Apr 10 22:49:48 2019 +0800
+
+    获取价格修改
+
+[33mcommit dcc2a25bba6dcac44e739d50063b2e16f1bfa39c[m
+Author: missing <327770692@qq.com>
+Date:   Mon Mar 18 16:48:25 2019 +0800
+
+    for no update price
+
+[33mcommit 558c96c0d32af5ca28001e553358fc639c2bb0b3[m
+Author: missing <327770692@qq.com>
+Date:   Fri Mar 8 11:14:36 2019 +0800
+
+    save_data change
+
+[33mcommit 68af0e40bafbbdcc4c7a739281ac9e4e95f14ca6[m
+Author: missing <327770692@qq.com>
+Date:   Tue Feb 26 22:37:19 2019 +0800
+
+    debug
+
+[33mcommit b9fc99bdf0f0b06b52bebf3bbc7e794a1aff471b[m
+Author: missing <327770692@qq.com>
+Date:   Sat Feb 23 01:44:41 2019 +0800
+
+    debug
+
+[33mcommit 287b876f0cb4d9cab2d5e441adf0b7d6fe5d3510[m
+Author: missing <327770692@qq.com>
+Date:   Fri Feb 22 23:53:57 2019 +0800
+
+    debug
+
+[33mcommit d5e9f0648a6a580dc650519d0f09b6849b223712[m
+Author: missing <327770692@qq.com>
+Date:   Fri Feb 22 23:40:51 2019 +0800
+
+    debug
+
+[33mcommit 45ae9060d8096d202639051c0abbea315ca26a44[m
+Author: missing <327770692@qq.com>
+Date:   Fri Feb 22 23:38:41 2019 +0800
+
+    debug
+
+[33mcommit b52846b27f648cd0abc523f70cec0d241442a324[m
+Author: missing <327770692@qq.com>
+Date:   Fri Feb 22 23:28:00 2019 +0800
+
+    debug
+
+[33mcommit 6e962b1dbe806f9667515751813bd14ab3e04000[m
+Author: missing <327770692@qq.com>
+Date:   Fri Feb 22 23:23:56 2019 +0800
+
+    debug
+
+[33mcommit 4750b355026f149f4de439f743eff535d798ffd8[m
+Author: missing <327770692@qq.com>
+Date:   Fri Feb 22 23:23:04 2019 +0800
+
+    debug
+
+[33mcommit 734568251d10b0143156e8e2e0cc107cc389f8cb[m
+Author: missing <327770692@qq.com>
+Date:   Fri Feb 22 23:10:56 2019 +0800
+
+    网站小说读取txt
+
+[33mcommit d7874eb592797a08cbfc874e5d619ac3aba69ae9[m
+Author: missing <327770692@qq.com>
+Date:   Fri Feb 22 22:48:42 2019 +0800
+
+    网站小说读取txt
+
+[33mcommit dd9af85786114b63998c97aa471a34ce9cab614b[m
+Author: missing <327770692@qq.com>
+Date:   Thu Feb 21 17:30:05 2019 +0800
+
+    修改新建数据的方案
+
+[33mcommit e0c93bad0a75d61a5be2db89e14058fe5113819e[m[33m ([m[1;32mtest[m[33m)[m
+Author: missing <327770692@qq.com>
+Date:   Mon Feb 18 17:38:23 2019 +0800
+
+    完成了mysql断线优化
+
+[33mcommit fe06604629549570d7d6c58baefed3c4d85f7dce[m
+Author: missing <327770692@qq.com>
+Date:   Mon Feb 18 17:20:13 2019 +0800
+
+    test2
+
+[33mcommit aa5ea2af84809feef3bbd73b3bd2c58b2de62d43[m
+Author: missing <327770692@qq.com>
+Date:   Mon Feb 18 16:37:44 2019 +0800
+
+    test
+
+[33mcommit 8fd7bc009a408dbde5a00010dee3ca37587a1e63[m
+Author: missing <327770692@qq.com>
+Date:   Mon Feb 18 15:31:37 2019 +0800
+
+    修改多进程保存数据之前
+
+[33mcommit 64c11f37de8233cc29104874a055d351935dcc58[m
+Author: missing <327770692@qq.com>
+Date:   Mon Feb 18 11:11:52 2019 +0800
+
+    一些改变 最后增加了shift+ctrl+v 取消了换行 用于粘贴pdf的文字
+
+[33mcommit bb371670bacea4dfae0b34df3c65f0130d12c6d0[m
+Author: missing <327770692@qq.com>
+Date:   Sun Feb 3 09:55:33 2019 +0800
+
+    debug
+
+[33mcommit 6016858f3416798d1890e5a6e52272bf4a5ba245[m
+Author: missing <327770692@qq.com>
+Date:   Sun Feb 3 09:53:40 2019 +0800
+
+    debug
+
+[33mcommit e071b399b11915524f1f35cbe25d0f0d74a63ad7[m
+Author: missing <327770692@qq.com>
+Date:   Sun Feb 3 09:49:50 2019 +0800
+
+    debug
+
+[33mcommit 795c3c21a65ab796f865cb2cbaf139445152eed4[m
+Author: missing <327770692@qq.com>
+Date:   Sun Feb 3 09:47:18 2019 +0800
+
+    debug
+
+[33mcommit 987e7c5d4b7c3c94c7d301502a05baf9a5bfe9f9[m
+Author: missing <327770692@qq.com>
+Date:   Sun Feb 3 09:42:22 2019 +0800
+
+    debug
+
+[33mcommit 1c7422b39ab2b7c20056d2079be5e1a4a34014c6[m
+Author: missing <327770692@qq.com>
+Date:   Sun Feb 3 09:40:39 2019 +0800
+
+    debug
+
+[33mcommit 33b0f2a164ada6da8b02219a92f4ac96e484935f[m
+Author: missing <327770692@qq.com>
+Date:   Fri Feb 1 11:04:00 2019 +0800
+
+    save
+
+[33mcommit 6d76c063c6083a71a72c19774ce3da8853b6d85b[m
+Author: missing <327770692@qq.com>
+Date:   Fri Jan 25 11:20:21 2019 +0800
+
+    完成了本地查找 提速了很多
+
+[33mcommit 681cb91634725c9095c83e29a3a6f974b6ff1f2f[m
+Author: missing <327770692@qq.com>
+Date:   Fri Jan 25 09:46:03 2019 +0800
+
+    可用版本
+
+[33mcommit 901b6cb513ef954feeda0ae63781131dc10a1e63[m
+Author: missing <327770692@qq.com>
+Date:   Thu Jan 24 22:33:38 2019 +0800
+
+    可以运行的版本,本地数据和mysql数据对的上
+
+[33mcommit adf04102efbce60ddde8d6f4c9c51f2c3faf8c99[m
+Author: missing <327770692@qq.com>
+Date:   Tue Jan 22 09:09:19 2019 +0800
+
+    addfeature 用MyModels替换models
+
+[33mcommit 171b762bed7ce0350c5797236b8c6aa3180e3454[m
+Author: missing <327770692@qq.com>
+Date:   Wed Jan 16 17:10:58 2019 +0800
+
+    debug
+
+[33mcommit 3ea24cdd72993cc1d27be5704825147939786ada[m
+Author: missing <327770692@qq.com>
+Date:   Wed Jan 16 11:31:49 2019 +0800
+
+    debug
+
+[33mcommit c0110576ee4a2cdb3bbf3628c1943b6813c2daf2[m
+Author: missing <327770692@qq.com>
+Date:   Mon Jan 14 16:23:47 2019 +0800
+
+    'debugbyknow'
+
+[33mcommit bf084892685de5eea3561b014babf9dd45c87b7c[m
+Author: missing <327770692@qq.com>
+Date:   Fri Jan 11 17:16:23 2019 +0800
+
+    debug
+
+[33mcommit e42c3b51b32e992a5951b4a4b7f5ada6ab3f3e19[m
+Author: missing <327770692@qq.com>
+Date:   Thu Jan 10 10:50:20 2019 +0800
+
+    'debugbyknow'
+
+[33mcommit 3ae75c3e0315c62c24a32271f16bd54af8d34920[m
+Author: missing <327770692@qq.com>
+Date:   Sun Jan 6 22:43:57 2019 +0800
+
+    '完成了gl环境复制'
+
+[33mcommit 780aa21ed44f2495221fd7fbf73e3ae99c8f92b7[m
+Author: missing <327770692@qq.com>
+Date:   Fri Jan 4 16:09:45 2019 +0800
+
+    '快传消息加入时间,历史记录优化'
+
+[33mcommit 1772e91375282d6ac4bdfff68ae682184e9881b5[m
+Author: missing <327770692@qq.com>
+Date:   Thu Jan 3 15:46:53 2019 +0800
+
+    '粘贴富文本的切换，换行形式的切换'
+
+[33mcommit 25b41b6ae2d9417371472c12cbb9c605b05dbf34[m
+Author: missing <327770692@qq.com>
+Date:   Thu Jan 3 11:58:22 2019 +0800
+
+    'search的添加_无格式数据的粘贴_treeitem不可修改'
+
+[33mcommit 257549fd69fc1b1e49f21185ce9c92477ee05b1a[m
+Author: missing <327770692@qq.com>
+Date:   Tue Jan 1 22:50:52 2019 +0800
+
+    'debugbyknow'
+
+[33mcommit dd543974ab14a2815feac375ada4c2cedd64df08[m
+Author: missing <327770692@qq.com>
+Date:   Tue Jan 1 22:44:32 2019 +0800
+
+    'debugbyknow'
+
+[33mcommit 11892ec4454a414814f3fd39914e062e0328653a[m
+Author: missing <327770692@qq.com>
+Date:   Tue Jan 1 22:40:49 2019 +0800
+
+    'debugbyknow'
+
+[33mcommit ba219441a063cb3b493e9df01878a0e13643f376[m
+Author: missing <327770692@qq.com>
+Date:   Tue Jan 1 22:31:54 2019 +0800
+
+    'addfeature小说添加百度链接'
+
+[33mcommit f2a179f3799a0bd3946c6456e4d4c1be848f7cbb[m
+Author: missing <327770692@qq.com>
+Date:   Tue Jan 1 22:19:36 2019 +0800
+
+    'debug_label的添加与删除都有反馈'
+
+[33mcommit 370253d97e856d6ac4ddc1b66640cdf6d8063e6f[m
+Author: missing <327770692@qq.com>
+Date:   Sat Dec 29 15:50:23 2018 +0800
+
+    'add_feature_uploadtxt'
+
+[33mcommit 955b936e63e59e4faa9c2cc459b7c07e19871c04[m
+Author: missing <327770692@qq.com>
+Date:   Wed Dec 26 10:53:41 2018 +0800
+
+    '完成置顶'
+
+[33mcommit e1cb60729595df2c1889aae4bc8cac8ef4c8e2b5[m
+Author: missing <327770692@qq.com>
+Date:   Tue Dec 25 18:00:33 2018 +0800
+
+    'addfeature截图功能'
+
+[33mcommit 35db63863f23ab1432d65cabed9f4f72e5b34253[m
+Author: missing <327770692@qq.com>
+Date:   Tue Dec 25 17:02:42 2018 +0800
+
+    'add_feature_保存图片'
+
+[33mcommit 55e5ff59c25c298bf07417233554020eb1a77eda[m
+Author: missing <327770692@qq.com>
+Date:   Mon Dec 24 17:31:02 2018 +0800
+
+    'debugbyknow'
+
+[33mcommit 95f787163f42f4851a985f1426c0fa497e3bed87[m
+Author: missing <327770692@qq.com>
+Date:   Fri Dec 21 10:03:24 2018 +0800
+
+    debug
+
+[33mcommit 87132079edb56a60785652e9e3519ecab6f95bd3[m
+Author: missing <327770692@qq.com>
+Date:   Thu Dec 20 17:32:55 2018 +0800
+
+    'debugbyknow'
+
+[33mcommit 781a62d031f87343bfb0e2557e1c6bfa8dd2a5d6[m
+Author: missing <327770692@qq.com>
+Date:   Thu Dec 20 17:29:16 2018 +0800
+
+    'git_pushcansave'
+
+[33mcommit 2ea8f8612ec417d9e891810e93348555a47c651e[m
+Author: missing <327770692@qq.com>
+Date:   Wed Dec 19 16:32:43 2018 +0800
+
+    'debug'
+
+[33mcommit 6a8b4755b7c905b46c38552776acfd9713b1fd14[m
+Author: missing <327770692@qq.com>
+Date:   Wed Dec 19 16:30:53 2018 +0800
+
+    'debug'
+
+[33mcommit 260a8120aa358743f427af4b241bcf9825c2e37f[m
+Author: missing <327770692@qq.com>
+Date:   Wed Dec 19 16:30:13 2018 +0800
+
+    'debug'
+
+[33mcommit 441cc380b666b3274aa43357f2a245674152d37c[m
+Author: missing <327770692@qq.com>
+Date:   Wed Dec 19 15:49:40 2018 +0800
+
+    'add_wal_data'
+
+[33mcommit ede9c60aa6d38f086454e4f909d30ea47306853b[m
+Author: missing <327770692@qq.com>
+Date:   Wed Dec 19 15:17:06 2018 +0800
+
+    'small_10_readonly_textarea'
+
+[33mcommit 8eb5c720b4773ec3eb640931f07ebd48252995c0[m
+Author: missing <327770692@qq.com>
+Date:   Tue Dec 18 17:27:29 2018 +0800
+
+    'debug'
+
+[33mcommit 6ddf2730ace45a18ad911dda075149b634b94590[m
+Author: missing <327770692@qq.com>
+Date:   Tue Dec 18 17:24:05 2018 +0800
+
+    'debug'
+
+[33mcommit cf871b7ce7298af7352c209cc11d66cf4361e440[m
+Author: missing <327770692@qq.com>
+Date:   Tue Dec 18 17:21:32 2018 +0800
+
+    'debug'
+
+[33mcommit a36f76db7e23ad44a9630f7391d021e397d3e179[m
+Author: missing <327770692@qq.com>
+Date:   Tue Dec 18 17:19:16 2018 +0800
+
+    'debug'
+
+[33mcommit 95157a81085e634f4856498db5c4f33bd440c116[m
+Author: missing <327770692@qq.com>
+Date:   Tue Dec 18 17:17:29 2018 +0800
+
+    'debug'
+
+[33mcommit 2af06171e9a8984cb96a7fe1f56f488c9b3870a9[m
+Author: missing <327770692@qq.com>
+Date:   Tue Dec 18 17:15:39 2018 +0800
+
+    'debug'
+
+[33mcommit 1b50bd8212c54307e94d7a6d270f2176f4f8c54b[m
+Author: missing <327770692@qq.com>
+Date:   Tue Dec 18 17:12:57 2018 +0800
+
+    'mytokencannot_getdata_now_by_feixiaohao_but_CYB_nohave'
+
+[33mcommit 6b1a533b84252e80ce27b79c58722102d9c543f3[m
+Author: missing <327770692@qq.com>
+Date:   Tue Dec 18 15:10:12 2018 +0800
+
+    'debug'
+
+[33mcommit 28da638006462a7c12daadf394e6d9c1ecc4552f[m
+Author: missing <327770692@qq.com>
+Date:   Mon Dec 17 12:05:10 2018 +0800
+
+    'add_git'
+
+[33mcommit 377856124620d0e9260d04be6005464662311651[m
+Author: missing <327770692@qq.com>
+Date:   Mon Dec 17 11:34:45 2018 +0800
+
+    xx
+
+[33mcommit 32b5254ce39f8f9eaaf41575aae22eb672dd8320[m
+Author: missing <327770692@qq.com>
+Date:   Mon Dec 17 11:31:18 2018 +0800
+
+    'dfeature'
+
+[33mcommit 35be32339454fbca756ba1da6a4e7604cfe025a3[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 16:30:41 2018 +0800
+
+    debug
+
+[33mcommit f288a34fee67116947c5268e9164df07d05e47bc[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 16:29:27 2018 +0800
+
+    debug
+
+[33mcommit 2573ce2d56fa200550340bebedc593dcf7062a9f[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 16:15:48 2018 +0800
+
+    添加权限
+
+[33mcommit 8bb9c77ecc2ff0ad5596b50f52e7749d616dc27d[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 12:59:11 2018 +0800
+
+    debug
+
+[33mcommit e022bd1e5579fa5eea25f0e0eb0f8070ddad9114[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 12:58:02 2018 +0800
+
+    debug
+
+[33mcommit fdead164a0c238d5f251f9374695577aca5cdc24[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 12:56:04 2018 +0800
+
+    debug
+
+[33mcommit cd4dda2f016d727ff7f31895ed267967799f3602[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 12:51:19 2018 +0800
+
+    debug
+
+[33mcommit ef8caef83b8918dd161b253b42dbd0fa5ce2af38[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 12:41:43 2018 +0800
+
+    feature asset
+
+[33mcommit 899013511538fe21c9b230e45f03ff64a76e7ff0[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 11:55:21 2018 +0800
+
+    set fontsize
+
+[33mcommit b988e1ae0c1b4b6ca1db23bab70ce58ec9bf3a0c[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 00:46:10 2018 +0800
+
+    debug
+
+[33mcommit 9ee14b54715d1e801295bb19fd0f1a18c5ff9078[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 00:42:35 2018 +0800
+
+    debug
+
+[33mcommit 1f52475d64f663a7220a9f69c7e2aa1b58fc6219[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 00:40:54 2018 +0800
+
+    debug
+
+[33mcommit cdf35b5a70e98286de0c8996b524d545d31587c3[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 00:27:12 2018 +0800
+
+    finish xiaoshuo
+
+[33mcommit f81d48c93899d4bec9b9335c3ea18ff2275907a8[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 16 00:26:47 2018 +0800
+
+    finish xiaoshuo
+
+[33mcommit eaa77667d46dbb47438d3a13ab6d67ced412c28b[m
+Author: missing <327770692@qq.com>
+Date:   Sat Dec 15 23:06:01 2018 +0800
+
+    debug for linux
+
+[33mcommit d910208966b0c595fb10f067929418ea81a259ed[m
+Author: missing <327770692@qq.com>
+Date:   Sat Dec 15 22:35:45 2018 +0800
+
+    debug for linux
+
+[33mcommit 81341d610167d62fc500bd3b69194c8e946ca243[m
+Author: missing <327770692@qq.com>
+Date:   Sat Dec 15 22:34:32 2018 +0800
+
+    debug for linux
+
+[33mcommit 68912434d8633b035f1381fa5aa13d486bd000f9[m
+Author: missing <327770692@qq.com>
+Date:   Sat Dec 15 22:31:46 2018 +0800
+
+    debug for linux
+
+[33mcommit 9da213a43ba5869258ad9fb128ab563ad1794672[m
+Author: missing <327770692@qq.com>
+Date:   Sat Dec 15 22:18:10 2018 +0800
+
+    debug for linux ml utf-8
+
+[33mcommit e874433fea855eae10911286f97bd8ba1f3cea46[m
+Author: missing <327770692@qq.com>
+Date:   Sat Dec 15 22:10:38 2018 +0800
+
+    debug for linux
+
+[33mcommit ff76a8843fb59dfc775411ed47554ba00d96652b[m
+Author: missing <327770692@qq.com>
+Date:   Sat Dec 15 21:43:46 2018 +0800
+
+    获得小说
+
+[33mcommit b7fc7baf4febf86cc8bebdf88f3392d65bab92e2[m
+Author: missing <327770692@qq.com>
+Date:   Sat Dec 15 21:34:24 2018 +0800
+
+    添加获取小说脚本
+
+[33mcommit d19498cde19b5fde19f4b592be88a8fee56669f3[m
+Author: missing <327770692@qq.com>
+Date:   Sat Dec 15 21:13:12 2018 +0800
+
+    完成了know的网页版本
+
+[33mcommit c65ce8902cce63d4f91465eed7675da4cb9f6e2c[m
+Author: missing <327770692@qq.com>
+Date:   Thu Dec 13 12:09:24 2018 +0800
+
+    日历变颜色完成 颜色以后调整
+
+[33mcommit c8ed7d97210f0e3fa80fe9f56ead6b1cd9171fcb[m
+Author: missing <327770692@qq.com>
+Date:   Thu Dec 13 10:23:53 2018 +0800
+
+    add feature 跳转content
+
+[33mcommit 931e3a6ab188490f6cc7ee8222412db2360164f0[m
+Author: missing <327770692@qq.com>
+Date:   Wed Dec 12 16:44:54 2018 +0800
+
+    完成多行table 增加finish快捷键 kqj可以运行
+
+[33mcommit f62a2ba937f409c7dccae985a858a1018f35b8c2[m
+Author: missing <327770692@qq.com>
+Date:   Mon Dec 10 18:00:27 2018 +0800
+
+    完成日历功能
+
+[33mcommit 1dd66b58241e8fc76350485ee4c42c0088bb3dfb[m
+Author: missing <327770692@qq.com>
+Date:   Mon Dec 10 00:16:21 2018 +0800
+
+    get bug cannot save the obj must be renturn last version to find the reason
+
+[33mcommit 3e7b5cae1f030ee17fa73ea11cad12d40c3bb1f8[m
+Author: missing <327770692@qq.com>
+Date:   Sun Dec 9 22:13:49 2018 +0800
+
+    save the new methon
+
+[33mcommit e74a5e38d04a91b99900701031a69d6e4cb7f6e1[m
+Author: missing <327770692@qq.com>
+Date:   Thu Dec 6 17:58:31 2018 +0800
+
+    add feature 日历功能1
+
+[33mcommit 57e6e7d05de2ebe4f5eeee68150a1fc0434f3f42[m
+Author: missing <327770692@qq.com>
+Date:   Thu Dec 6 10:00:55 2018 +0800
+
+    debug textedit固定颜色
+
+[33mcommit 6d687dbfb2bd6e500e8dfe9025b23b1434774f2c[m
+Author: missing <327770692@qq.com>
+Date:   Thu Dec 6 09:17:24 2018 +0800
+
+    debug 排序与labelexpand冲突
+
+[33mcommit a65509defdb81cdb98a5a194003333668a9013cc[m
+Author: missing <327770692@qq.com>
+Date:   Wed Dec 5 08:58:17 2018 +0800
+
+    移动content完成了一半
+
+[33mcommit 3131ae6388d9d2f9b04296a90ffb61ebddf7ffd3[m
+Author: missing <327770692@qq.com>
+Date:   Mon Dec 3 17:09:22 2018 +0800
+
+    保存了标签扩展状态
+
+[33mcommit 82a84209640c80b910f9ac73f34579ae0a171426[m
+Author: missing <327770692@qq.com>
+Date:   Mon Dec 3 11:09:19 2018 +0800
+
+    highligth the lineeidt text in textedit
+
+[33mcommit 5526855ec784278ec5895860cb6b7de19b56a72f[m
+Author: missing <327770692@qq.com>
+Date:   Fri Nov 30 13:14:56 2018 +0800
+
+    4个空格
+
+[33mcommit e4ca1c95ae717c3506bf74383bf49816282208d5[m[33m ([m[1;31morigin/feature[m[33m, [m[1;32mfeature[m[33m)[m
+Author: missing <327770692@qq.com>
+Date:   Fri Nov 30 11:20:06 2018 +0800
+
+    ctrlT 时间快捷键
+
+[33mcommit 6d4c916629d99ffbeacdc5b0574d8a0f6a7eb950[m[33m ([m[1;33mtag: v0.8[m[33m, [m[1;31morigin/release[m[33m, [m[1;32mrelease[m[33m)[m
+Author: missing <327770692@qq.com>
+Date:   Fri Nov 30 09:29:30 2018 +0800
+
+    first commit

@@ -313,8 +313,9 @@ def run(conn1):
             re2 = f2[0](*f2[1],**f2[2])
             print('运行完成   ',end='\r')
         # except OperationalError as e:
-        except:
+        except Exception as e:
             traceback.print_exc()
+            print('错误类型',type(e))
             print('出错了，并对数据进行备份')
             RUNN_ALIVE = False
 
