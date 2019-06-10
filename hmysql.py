@@ -47,7 +47,8 @@ import random
 import datetime
 from multiprocessing import Process,Pipe
 from django.db.utils import OperationalError
-
+from pymysql.err import OperationalError as pe_OperationalError
+from socket import timeout
 
 
 LABEL_FIELDS = ('id','name','pid','queue','grade','create_date')
@@ -158,12 +159,39 @@ def run_for_create(conn1):
                 obj = create(*args,**kw)
                 data = get_model_all_data(obj)
                 conn1.send(data)
-        except OperationalError as e:
+
+        except OperationalError:
             time.sleep(3)
+            print('错误 OperationalError')
             print('创建失败进行重启')
             conn1.send('err')
             conn1.close()
             break
+
+        except pe_OperationalError:
+            time.sleep(3)
+            print('错误 pe_OperationalError')
+            print('创建失败进行重启')
+            conn1.send('err')
+            conn1.close()
+            break
+
+        except ConnectionResetError:
+            time.sleep(3)
+            print('错误 ConnectionResetError')
+            print('创建失败进行重启')
+            conn1.send('err')
+            conn1.close()
+            break
+
+        except timeout:
+            time.sleep(3)
+            print('错误 timeout')
+            print('创建失败进行重启')
+            conn1.send('err')
+            conn1.close()
+            break
+
         except Exception:
             traceback.print_exc()
             time.sleep(3)

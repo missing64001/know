@@ -19,9 +19,17 @@ tryruntime(fun,times=5)
 get_link(path)
 
 # 装饰器 数据如果存在则判断时间，超时或不存在则重新读取
-opt_read
+opt_read(T=5*60,end='\r',pa=None)
+
+
+# 装饰器 拦截错误
+dec_try(errC=None,err=None)
+    errC 错误类别
+    err 错误内容
+
+
 '''
-__all__ = ['tryruntime','get_link','opt_read']
+__all__ = ['tryruntime', 'get_link', 'opt_read', 'dec_try', ]
 
 
 def runfilepath(*path):
@@ -89,8 +97,6 @@ def get_link(path):
 
 
 # 装饰器 数据如果存在则判断时间，超时或不存在则重新读取
-# 
-
 def opt_read(T=5*60,end='\r',pa=None):
     def _opt_read(fun):
         def inner(*arg,**kw):
@@ -132,7 +138,46 @@ def myreduce(fun,lst,deal_data_fun=None):
 def xx():
     return 55
 
+
+# 装饰器 拦截错误
+def dec_try(errC=None,err=None):
+    if not errC:
+        errC = Exception
+    def _dec_try(fun):
+        def inner(*args,**kw):
+            try:
+                data = fun(*args,**kw)
+                return data
+            except errC as e:
+                if err and e != err:
+                    raise e
+                print('拦截了 %s :%s' % (errC,e))
+                    
+        return inner
+    return _dec_try
+
+
+
+
+
+
+
+
+
+
+
+@dec_try(err='123')
+def test(a):
+    print(a)
+
+
+
+
 if __name__ == '__main__':
+    test()
+
+
+def test():
     print(111)
 
     open = tryruntime(open)

@@ -12,6 +12,7 @@ from gl.gl import myexec,get_computer_info,CURRENTURL,open
 
 
 bios = get_computer_info
+
 if bios[0] == 0:
     file_exe = r'start /b F:\sublime\SublimeText_XP85\sublime_text.exe'
 elif bios[0] == 1:
@@ -36,6 +37,9 @@ import screen_capture
 from multiprocessing import Process,Pipe
 from func.passworkdialog import PasswdDialog
 from func.hgcrypto import mmCrypto
+from func.myexcept import *
+from xpinyin import Pinyin
+
 
 # sys.setrecursionlimit(150) # set the maximum depth as 1500
 
@@ -525,12 +529,45 @@ class TextEdit(QTextEdit):
             cursor = self.textCursor()
             self.moveCursor(cursor.End,cursor.MoveAnchor)
 
+    def quote_read(self,text,n=1):
+        if n > 5:
+            print('n 大于 5')
+            return
+        form = '<quoteb:%s>\n%s\n' + '    '*(n-1) +  '<quotee:%s>\n'
+
+        ids = re.findall(r'<quote:(\d+)>',text)
+        if not ids:
+            return text
+        for i in ids:
+            tt = MyModels(Content,None,int(i)).text
+            tt = tt.split('\n')
+            tt = [ '    '*n + t for t in tt]
+            tt = '\n'.join(tt)
+
+            text = text.replace('<quote:%s>'%i,form % (i,tt,i))
+        return self.quote_read(text,n+1)
+
+    def quote_recovery(self,text):
+        res = re.findall(r'<quoteb:(\d+)>([\w\W]+)<quotee:(\d+)>(\n)',text)
+        for r in res:
+            if r[0] == r[2]:
+                replacetext = '<quoteb:%s>%s<quotee:%s>%s' % r
+                text = text.replace(replacetext,'<quote:%s>' % r[0])
+            else:
+                raise ValueError('出错了')
+        if res:
+            return self.quote_recovery(text)
+        else:
+            return text
+
     def exec_test(self,**kw):
         print('exec_test')
         return myexec()
         clipboard = QApplication.clipboard()
         s = clipboard.text().replace('\n','')
         self.insertPlainText(s)
+
+
 
 class TreeWidgetItem(QTreeWidgetItem):
     def __init__(self, *arg, **kw):
@@ -1153,6 +1190,7 @@ class LabelTree(QTreeWidget):
 
 
 
+        self.clicked.connect(self.itemClicked_connect)
         self.itemDoubleClicked.connect(self.itemDoubleClicked_connect)
         self.itemChanged.connect(self.itemChanged_connect)
         # self.itemClicked.connect(self.itemClicked_connect)
@@ -1207,6 +1245,14 @@ class LabelTree(QTreeWidget):
                     obj = item.model_data['object']
                     obj.pid = 1
                     obj.save()
+
+    def itemClicked_connect(self):
+        item = self.currentItem()
+        if hasattr(item,'model_data'):
+            id_ = item.model_data['object'].id
+            self.mself.dia_le.setText(str(id_))
+        else:
+            print('没有 model_data')
 
     def itemChanged_connect(self,item,column):
 
@@ -1356,8 +1402,6 @@ class LabelTree(QTreeWidget):
         self.setCurrentItem(nitem)
         self.editItem(nitem,0)
 
-
-
     def add_next_item(self):
         item = self.currentItem()
         nitem = TreeWidgetItem()
@@ -1410,6 +1454,7 @@ class Mainwindow(QMainWindow):
         self.tree = None
         self.textEdit = None
         self.cl_bt_le = None
+        self.pin = None
 
         self.load_Expanded()
 
@@ -1664,9 +1709,9 @@ class Mainwindow(QMainWindow):
         self.textEdit.moveCursor(cursor.End,cursor.MoveAnchor)
 
     def shortcut_shotscreen(self):
-        app = QApplication.instance() or QApplication(sys.argv)
+        # app = QApplication.instance() or QApplication(sys.argv)
         screen_capture.WScreenShot.run()
-        app.exec_()
+        # app.exec_()
 
     def shortcut_setmm(self):
         id_ = self.content_layout_current_id
@@ -1685,6 +1730,7 @@ class Mainwindow(QMainWindow):
         self.connect_db()
 
     def show_labels_pre(self):
+        '保存textedit的数据'
         if not self.is_show_labels_pre:
             return
 
@@ -1709,6 +1755,9 @@ class Mainwindow(QMainWindow):
             # 进行加密
             text = self.textEdit.mmcrypto.mEncrypt(text)
 
+            # 反引用
+            text = self.textEdit.quote_recovery(text)
+
             if text != obj.text:
                 change = True
                 obj.text = text
@@ -1719,7 +1768,7 @@ class Mainwindow(QMainWindow):
                 print('数据保存完成',end='\r')
 
     def show_labels(self):
-        # 设置 textedit 和 cl_bt_le 的文字 并生成标签
+        '设置 textedit 和 cl_bt_le 的文字 并生成标签'
         # return myexec()
         for bt in self.show_label_lst:
             sip.delete(bt)
@@ -1734,12 +1783,16 @@ class Mainwindow(QMainWindow):
             # 解密
             text = self.textEdit.mmcrypto.mDecrypt(text)
 
+            # 引用
+            text = self.textEdit.quote_read(text)
+
             self.textEdit.setText(text)
 
             # 读取服务器上的数据
             if self.content_layout_current_id == 395:
                 self.textEdit.setText(obj.get_content395())
-                
+            
+            # 设置数据
             self.set_textEdit()
 
             createddate = obj.create_date + datetime.timedelta(hours=8)
@@ -1907,7 +1960,7 @@ class Mainwindow(QMainWindow):
 
         self.ltree.set_mself(self)
 
-
+        self.dia_le = QLineEdit('126')
 
         ok_bt = QPushButton('确定')
         ok_bt.clicked.connect(self.dia_ok_bt_clicked)
@@ -1917,6 +1970,7 @@ class Mainwindow(QMainWindow):
 
         hbox = QHBoxLayout()
         vbox.addWidget(self.ltree)
+        hbox.addWidget(self.dia_le)
         hbox.addWidget(ok_bt)
         hbox.addWidget(cancel_bt)
         vbox.addLayout(hbox)
@@ -1954,7 +2008,8 @@ class Mainwindow(QMainWindow):
             obj.labels.remove(self.bt_sender.model_data['object'])
 
 
-        lobj = self.ltree.get_currentItem_model_data()['object']
+        # lobj = self.ltree.get_currentItem_model_data()['object']
+        lobj = MyModels(Label,None,int(self.dia_le.text()))
         # objlabelset = set(objlabelset)
         if not objlabelset:
             objlabelset = {lobj.id}
@@ -2072,6 +2127,8 @@ class Mainwindow(QMainWindow):
         self.show_labels()
 
     def search_models(self):
+        if not self.pin:
+            self.pin = Pinyin()
 
         text = self.le1.text()
         if text[0] == '#':
@@ -2131,7 +2188,7 @@ class Mainwindow(QMainWindow):
                 label_id_set = set()
                 for label in MyQuery(models.labeldict,Label):
                     # label = self.labeldict[i]
-                    if text in label.name:
+                    if text.lower() in label.name.lower() or text.lower() in self.pin.get_pinyin(label.name,''):
                         label_id_set.add(label.id)
 
 
@@ -2144,7 +2201,7 @@ class Mainwindow(QMainWindow):
 
                 for content in MyQuery(models.contentdict,Content):
                     id_ = content.id
-                    if text.lower() in content.name.lower():
+                    if text.lower() in content.name.lower() or text.lower() in self.pin.get_pinyin(content.name,''):
                         content_id_set_by_text.add(id_)
                     elif text.lower() in content.text.lower():
                         content_id_set_by_text.add(id_)
