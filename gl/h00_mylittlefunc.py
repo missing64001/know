@@ -5,7 +5,7 @@ import pickle
 import sys
 import inspect
 from functools import reduce
-
+CURRENTURL = os.path.dirname(__file__)
 
 
 
@@ -101,17 +101,19 @@ def opt_read(T=5*60,end='\r',pa=None):
     def _opt_read(fun):
         def inner(*arg,**kw):
             path = pa
+            # abspath = runfilepath('gl')
+            abspath = os.path.join(CURRENTURL,'gl','__opt_read')
+            if not os.path.exists(abspath):
+                os.makedirs(abspath)
+
             if not path:
-                abspath = runfilepath('gl')
-                abspath = os.path.join(abspath,'__opt_read')
-                if not os.path.exists(abspath):
-                    os.makedirs(abspath)
-                path = os.path.join(abspath,fun.__qualname__+'.dat')
+                path = fun.__qualname__
+            path = os.path.join(abspath,path+'.dat')
 
             if os.path.exists(path):
                 t1 = time.time() - os.path.getmtime(path)
-                if t1 < T:
-                    print('还有%d秒过期'%(T-t1),end=end)
+                if t1 < T or T == -1:
+                    print('\r'+' '*20+'\r' + '还有%d秒过期'%(T-t1),end=end)
                     filename = path
                     with open(filename,'rb') as f:
                         data = pickle.load(f)

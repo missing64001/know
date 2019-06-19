@@ -314,8 +314,10 @@ def run(conn1):
             print('运行完成   ',end='\r')
         # except OperationalError as e:
         except Exception as e:
-            traceback.print_exc()
-            print('错误类型',type(e))
+
+            if type(e) != OperationalError:
+                traceback.print_exc()
+                print('错误类型',type(e))
             print('出错了，并对数据进行备份')
             RUNN_ALIVE = False
 

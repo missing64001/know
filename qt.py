@@ -369,7 +369,7 @@ class TextEdit(QTextEdit):
                     else:
                         for _ in range(length-1):
                             self.moveCursor(tc.PreviousBlock,tc.KeepAnchor)
-
+            return None
 
         elif event.key() == 16777218:
             'shift table'
@@ -390,7 +390,7 @@ class TextEdit(QTextEdit):
                 else:
                     for _ in range(length-1):
                         self.moveCursor(tc.PreviousBlock,tc.KeepAnchor)
-
+            return None
 
 
         elif event.key() == Qt.Key_Backspace:
@@ -405,7 +405,6 @@ class TextEdit(QTextEdit):
                     self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
                     self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
                     self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
-            QTextEdit.keyPressEvent(self,event)
 
         elif event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             'Enter'
@@ -426,6 +425,7 @@ class TextEdit(QTextEdit):
             self.setTextCursor(cursor)
             QTextEdit.keyPressEvent(self,event)
             self.insertPlainText(' '*i)
+            return None
 
         elif event.key() == 70:
             'f'
@@ -443,27 +443,47 @@ class TextEdit(QTextEdit):
                     self.setTextCursor(cursor)
                     self.insertPlainText(history[1])
                     self.moveCursor(cursor.Left,cursor.MoveAnchor)
-            else:
-                QTextEdit.keyPressEvent(self,event)
+                return None
 
-        # ctrl shift v
+        # 
         elif event.key() == 86 and QApplication.keyboardModifiers() == Qt.ControlModifier | Qt.ShiftModifier:
+            'ctrl shift v'
             clipboard = QApplication.clipboard()
             s = clipboard.text().replace('\n','')
             self.insertPlainText(s)
+            return None
 
 
         # about crypto
         # elif event.key() == 77 and QApplication.keyboardModifiers() == Qt.ControlModifier:
         #     self.ctrl_M()
 
-
         elif event.key() == 77 and QApplication.keyboardModifiers() == Qt.ControlModifier | Qt.ShiftModifier:
+            'ctrl shift M'
             self.shift_M()
+            return None
+
+        elif event.key() == 16777237:
+            cursor = self.textCursor()
+            self.moveCursor(cursor.EndOfLine,cursor.MoveAnchor)
+            self.moveCursor(cursor.End,cursor.KeepAnchor)
+            end = self.textCursor().selectedText()
+            if len(end) == 0:
+                self.moveCursor(cursor.StartOfLine,cursor.KeepAnchor)
+                line = self.textCursor().selectedText()
+                if line.lstrip():
+                    print(line.lstrip(),bool(line.lstrip()))
+                    x = re.search(r'^\s+',line)
+                    i = 0
+                    if x:
+                        i = x.end() -x.start()
+                        i = i - i % 4
+                    self.moveCursor(cursor.EndOfLine,cursor.KeepAnchor)
+                    self.insertPlainText('\n' + ' '*i)
+            self.setTextCursor(cursor)
 
 
-        else:
-            QTextEdit.keyPressEvent(self,event)
+        QTextEdit.keyPressEvent(self,event)
 
     def ctrl_M(self):
         pwd = PasswdDialog()
@@ -551,17 +571,11 @@ class TextEdit(QTextEdit):
         return self.quote_read(text,n+1)
 
     def quote_recovery(self,text):
-        res = re.findall(r'<quoteb:(\d+)>([\w\W]+?)<quotee:(\d+)>(\n)',text)
+        res = re.findall(r'<quoteb:(?P<id>\d+)>([\w\W]+?)<quotee:(?P=id)>(\n)',text)
         for r in res:
-            if r[0] == r[2]:
-                replacetext = '<quoteb:%s>%s<quotee:%s>%s' % r
-                text = text.replace(replacetext,'<quote:%s>' % r[0])
-            else:
-                raise ValueError('出错了')
-        if res:
-            return self.quote_recovery(text)
-        else:
-            return text
+            replacetext = '<quoteb:%s>%s<quotee:%s>%s' % (r[0],r[1],r[0],r[2])
+            text = text.replace(replacetext,'<quote:%s>' % r[0])
+        return text
 
     def exec_test(self,**kw):
         print('exec_test')
@@ -1464,10 +1478,12 @@ class Mainwindow(QMainWindow):
 
 
 
-        # self.timer = QTimer(self)
-        # self.timer.setSingleShot(False)
-        # self.timer.timeout.connect(self.connect_db) 
-        # self.timer.start(1000 * 60 * 30)
+        self.timer = QTimer(self)
+        self.timer.setSingleShot(False)
+        self.timer.timeout.connect(self.timer_save) 
+        self.timer.start(1000 * 60 * 5)
+
+        self.timer_save_time = None
 
 
 
@@ -1740,6 +1756,8 @@ class Mainwindow(QMainWindow):
         self.connect_db()
 
     def show_labels_pre(self):
+        
+        self.timer_save_time = time.time()
         '保存textedit的数据'
         if not self.is_show_labels_pre:
             return
@@ -2306,6 +2324,15 @@ class Mainwindow(QMainWindow):
     def pushLe1Menu(self):
         self.le1.setText(self.sender().text())
         self.search_models()
+
+    def timer_save(self):
+        if not self.timer_save_time:
+            self.timer_save_time = time.time()
+            return
+        now = time.time()
+        if now - self.timer_save_time > 60 * 10:
+            self.show_labels_pre()
+            print(time.ctime(),'完成备份' , end = '\r')
 
     # 旧的
     def search_models_none(self):
