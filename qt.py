@@ -464,6 +464,7 @@ class TextEdit(QTextEdit):
             return None
 
         elif event.key() == 16777237:
+            '方向下'
             cursor = self.textCursor()
             self.moveCursor(cursor.EndOfLine,cursor.MoveAnchor)
             self.moveCursor(cursor.End,cursor.KeepAnchor)
@@ -472,7 +473,7 @@ class TextEdit(QTextEdit):
                 self.moveCursor(cursor.StartOfLine,cursor.KeepAnchor)
                 line = self.textCursor().selectedText()
                 if line.lstrip():
-                    print(line.lstrip(),bool(line.lstrip()))
+                    # print(line.lstrip(),bool(line.lstrip()))
                     x = re.search(r'^\s+',line)
                     i = 0
                     if x:
@@ -480,7 +481,12 @@ class TextEdit(QTextEdit):
                         i = i - i % 4
                     self.moveCursor(cursor.EndOfLine,cursor.KeepAnchor)
                     self.insertPlainText('\n' + ' '*i)
-            self.setTextCursor(cursor)
+                    self.setTextCursor(cursor)
+                else:
+                    self.setTextCursor(cursor)
+                    self.moveCursor(cursor.End,cursor.MoveAnchor)
+            else:
+                self.setTextCursor(cursor)
 
 
         QTextEdit.keyPressEvent(self,event)
