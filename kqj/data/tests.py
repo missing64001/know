@@ -1,5 +1,12 @@
+import os
+import datetime
 
 
+
+path = r'C:\Users\vanlance\Desktop\pdf解密软件.rar'
+da = datetime.datetime.fromtimestamp(os.path.getatime(path))
+print(da)
+exit()
 
 # import sys,os
 # sys.path.append('../')

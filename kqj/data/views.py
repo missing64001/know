@@ -15,7 +15,7 @@ from pprint import pprint
 from .myasset.get_asset_data import getres
 from .myasset.get_other_data import get_wal_data
 import time
-
+import datetime
 # sys.path.insert(1,path)
 
 # Create your views here.
@@ -74,10 +74,12 @@ def xs_view(request):
             if res:
                 res = res[0]
                 lst = xsdict.get(res[0])
+                date = datetime.datetime.fromtimestamp(os.path.getatime(os.path.join(curdir,file)))
                 if lst:
-                    lst.append((int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file)))
+                    lst.append((int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file),date))
                 else:
-                    xsdict[res[0]] = [(int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file))]
+                    xsdict[res[0]] = [(int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file),date)]
+
 
         break
 
@@ -150,10 +152,11 @@ def get_xs_all_lst(request,abname):
             if res:
                 res = res[0]
                 lst = xsdict.get(res[0])
+                date = datetime.datetime.fromtimestamp(os.path.getatime(os.path.join(curdir,file)))
                 if lst:
-                    lst.append((int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file)))
+                    lst.append((int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file),date))
                 else:
-                    xsdict[res[0]] = [(int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file))]
+                    xsdict[res[0]] = [(int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file),date)]
 
         break
 
