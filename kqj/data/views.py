@@ -74,7 +74,7 @@ def xs_view(request):
             if res:
                 res = res[0]
                 lst = xsdict.get(res[0])
-                date = datetime.datetime.fromtimestamp(os.path.getatime(os.path.join(curdir,file)))
+                date = datetime.datetime.fromtimestamp(os.path.getmtime(os.path.join(curdir,file)))
                 if lst:
                     lst.append((int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file),date))
                 else:
@@ -152,7 +152,7 @@ def get_xs_all_lst(request,abname):
             if res:
                 res = res[0]
                 lst = xsdict.get(res[0])
-                date = datetime.datetime.fromtimestamp(os.path.getatime(os.path.join(curdir,file)))
+                date = datetime.datetime.fromtimestamp(os.path.getmtime(os.path.join(curdir,file)))
                 if lst:
                     lst.append((int(res[1]),res[1] + ' ' + res[2],os.path.join(curdir,file),date))
                 else:

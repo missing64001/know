@@ -1,13 +1,23 @@
+
+
+
 import os
-import datetime
+import time
 
+def dell(t,d=False):
+    for curdir,subdirs,files in os.walk(r'/home/uftp/my/know/func/xiaoshuo/day'):
+        for file in files:
+            if file in ('xxtxml.txt','jlml.txt','ddctml.txt')
+            path = os.path.join(curdir,file)
+            if os.path.getmtime(path) > t:
+                if d:
+                    os.remove(path)
+                else:
+                    print(file)
 
+dell(time.time() - 60 * 60 * 2)
 
-path = r'C:\Users\vanlance\Desktop\pdf解密软件.rar'
-da = datetime.datetime.fromtimestamp(os.path.getatime(path))
-print(da)
 exit()
-
 # import sys,os
 # sys.path.append('../')
 # os.environ['DJANGO_SETTINGS_MODULE'] ='kqj.settings'

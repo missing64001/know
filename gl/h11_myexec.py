@@ -163,6 +163,8 @@ def myexec(di=True):
         if reslst_reslst:
             return reslst_reslst[-1]
         return None
+    except PermissionError:
+        print('PermissionError')
     except Exception:
         print('----------s1----------')
         pprint(s1)

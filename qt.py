@@ -40,7 +40,7 @@ from func.hgcrypto import mmCrypto
 from func.myexcept import *
 from func.labelhistory import LabelHistory
 from xpinyin import Pinyin
-
+from func.know001_follow_know import single_windows, follow_know_windows
 
 # sys.setrecursionlimit(150) # set the maximum depth as 1500
 
@@ -1465,6 +1465,7 @@ class LabelTree(QTreeWidget):
 class Mainwindow(QMainWindow):
 
     def __init__(self):
+        single_windows(self)
         super().__init__()
         self.is_show_labels_pre = True
         self.show_label_lst = []
@@ -1509,6 +1510,7 @@ class Mainwindow(QMainWindow):
         t1.start()
 
         self.initUI()
+        self.addNewFunc()
 
     def connect_db(self):
         global models
@@ -1642,9 +1644,17 @@ class Mainwindow(QMainWindow):
         self.show()
         self.show_labels()
 
+    def addNewFunc(self):
+        pass
+
+    def moveEvent(self,e):
+        follow_know_windows(self)
+
     def closeEvent(self, event):
         if self.shortcut_examine_data():
             super().closeEvent(event)
+        else:
+            event.ignore()
 
     def set_shortcut(self,name,shortcut,fun):
         save = QAction(QIcon(''),  name,  self)
@@ -2183,9 +2193,8 @@ class Mainwindow(QMainWindow):
                     # models.Content.objects.get(id=res)
                     self.label_tree_clicked(res)
                 except models.Content.DoesNotExist:
-                    pass
-            return
-
+                    print('错误的content id',res)
+            
         elif text[0] == '@':
             cobj = MyModels(Content,None,170)
             if cobj.name != 'know_setting':
@@ -2198,6 +2207,15 @@ class Mainwindow(QMainWindow):
             if res:
                 self.le1.setText(res)
 
+        elif text[0] in '!！' :
+            res = text[1:].strip().split()[0]
+            if res.isdigit():
+                try:
+                    res = int(res)
+                    self.label_tree_clicked(res)
+                except models.Content.DoesNotExist:
+                    print('错误的content id',res)
+                
 
 
         def get_contents_by_textlst(textlst):

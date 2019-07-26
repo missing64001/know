@@ -10,6 +10,7 @@ imports = [
             ('F00_myfn','h09_get_bios'),
             ('F00_pythonself','get_cost_time'),
             ('F00_myfn','h00_mylittlefunc'),
+            ('F00_myfn','h17_windows'),
             ]
 
 localpath = os.path.join(CURRENTURL,'gl')
@@ -47,6 +48,9 @@ gcts = importitems[2].gcts
 
 tryruntime = importitems[3].tryruntime
 open = tryruntime(open)
+
+reset_window_pos = importitems[4].reset_window_pos
+set_title = importitems[4].set_title
 
 # setattr(M,'myexec',importitems[0].myexec)
 # setattr(M,'get_computer_info',importitems[1].get_computer_info)

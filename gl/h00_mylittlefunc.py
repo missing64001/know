@@ -6,9 +6,8 @@ import sys
 import inspect
 from functools import reduce
 CURRENTURL = os.path.dirname(__file__)
-
-
-
+import traceback
+import hashlib
 
 
 x='''
@@ -27,6 +26,8 @@ dec_try(errC=None,err=None)
     errC 错误类别
     err 错误内容
 
+# 获得文件的md5码
+file_md5(filename)
 
 '''
 __all__ = ['tryruntime', 'get_link', 'opt_read', 'dec_try', ]
@@ -38,7 +39,7 @@ def runfilepath(*path):
 
 
 # 装饰器 指定程序出错运行次数
-def tryruntime(fun,times=5):
+def tryruntime(fun,times=5,sleep_time=2,israise=True,isshowerr=False):
     def inner(*args,**kw):
         runtimes = 0
         while True:
@@ -47,11 +48,21 @@ def tryruntime(fun,times=5):
                 data = fun(*args,**kw)
                 return data
             except Exception as e:
-                print('出错 2秒后 重启')
-                time.sleep(2)
+                if isshowerr:
+                    traceback.print_exc()
+                now = wrong_time = time.time()
+                # print('出错 %s秒后 重启' % sleep_time)
+                while now - wrong_time < sleep_time:
+                    now = time.time()
+                    print('%s 第%s/%s次 出错 %d/%s秒后 重启' % (fun.__name__,runtimes,times,now - wrong_time,sleep_time),end='\r')
+                    time.sleep(1)
+
                 if runtimes >= times:
-                    raise e
+                    if israise:
+                        raise e
+                    return
     return inner
+
 
 
 
@@ -160,6 +171,25 @@ def dec_try(errC=None,err=None):
 
 
 
+def analysis_module(module):
+    import cmd
+    module = cmd.Cmd
+    dirs = dir(module)
+    for d in dirs[20:]:
+        ttt = getattr(module,d)
+        if d in ['__all__','__builtins__','__doc__','__spec__','__name__',
+                '__cached__','__file__','__package__','__loader__','meta_path','modules','path','path_hooks'
+                ]:
+            continue
+        if callable(ttt):
+            try:
+                xxx = ttt()
+                print('|||||%s||||' %d,xxx)
+            except:
+                pass
+        else:
+            print('|||||%s||||' %d,ttt)
+
 
 
 
@@ -173,19 +203,14 @@ def test(a):
     print(a)
 
 
-
-
-if __name__ == '__main__':
-    test()
-
-
 def test():
     print(111)
 
-    open = tryruntime(open)
-    with open('123.txt','r') as f:
+    open_ = tryruntime(open,sleep_time=1,israise=False)
+    with open_('bios.txt','r') as f:
         f.read()
 
+    print(2223)
     exit()
     a = [1,3,4,5,7]
     b = [3]
@@ -193,3 +218,9 @@ def test():
     print(a)
     b = myreduce(lambda x,y:str(x)+str(y),b)
     print(type(b))
+
+if __name__ == '__main__':
+    analysis_module(sys)
+
+
+
