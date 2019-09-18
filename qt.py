@@ -157,6 +157,7 @@ class TextEdit(QTextEdit):
         self.ismyInsertPlainText = True
         # self.password = None
         self.mmcrypto = mmCrypto()
+        self.another_textedit = QTextEdit()
 
     def __func_arg__(self):
         self.git_cwd = 'all'
@@ -465,6 +466,11 @@ class TextEdit(QTextEdit):
             self.shift_M()
             return None
 
+        elif event.key() == 78 and QApplication.keyboardModifiers() == Qt.ControlModifier:
+            self.another_textedit.show()
+            self.another_textedit.setHtml(self.toHtml())
+            return None
+
         elif event.key() == 16777237:
             '方向下'
             verticalscrollbar_value = self.verticalScrollBar().value()
@@ -493,6 +499,9 @@ class TextEdit(QTextEdit):
                 self.verticalScrollBar().setValue(verticalscrollbar_value)
 
         QTextEdit.keyPressEvent(self,event)
+
+    def closeEvent(self, e):
+        self.another_textedit.close()
 
     def ctrl_M(self):
         pwd = PasswdDialog()
