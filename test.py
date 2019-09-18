@@ -1,3 +1,31 @@
+
+
+from qt import TextEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow
+import sys
+
+
+
+
+
+class QQ(QMainWindow):
+    def closeEvent(self, event):
+        print(111)
+        event.ignore()
+
+
+
+
+app = QApplication(sys.argv)
+ex = TextEdit()
+ex.show()
+sys.exit(app.exec_())
+
+
+
+exit()
+
+
 import os
 import sys
 
@@ -26,25 +54,3 @@ if res[0] == 'python':
 print(os.getpid())
 
 input('111')
-exit()
-
-from qt import TextEdit
-from PyQt5.QtWidgets import QApplication, QMainWindow
-import sys
-
-
-
-
-
-class QQ(QMainWindow):
-    def closeEvent(self, event):
-        print(111)
-        event.ignore()
-
-
-
-
-app = QApplication(sys.argv)
-ex = QQ()
-ex.show()
-sys.exit(app.exec_())

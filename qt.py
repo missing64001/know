@@ -400,7 +400,9 @@ class TextEdit(QTextEdit):
                 self.moveCursor(x.PreviousWord,x.KeepAnchor)
                 zzz = self.textCursor().selectedText()
                 self.setTextCursor(x)
-                if zzz.endswith('    '):
+                blank_num = (len(zzz) - len(zzz.rstrip(' ')))
+                if blank_num and blank_num % 4 ==0:
+                # if zzz.endswith('    '):
                     self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
                     self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
                     self.moveCursor(x.PreviousCharacter,x.KeepAnchor)
@@ -465,6 +467,7 @@ class TextEdit(QTextEdit):
 
         elif event.key() == 16777237:
             '方向下'
+            verticalscrollbar_value = self.verticalScrollBar().value()
             cursor = self.textCursor()
             self.moveCursor(cursor.EndOfLine,cursor.MoveAnchor)
             self.moveCursor(cursor.End,cursor.KeepAnchor)
@@ -487,7 +490,7 @@ class TextEdit(QTextEdit):
                     self.moveCursor(cursor.End,cursor.MoveAnchor)
             else:
                 self.setTextCursor(cursor)
-
+                self.verticalScrollBar().setValue(verticalscrollbar_value)
 
         QTextEdit.keyPressEvent(self,event)
 
