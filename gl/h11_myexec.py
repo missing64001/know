@@ -87,10 +87,12 @@ def dectry(fun):
 
 
 # @dectry
-def myexec(di=True):
+def myexec(mgl=None):
     try:
         s3 = None
         bc = {}
+        if mgl:
+            bc.update(mgl)
         gl = sys._getframe().f_back.f_globals
         lc = sys._getframe().f_back.f_locals
 
@@ -174,8 +176,41 @@ def myexec(di=True):
         pprint(s3)
         traceback.print_exc()
 
+def breakPoint(fun):
+    bc = {'pprint':pprint}
+    gl = sys._getframe().f_back.f_globals
+    lc = sys._getframe().f_back.f_locals
+
+    if gl:
+        bc.update(gl)
+    if lc:
+        bc.update(lc)
+    inspectobj = inspect.stack()[1]
+    while True:
+        key = input('breakPoint:%s>> ' % inspectobj.lineno)
+        if key == 'n':
+            break
+        elif key == 'y':
+            fun(bc)
+        elif key == 'h':
+            print('''
+h: 帮助
+n: 退出断点
+y: 运行 breakPoint_test
+    breakPoint(breakPoint_test)
+    def breakPoint_test(mgl):
+        return myexec(mgl)
+        pass
 
 
+输入其他内容 直接按照exec运行
+path:%s
+''' % inspectobj.filename)
+        else:
+            try:
+                exec(key,bc)
+            except Exception:
+                traceback.print_exc()
 
 def dec(fun):
     def inner(*arg,**kw):

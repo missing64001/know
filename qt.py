@@ -4,11 +4,11 @@ import os
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFrame,QSplitter, QStyleFactory, QApplication
 from PyQt5.QtWidgets import QTreeWidget, QTextEdit, QMainWindow, QTreeWidgetItem, QLineEdit,QPushButton, QLabel,QMenu
 from PyQt5.QtWidgets import QDialog, QShortcut, QAbstractItemView, QAction ,QMessageBox
-from PyQt5.QtCore import Qt, QTimer, QRegExp ,QThread
+from PyQt5.QtCore import Qt, QTimer, QRegExp, QThread
 from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat ,QTextDocumentFragment ,QTextOption ,QClipboard,QCursor
 
 
-from gl.gl import myexec,get_computer_info,CURRENTURL,open
+from gl.gl import myexec,get_computer_info,CURRENTURL,open, TryClass, tryruntime
 
 
 bios = get_computer_info
@@ -41,6 +41,7 @@ from func.myexcept import *
 from func.labelhistory import LabelHistory
 from xpinyin import Pinyin
 from func.know001_follow_know import single_windows, follow_know_windows
+from func.know002_search_again import know002_search_again
 
 # sys.setrecursionlimit(150) # set the maximum depth as 1500
 
@@ -51,7 +52,6 @@ from func.know001_follow_know import single_windows, follow_know_windows
 
 
 GTIMES = time.time()
-
 
 
 #-------------------重写formysql-------------------
@@ -184,7 +184,7 @@ class TextEdit(QTextEdit):
             fragment = QTextDocumentFragment.fromHtml("<img src='%s'>" % fname)
             self.textCursor().insertFragment(fragment);
 
-            self.insertPlainText('<hgpic=%s>' % hgfileid)
+            self.insertPlainText('<hgpic=%s>\n' % hgfileid)
         elif self.ismyInsertPlainText:
             self.insertPlainText(source.text())
         else:
@@ -1424,6 +1424,7 @@ class LabelTree(QTreeWidget):
         # nitem.setFlags(Qt.ItemIsEditable | Qt.ItemIsEnabled)
         self.setCurrentItem(nitem)
         self.editItem(nitem,0)
+        self.mself.dia_le.setText('%s' % obj.id)
 
     def add_next_item(self):
         item = self.currentItem()
@@ -1451,6 +1452,7 @@ class LabelTree(QTreeWidget):
         # nitem.setFlags(Qt.ItemIsEditable | Qt.ItemIsEnabled)
         self.setCurrentItem(nitem)
         self.editItem(nitem,0)
+        self.mself.dia_le.setText('%s' % obj.id)
 
         # 修改 parent 排序
         if pid != 1:
@@ -1484,13 +1486,19 @@ class Mainwindow(QMainWindow):
 
 
 
-
+        # 每5分钟保存一次
         self.timer = QTimer(self)
         self.timer.setSingleShot(False)
         self.timer.timeout.connect(self.timer_save) 
         self.timer.start(1000 * 60 * 5)
 
         self.timer_save_time = None
+
+        # 每30分钟连接服务器一次
+        self.timer_connect = QTimer(self)
+        self.timer_connect.setSingleShot(False)
+        self.timer_connect.timeout.connect(self.connect_db)
+        self.timer_connect.start(1000 * 60 * 5)
 
 
 
@@ -1512,18 +1520,11 @@ class Mainwindow(QMainWindow):
         self.initUI()
         self.addNewFunc()
 
+    # @tryruntime
     def connect_db(self):
-        global models
-        #-------------------重写formysql-------------------
-        print('每半小时连接一次服务器',end='\r')
-        try:
-            x = list(models.Content.objects.filter(id = -100))
-            print('每半小时连接一次服务器 成功连接 '+ str(x))
-        except BaseException as e:
-            print('连接中断，再次进行连接')
-            self.save_text()
-            print('出错了。。。。。。。。。。。。。。。。。。。。。。')
-            return
+        # x = list(models.Content.objects.filter(id = -100))
+        MyModels().time_connect()
+        print('每半小时连接一次服务器 成功连接 ',end='\r')
 
     def initUI(self):
 
@@ -1933,7 +1934,7 @@ class Mainwindow(QMainWindow):
         self.textEdit.mergeCurrentCharFormat(colorFormat)
 
         for to_find_text in letextlst:
-
+            to_find_text = to_find_text.lstrip('~')
             x = self.textEdit.textCursor()
             self.textEdit.moveCursor(x.Start,x.MoveAnchor)
 
@@ -2171,7 +2172,6 @@ class Mainwindow(QMainWindow):
         self.show_labels()
 
     def search_models(self):
-
         text = self.le1.text()
         self.labelhistory.addHistory(text)
 
@@ -2192,6 +2192,8 @@ class Mainwindow(QMainWindow):
                     res = int(res)
                     # models.Content.objects.get(id=res)
                     self.label_tree_clicked(res)
+                    return None
+
                 except models.Content.DoesNotExist:
                     print('错误的content id',res)
             
@@ -2213,9 +2215,13 @@ class Mainwindow(QMainWindow):
                 try:
                     res = int(res)
                     self.label_tree_clicked(res)
+                    return None
                 except models.Content.DoesNotExist:
                     print('错误的content id',res)
-                
+        elif text[0] == '~':
+            res = text[1:].strip().split()[0]
+            know002_search_again(self,res)
+            return None
 
 
         def get_contents_by_textlst(textlst):

@@ -16,7 +16,8 @@ __all__ = ['reset_window_pos', ]
 
 def reset_window_pos(targetTitle,x=600,y=300,w=600,h=300,hwnd=None):  
     if hwnd:
-        win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, x,y,w,h, win32con.SWP_NOACTIVATE)
+        win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, x,y,w,h, win32con.SWP_NOACTIVATE)
+        win32gui.SetWindowPos(hwnd, win32con.HWND_NOTOPMOST, x,y,w,h, win32con.SWP_NOACTIVATE)
     else:
         hWndList = []
         win32gui.EnumWindows(lambda hWnd, param: param.append(hWnd), hWndList) 
@@ -31,8 +32,8 @@ def set_title(title):
     os.system("title %s" % title)
 
 def main():
-    set_title('haha')
-    hwnd = reset_window_pos("haha")
+    # set_title('haha')
+    hwnd = reset_window_pos("BitShare")
 
     win32gui.SetWindowPos(hwnd, win32con.HWND_NOTOPMOST, 300,300,300,300, win32con.SWP_SHOWWINDOW)
 

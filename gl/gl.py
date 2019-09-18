@@ -46,6 +46,7 @@ gctdec = importitems[2].gctdec
 tprintex = importitems[2].tprintex
 gcts = importitems[2].gcts
 
+TryClass = importitems[3].TryClass
 tryruntime = importitems[3].tryruntime
 open = tryruntime(open)
 

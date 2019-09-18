@@ -151,6 +151,10 @@ def run_for_create(conn1):
             if getrecv == 'content395':
                 obj = Content.objects.get(id=395)
                 conn1.send(obj.text)
+            elif getrecv == 'time_connect':
+                Content.objects.filter(id=-1)
+                conn1.send('bb')
+
             elif getrecv == 'mysql_all_data':
                 mysql_all_data = get_all_data_from_mysql()
                 conn1.send(mysql_all_data)
@@ -221,7 +225,7 @@ class ConnThread_for_create(QThread):
                 # print('出现错误')
             while True:
                 queget = self.que.get()
-                if queget in ('content395','mysql_all_data'):
+                if queget in ('content395','mysql_all_data','time_connect'):
                     self.conn.send(queget)
                     data = self.conn.recv()
                     if data == 'err':
@@ -656,6 +660,12 @@ class MyModels(object):
         data = self.ThreadCreate.queres.get()
         print('get_content395完成',end = '\r')
         return data
+
+    def time_connect(self):
+        print('创建mysql连接中。。',end='\r')
+        self.ThreadCreate.que.put('time_connect')
+        data = self.ThreadCreate.queres.get()
+        print('创建mysql连接完成  ',end='\r')
 
     def save(self):
         re1 = (lambda:None,())
