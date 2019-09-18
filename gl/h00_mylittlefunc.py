@@ -5,11 +5,14 @@ import pickle
 import sys
 import inspect
 from functools import reduce
+CURRENTURL = os.path.dirname(__file__)
+import traceback
+import hashlib
+from functools import wraps
+import numpy
 
 
-
-
-
+HGENUMERATE_DICT = {}
 
 x='''
 # 装饰器 指定程序出错运行次数
@@ -27,18 +30,52 @@ dec_try(errC=None,err=None)
     errC 错误类别
     err 错误内容
 
+# 获得文件的md5码
+file_md5(filename)
+
+# 类似enumerate length代表了总长
+hgenumerate(start=1,length=None,isprint=True,end='\r')
 
 '''
-__all__ = ['tryruntime', 'get_link', 'opt_read', 'dec_try', ]
+__all__ = ['tryruntime', 'get_link', 'opt_read', 'dec_try', 'analysis_module', 'hgenumerate', 'TryClass']
+
+
+
+
 
 
 def runfilepath(*path):
     x = inspect.stack()[-1]
     return os.path.join(os.path.dirname(x.filename),*path)
 
+# 被继承类 继承后出错不会抛出
+def des(func):
+    @wraps(func)
+    def inner(*args,**kw):
+        try:
+            data = func(*args,**kw)
+        except Exception as e:
+            traceback.print_exc()
+            data = False
+        return data
+    return inner
+
+
+
+class TryClass(object):
+    def __getattribute__(self,name):
+        try:
+            res = super().__getattribute__(name)
+        except Exception:
+            traceback.print_exc()
+            res = False
+        if callable(res):
+            res = des(res)
+        return res
+
 
 # 装饰器 指定程序出错运行次数
-def tryruntime(fun,times=5):
+def tryruntime(fun,times=5,sleep_time=2,israise=True,isshowerr=False):
     def inner(*args,**kw):
         runtimes = 0
         while True:
@@ -47,11 +84,21 @@ def tryruntime(fun,times=5):
                 data = fun(*args,**kw)
                 return data
             except Exception as e:
-                print('出错 2秒后 重启')
-                time.sleep(2)
+                if isshowerr:
+                    traceback.print_exc()
+                now = wrong_time = time.time()
+                # print('出错 %s秒后 重启' % sleep_time)
+                while now - wrong_time < sleep_time:
+                    now = time.time()
+                    print('%s 第%s/%s次 出错 %d/%s秒后 重启' % (fun.__name__,runtimes,times,now - wrong_time,sleep_time),end='\r')
+                    time.sleep(1)
+
                 if runtimes >= times:
-                    raise e
+                    if israise:
+                        raise e
+                    return
     return inner
+
 
 
 
@@ -101,24 +148,26 @@ def opt_read(T=5*60,end='\r',pa=None):
     def _opt_read(fun):
         def inner(*arg,**kw):
             path = pa
+            # abspath = runfilepath('gl')
+            abspath = os.path.join(CURRENTURL,'gl','__opt_read')
+            if not os.path.exists(abspath):
+                os.makedirs(abspath)
+
             if not path:
-                abspath = runfilepath('gl')
-                abspath = os.path.join(abspath,'__opt_read')
-                if not os.path.exists(abspath):
-                    os.makedirs(abspath)
-                path = os.path.join(abspath,fun.__qualname__+'.dat')
+                path = fun.__qualname__
+            path = os.path.join(abspath,path+'.dat')
 
             if os.path.exists(path):
                 t1 = time.time() - os.path.getmtime(path)
-                if t1 < T:
-                    print('还有%d秒过期'%(T-t1),end=end)
+                if t1 < T or T == -1:
+                    print('\r'+' '*20+'\r' + '还有%d秒过期'%(T-t1),end=end)
                     filename = path
                     with open(filename,'rb') as f:
                         data = pickle.load(f)
                     return data
             print('重新读取数据',end=end)
             data = fun(*arg,**kw)
-            if data:
+            if type(data) is numpy.ndarray or data:
                 filename = path
                 with open(filename,'wb') as f:
                     pickle.dump(data,f)
@@ -157,10 +206,37 @@ def dec_try(errC=None,err=None):
     return _dec_try
 
 
+# 模块分析 输出有返回值的所有属性
+def analysis_module(module):
+    dirs = dir(module)
+    for d in dirs[20:]:
+        ttt = getattr(module,d)
+        if d in ['__all__','__builtins__','__doc__','__spec__','__name__',
+                '__cached__','__file__','__package__','__loader__','meta_path','modules','path','path_hooks'
+                ]:
+            continue
+        if callable(ttt):
+            try:
+                xxx = ttt()
+                print('|||||%s||||' %d,xxx)
+            except:
+                pass
+        else:
+            print('|||||%s||||' %d,ttt)
 
 
 
-
+def hgenumerate(start=1,length=None,isprint=True,end='\r'):
+    a = sys._getframe().f_back.f_lineno
+    b = sys._getframe().f_back.f_lasti
+    key = '%s,%s'%(a,b)
+    HGENUMERATE_DICT[key] = HGENUMERATE_DICT.get(key,start-1) + 1
+    if isprint:
+        if length:
+            print('%s/%s'%(HGENUMERATE_DICT[key],length),end=end)
+        else:
+            print(HGENUMERATE_DICT[key],end=end)
+    return HGENUMERATE_DICT[key],key
 
 
 
@@ -171,19 +247,14 @@ def test(a):
     print(a)
 
 
-
-
-if __name__ == '__main__':
-    test()
-
-
 def test():
     print(111)
 
-    open = tryruntime(open)
-    with open('123.txt','r') as f:
+    open_ = tryruntime(open,sleep_time=1,israise=False)
+    with open_('bios.txt','r') as f:
         f.read()
 
+    print(2223)
     exit()
     a = [1,3,4,5,7]
     b = [3]
@@ -191,3 +262,18 @@ def test():
     print(a)
     b = myreduce(lambda x,y:str(x)+str(y),b)
     print(type(b))
+
+def main():
+    for i in range(10):
+        x,_ = hgenumerate(3)
+        print('x',x)
+    for i in range(20):
+        hgenumerate()
+
+        # hgenumerate()
+if __name__ == '__main__':
+    # analysis_module(sys)
+    main()
+
+
+

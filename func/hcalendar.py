@@ -316,6 +316,8 @@ class HCalendar(object):
     def addhistory(self,text):
         history = re.findall(r'\<history\>[\w\W]+\</history\>',text)
         time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
+        week = datetime.datetime.now().weekday() + 1
+        time_now_str = time_now_str[:8] + '-%d' % week + time_now_str[8:]
         if history:
             if len(history) != 1:
                 print('获得了多个history')
@@ -329,6 +331,8 @@ class HCalendar(object):
     def addhistoryex(self,text):
         history = re.search(r'\<history\>[\w\W]+\</history\>',text)
         time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
+        week = datetime.datetime.now().weekday() + 1
+        time_now_str = time_now_str[:8] + '-%d' % week + time_now_str[8:]
         if history:
             return history.start() + 10,'<%s>\n    \n'%time_now_str,-1
         else:

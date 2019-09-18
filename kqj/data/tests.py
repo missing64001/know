@@ -1,6 +1,23 @@
 
 
 
+import os
+import time
+
+def dell(t,d=False):
+    for curdir,subdirs,files in os.walk(r'/home/uftp/my/know/func/xiaoshuo/day'):
+        for file in files:
+            if file in ('xxtxml.txt','jlml.txt','ddctml.txt')
+            path = os.path.join(curdir,file)
+            if os.path.getmtime(path) > t:
+                if d:
+                    os.remove(path)
+                else:
+                    print(file)
+
+dell(time.time() - 60 * 60 * 2)
+
+exit()
 # import sys,os
 # sys.path.append('../')
 # os.environ['DJANGO_SETTINGS_MODULE'] ='kqj.settings'
