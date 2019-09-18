@@ -1739,6 +1739,8 @@ class Mainwindow(QMainWindow):
     def shortcut_writetime(self):
         # print(111)
         time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
+        week = datetime.datetime.now().weekday() + 1
+        time_now_str = time_now_str[:8] + '-%d' % week + time_now_str[8:]
         self.textEdit.insertPlainText(time_now_str)
 
     def shortcut_git(self):
