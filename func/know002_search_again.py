@@ -40,7 +40,7 @@ def know002_search_again(self,txt):
         citem.setForeground(0,QBrush(QColor("#000000")))
 
     # 原有label上的重新搜索再优化 1829
-    return set(all_change_citem)
+    self.tree.set_content_to_tree_top(all_change_citem)
 
 
 
