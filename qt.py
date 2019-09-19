@@ -2234,7 +2234,8 @@ class Mainwindow(QMainWindow):
                     print('错误的content id',res)
         elif text[0] == '~':
             res = text[1:].strip().split()[0]
-            know002_search_again(self,res)
+            all_change_citem = know002_search_again(self,res)
+            set_content_to_tree(self.tree,all_change_citem)
             return None
 
 
@@ -2443,7 +2444,22 @@ class QueueDeal(object):
             return '|'.join(queue)
         return '|'
         
+def set_content_to_tree(self, content_id_set):
+    if not content_id_set:
+        return 0
 
+    for cobj in MyQuery(content_id_set,Content):
+        item = TreeWidgetItem()
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setText(0,cobj.name)
+        item.model_data = {
+                            'id':cobj.id,
+                            'name':cobj.name,
+                            'text':cobj.text,
+                            'object':cobj,
+        }
+        item.typelc = 'c'
+        self.insertTopLevelItem(0,item)
 
 if __name__ == '__main__':
     obj = models.Content

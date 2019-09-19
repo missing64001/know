@@ -1,5 +1,10 @@
-
-
+import datetime
+import time
+time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
+week = datetime.datetime.now().weekday() + 1
+time_now_str = time_now_str[:8] + '-%d' % week + time_now_str[8:]
+print(time_now_str)
+exit()
 from qt import TextEdit
 from PyQt5.QtWidgets import QApplication, QMainWindow
 import sys

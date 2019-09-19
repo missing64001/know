@@ -2,7 +2,7 @@
 # 需要进一步优化 搜索后显示单独的content
 
 
-
+import copy
 
 
 def know002_search_again(self,txt):
@@ -21,6 +21,7 @@ def know002_search_again(self,txt):
     
     text = self.le1.text()
     print(txt)
+    all_change_citem = []
     for citem in citemall:
         mym = citem.model_data['object']
         if str(mym.model) == "<class 'data.models.Label'>":
@@ -30,9 +31,18 @@ def know002_search_again(self,txt):
         else:
             if txt in mym.name.lower():
                 citem.setForeground(0,QBrush(QColor("#aa3333")))
+                all_change_citem.append(citem.model_data['object'].id)
                 continue
             elif txt in mym.text.lower():
                 citem.setForeground(0,QBrush(QColor("#557033")))
+                all_change_citem.append(citem.model_data['object'].id)
                 continue
         citem.setForeground(0,QBrush(QColor("#000000")))
+
+    # 原有label上的重新搜索再优化 1829
+    return set(all_change_citem)
+
+
+
+
     # print(len(citemall))
