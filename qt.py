@@ -1661,6 +1661,7 @@ class Mainwindow(QMainWindow):
         self.set_shortcut('shotscreen','alt+B',self.shortcut_shotscreen )
         self.set_shortcut('setmm','ctrl+m',self.shortcut_setmm )
         self.set_shortcut('examine_data','ctrl+E',self.shortcut_examine_data )
+        self.set_shortcut('copy_text','ctrl+shift+c',self.shortcut_copy_text )
 
 
 
@@ -1797,6 +1798,12 @@ class Mainwindow(QMainWindow):
         local_all_data = models.all_data
         save_all_data(*local_all_data)
         return models.check_data()
+
+    def shortcut_copy_text(self):
+        text = (models.contentdict[170][2])
+        text = re.findall(r'<copy_texts>([\w\W]*?)<copy_texte>',text)[0]
+        text = text.split('\n')[1].strip()
+        pyperclip.copy(text)
 
     def exec_test(self):
         # return myexec()

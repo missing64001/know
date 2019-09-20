@@ -6,6 +6,18 @@ import copy
 
 
 def know002_search_again(self,txt):
+    # 删除 顶层的 靠前的 content
+    deleteitems = []
+    for i in range(self.tree.topLevelItemCount()):
+        item = self.tree.topLevelItem(i)
+        if str(item.model_data['object'].model) == "<class 'data.models.Label'>":
+            break
+        deleteitems.append(i)
+
+    for _ in deleteitems:
+        self.tree.takeTopLevelItem(0)
+
+        
     txt = txt.lower()
     from PyQt5.QtGui import QFont, QColor, QBrush
     citems = self.tree.children()
@@ -38,6 +50,9 @@ def know002_search_again(self,txt):
                 all_change_citem.append(citem.model_data['object'].id)
                 continue
         citem.setForeground(0,QBrush(QColor("#000000")))
+
+
+
 
     # 原有label上的重新搜索再优化 1829
     self.tree.set_content_to_tree_top(all_change_citem)
