@@ -33,16 +33,17 @@ import datetime
 import pickle
 from func.hcalendar import HCalendar
 import subprocess
-import screen_capture
 from multiprocessing import Process,Pipe
+from func import screen_capture
 from func.passworkdialog import PasswdDialog
 from func.hgcrypto import mmCrypto
 from func.myexcept import *
 from func.labelhistory import LabelHistory
-from xpinyin import Pinyin
 from func.know001_follow_know import single_windows, follow_know_windows
 from func.know002_search_again import know002_search_again
+from func.hotkey import Hotkey
 
+from xpinyin import Pinyin
 # sys.setrecursionlimit(150) # set the maximum depth as 1500
 
 
@@ -1255,6 +1256,8 @@ class LabelTree(QTreeWidget):
                 self.add_child_tem()
             else:
                 self.add_next_item()
+        elif event.key() == Qt.Key_Escape:
+            self.mself.dia.close()
 
     def dragMoveEvent(self, event):
         self.sitems = self.selectedItems()
@@ -1658,10 +1661,13 @@ class Mainwindow(QMainWindow):
         self.set_shortcut('writetime','Ctrl+T',self.shortcut_writetime )
         self.set_shortcut('writetime','alt+T',self.shortcut_writetime )
         self.set_shortcut('git','alt+G',self.shortcut_git )
-        self.set_shortcut('shotscreen','alt+B',self.shortcut_shotscreen )
         self.set_shortcut('setmm','ctrl+m',self.shortcut_setmm )
         self.set_shortcut('examine_data','ctrl+E',self.shortcut_examine_data )
         self.set_shortcut('copy_text','ctrl+shift+c',self.shortcut_copy_text )
+        # self.set_shortcut('shotscreen','alt+B',self.shortcut_shotscreen )
+        hotkey = Hotkey()
+        hotkey.closeApp.connect(self.shortcut_shotscreen)
+        hotkey.start()
 
 
 
@@ -1784,6 +1790,8 @@ class Mainwindow(QMainWindow):
 
     def shortcut_shotscreen(self):
         # app = QApplication.instance() or QApplication(sys.argv)
+        # import importlib
+        # importlib.reload(screen_capture)
         screen_capture.WScreenShot.run()
         # app.exec_()
 

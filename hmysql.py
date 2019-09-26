@@ -152,7 +152,7 @@ def run_for_create(conn1):
                 obj = Content.objects.get(id=395)
                 conn1.send(obj.text)
             elif getrecv == 'time_connect':
-                Content.objects.filter(id=-1)
+                Content.objects.get(id=395)
                 conn1.send('bb')
 
             elif getrecv == 'mysql_all_data':
@@ -863,7 +863,10 @@ def get_md5_bj(lst1,lst2):
                     show_id[1].update(l1[s])
 
         res.append(r)
-    pprint(res)
+    try:
+        pprint(res)
+    except:
+        'pprint 有字符不能显示'
 
 def randomstr(n):
     src = str(time.time())

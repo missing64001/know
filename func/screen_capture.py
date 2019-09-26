@@ -1,3 +1,7 @@
+# 用于截屏的
+
+
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -19,7 +23,7 @@ class WScreenShot(QWidget):
     def run(cls):
         cls.win = cls()
         cls.win.show()
-    
+
     def __init__(self, parent = None):
         super(WScreenShot, self).__init__(parent)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
@@ -70,10 +74,26 @@ class WScreenShot(QWidget):
             # 通用
             screenshot = QApplication.primaryScreen().grabWindow(QApplication.desktop().winId())
             
+
+            # print(self.startPoint.x(),self.startPoint.y(),self.endPoint.x(),self.endPoint.y())
+
+
+
+
             x1 = min(self.startPoint.x(),self.endPoint.x())
             y1 = min(self.startPoint.y(),self.endPoint.y())
             x2 = max(self.startPoint.x(),self.endPoint.x()) - x1
             y2 = max(self.startPoint.y(),self.endPoint.y()) - y1
+
+
+            if self.startPoint.x() > self.endPoint.x():
+                x1 += 1
+                x2 -= 1
+            if self.startPoint.y() > self.endPoint.y():
+                y1 += 1
+                y2 -= 1
+
+
             rect = QRect(x1,y1,x2,y2)
             # rect = QRect(abs(rect.x()),abs(rect.y()),abs(rect.width()),abs(rect.height()))
             # print(self.startPoint)
@@ -84,6 +104,7 @@ class WScreenShot(QWidget):
 
             QGuiApplication.clipboard().setPixmap(outputRegion)
             self.close()
+
 
 if __name__ == '__main__':
     app = QApplication.instance() or QApplication(sys.argv)

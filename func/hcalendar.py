@@ -336,7 +336,7 @@ class HCalendar(object):
         if history:
             return history.start() + 10,'<%s>\n    \n'%time_now_str,-1
         else:
-            return -1,'\n<history>\n<%s>\n    \n</history>\n'%time_now_str,len(text) + 35
+            return -1,'\n<history>\n<%s>\n    \n</history>\n'%time_now_str,len(text) + 37
 
 
 if __name__ == '__main__':
