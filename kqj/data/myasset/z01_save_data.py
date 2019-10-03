@@ -1,5 +1,7 @@
 
-
+x = 22033+20+32.8+20.8846+5805+18.468+30000+1979+11000
+print(x)
+exit()
 
 print('v 1.01')
 import sys
@@ -27,7 +29,7 @@ from hmysql import MYSQL
 import traceback
 
 def main():
-    tinterval = Time_interval(save_data,1/6)
+    tinterval = Time_interval(save_data,10*60)
     while True:
         tinterval.run()
 

@@ -28,7 +28,7 @@ from hmysql import MYSQL
 import traceback
 import json
 
-M = ['BTS','HTB','CYB','SEER','HT','ETH','OCT','YOYOW','EOS','FIL6','ABT','WAL','THETA']
+M = ['BG','SEER','ETH','OCT','YOYOW','EOS','FIL6','WAL']
 name_change = {
     'ETH':'ethereum',
     'BTS':'bitshares',
@@ -39,9 +39,12 @@ name_change = {
     'THETA':'thetatoken',
 
 }
+IDDICT={
+    'BG':'bg/821704931',
+}
 
 def main():
-    tinterval = Time_interval(save_data,1/6)
+    tinterval = Time_interval(save_data,10*60)
     while True:
         tinterval.run()
 
@@ -80,25 +83,26 @@ def get_data():
 
     for m in M:
         try:
-            if m == 'CYB':
-                reslst.append(deal_data(*get_cyb()))
-            name = name_change.get(m,m)
-            data = mytoken_set_cookie('https://public.bqi.com/public/v1/ticker?code=%s&convert=CNY' % name)
-            data = json.loads(data.decode())[0]
-            name,price,volume = m,float(data['price_cny']),int(data['volume_24h_cny'])
-            if not price:
-                name,price,volume = m,round(float(data['price_usd'])*6.7160,4),int(data['volume_24h_usd'])*6.7160
-            print(name,price,volume,end='\r')
-            reslst.append(deal_data(name,price,volume))
+            if m == 'BG':
+                reslst.append(deal_data(*get_data_by_mytoken(m,IDDICT[m])))
+            else:
+                name = name_change.get(m,m)
+                data = mytoken_set_cookie('https://public.bqi.com/public/v1/ticker?code=%s&convert=CNY' % name)
+                data = json.loads(data.decode())[0]
+                name,price,volume = m,float(data['price_cny']),int(data['volume_24h_cny'])
+                if not price:
+                    name,price,volume = m,round(float(data['price_usd'])*6.7160,4),int(data['volume_24h_usd'])*6.7160
+                print(name,price,volume,end='\r')
+                reslst.append(deal_data(name,price,volume))
         except:
             pass
-            # traceback.print_exc()
+            traceback.print_exc()
 
     return reslst
 
-def get_cyb():
+def get_data_by_mytoken(name,id_):
 
-    data = mytoken_set_cookie('https://www.mytoken.io/currency/cyb/821689818?legal_currency=CNY')
+    data = mytoken_set_cookie('https://www.mytoken.io/currency/%s?legal_currency=CNY' % id_)
     text = data.decode()
     from lxml import etree
     html = etree.HTML(text)
@@ -106,7 +110,11 @@ def get_cyb():
     volume = html.xpath('//*[@id="__layout"]/div/div[1]/section/div[1]/div[1]/div[3]/div[2]/div[2]/p/text()')[0]
     volume = volume.replace('¥','').replace(',','')
     # volume = round(float(volume)*6.9,2)
-    return 'CYB',price,volume
+    if '万' in volume:
+        volume = float(volume.replace('万','')) * 10000
+    elif '亿' in volume:
+        volume = float(volume.replace('亿','')) * 100000000
+    return name,price,volume
 
 def mytoken_set_cookie(url,t=0):
     t += 1

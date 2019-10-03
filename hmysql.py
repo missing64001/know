@@ -50,6 +50,8 @@ from django.db.utils import OperationalError
 from pymysql.err import OperationalError as pe_OperationalError
 from socket import timeout
 
+from django.db.models.query import QuerySet
+
 
 LABEL_FIELDS = ('id','name','pid','queue','grade','create_date')
 CONTENT_FIELDS = ('id','name','text','create_date')
@@ -304,7 +306,6 @@ def run(conn1):
     # f2,re1 = lst
     while True:
         f2 = QUE.get()
-
         try:
             end = '\n' if QUE.qsize() > 5 else '\r'
             print('未完成数量',QUE.qsize(),'运行中。。。',end=end)

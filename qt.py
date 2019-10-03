@@ -1,6 +1,7 @@
 
 import sys
 import os
+import imp as impp
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFrame,QSplitter, QStyleFactory, QApplication
 from PyQt5.QtWidgets import QTreeWidget, QTextEdit, QMainWindow, QTreeWidgetItem, QLineEdit,QPushButton, QLabel,QMenu
 from PyQt5.QtWidgets import QDialog, QShortcut, QAbstractItemView, QAction ,QMessageBox
@@ -25,6 +26,7 @@ import sip
 from hmysql import Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,MyQuery,save_all_data,      Label,Content ,runn
 import time
 from django.db import connection
+from django.db import models
 from functools import reduce
 import re
 import traceback
@@ -159,6 +161,9 @@ class TextEdit(QTextEdit):
         # self.password = None
         self.mmcrypto = mmCrypto()
         self.another_textedit = QTextEdit()
+
+        self.set_subtextedit()
+        self.subtexteditOpen = False
 
     def __func_arg__(self):
         self.git_cwd = 'all'
@@ -331,6 +336,9 @@ class TextEdit(QTextEdit):
                     elif self.frameStyle() == 3:
                         self.setFrameStyle(54)
                         self.ismyInsertPlainText = False
+
+                elif res[0] == 'hotswap':
+                    self.mself.setHotSwap(res[1:])
 
                 else:
                     super().mouseDoubleClickEvent(event)
@@ -596,6 +604,65 @@ class TextEdit(QTextEdit):
             text = text.replace(replacetext,'<quote:%s>' % r[0])
         return text
 
+    def set_subtextedit(self):
+        self.subtextedit = QTextEdit("气泡提示<b>demo</b>")
+        self.subtextedit.setWindowFlags(Qt.FramelessWindowHint)
+        self.subtextedit.setReadOnly(True)
+        # self.subtextedit.setWindowOpacity(0.7)
+        self.subtextedit.setAlignment(Qt.AlignCenter)
+        self.subtextedit.resize(300,30)
+
+        self.subtextedit2 = QTextEdit("气泡提示<b>demo</b>")
+        self.subtextedit2.setWindowFlags(Qt.FramelessWindowHint)
+        self.subtextedit2.setReadOnly(True)
+        # self.subtextedit2.setWindowOpacity(0.7)
+        self.subtextedit2.resize(300,300)
+
+        self.subtextedit.show()
+        self.subtextedit2.show()
+        self.subtextedit.close()
+        self.subtextedit2.close()
+    
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if event.button() == Qt.LeftButton and QApplication.keyboardModifiers()==Qt.ControlModifier:
+            pos = self.mapToGlobal(event.pos())
+            posx = pos.x()+20
+            posy = pos.y()+20
+            self.subtextedit.move(posx,posy)
+            self.subtextedit.show()
+
+            self.subtextedit2.move(posx,posy+29)
+            self.subtextedit2.show()
+
+
+            x = self.textCursor()
+            self.moveCursor(x.StartOfBlock,x.MoveAnchor)
+            self.moveCursor(x.EndOfBlock,x.KeepAnchor)
+            zzz = self.textCursor().selectedText().strip()
+            res = zzz.split('|')
+            super().mouseDoubleClickEvent(event)
+            title = 'None'
+            text = 'None'
+            if res[0] == 'content':
+                r = res[1].strip().split()[0]
+                if r.isdigit():
+                    r = int(r)
+                    print(r)
+
+                    data = models.contentdict.get(r)
+                    title = data[1]
+                    text = data[2]
+
+            self.subtextedit.setText(title)
+            self.subtextedit2.setText(text)
+
+    def mouseReleaseEvent(self, event):
+        if event.button () == Qt.LeftButton:
+            self.subtextedit.close()
+            self.subtextedit2.close()
+        super().mouseReleaseEvent(event)
+
     def exec_test(self,**kw):
         print('exec_test')
         return myexec()
@@ -603,7 +670,71 @@ class TextEdit(QTextEdit):
         s = clipboard.text().replace('\n','')
         self.insertPlainText(s)
 
+class MyLineEdit(QLineEdit):
+    def __init__(self,*args,**kw):
+        self.historytext = []
+        self.pos = 0
+        super().__init__(*args,**kw)
+        # self.returnPressed.connect(self.addhistorytext)
 
+    def keyPressEvent(self, event):
+        if event.key() == 16777235 and QApplication.keyboardModifiers()==Qt.ControlModifier:
+            'ctrl 上'
+        elif event.key() == 16777237 and QApplication.keyboardModifiers()==Qt.ControlModifier:
+            'ctrl 下'
+        elif event.key() == 16777234 and QApplication.keyboardModifiers()==Qt.ControlModifier:
+            'ctrl 左'
+            if self.pos <= 0:
+                return
+            self.pos -= 1
+            self.setText(self.historytext[self.pos])
+        elif event.key() == 16777236 and QApplication.keyboardModifiers()==Qt.ControlModifier:
+            'ctrl 右'
+            if self.pos >= len(self.historytext)-1:
+                return
+            self.pos += 1
+            self.setText(self.historytext[self.pos])
+        else:
+            super().keyPressEvent(event)
+
+    def addhistorytext(self):
+        text = self.text()
+        if text in self.historytext:
+            self.historytext.remove(text)
+        self.historytext.append(text)
+        self.pos = len(self.historytext)-1
+
+class MyLineEdit_2(MyLineEdit):
+
+    def keyPressEvent(self, event):
+        if event.key() == 16777235 and QApplication.keyboardModifiers()==Qt.ControlModifier:
+            'ctrl 上'
+        elif event.key() == 16777237 and QApplication.keyboardModifiers()==Qt.ControlModifier:
+            'ctrl 下'
+        elif event.key() == 16777234 and QApplication.keyboardModifiers()==Qt.ControlModifier:
+            'ctrl 左'
+            if self.pos <= 0:
+                return
+            self.pos -= 1
+            self.mself.label_tree_clicked(self.historytext[self.pos],False)
+        elif event.key() == 16777236 and QApplication.keyboardModifiers()==Qt.ControlModifier:
+            'ctrl 右'
+            if self.pos >= len(self.historytext)-1:
+                return
+            self.pos += 1
+            self.mself.label_tree_clicked(self.historytext[self.pos],False)
+        else:
+            super().keyPressEvent(event)
+
+    def addhistorytext(self,id_):
+        if id_ in self.historytext:
+            self.historytext.remove(id_)
+        self.historytext.append(id_)
+        self.pos = len(self.historytext)-1
+
+    def set_mself(self,mself):
+        self.mself = mself
+        
 
 class TreeWidgetItem(QTreeWidgetItem):
     def __init__(self, *arg, **kw):
@@ -649,14 +780,17 @@ class MyTree(QTreeWidget):
     def dropEvent(self, event):
 
         sitems = self.selectedItems()
-                
+        
+        # 设置旧的parent供后面使用 oldparent里面又多个属性以便以后可以修改
+        # 但可以改变不迁移的手段 直接不迁移 而不是迁移后再进行判断
         for item in sitems:
             pitem = item.parent()
             item.oldparent = (pitem, self.indexItem(item), item)
 
         QTreeWidget.dropEvent(self,event)
 
-
+        querysetlist = set()
+        # 修改 已经迁移了的item的属性标签
         for item in sitems:
             obj = item.model_data['object']
             pobj = item.parent().model_data['object'] if item.parent() else None
@@ -670,8 +804,10 @@ class MyTree(QTreeWidget):
                     if oldpobj:
                         obj.labels.remove(oldpobj)
                     obj.labels.add(pobj)
-                    obj.save()
+                    querysetlist.add(obj)
+                    # obj.save()
 
+        # 迁移后 判断父亲 如果不对则 不迁移
         for item in sitems:
             if item.parent():
                 pobj = item.parent().model_data['object']
@@ -679,25 +815,12 @@ class MyTree(QTreeWidget):
                     # print(1,item.model_data['name'],item.parent().model_data['name'])
                     obj = item.model_data['object']
                     obj.pid = pobj.id
-                    obj.save()
-
+                    querysetlist.add(obj)
+                    # obj.save()
+        
+        for obj in querysetlist:
+            obj.save()
         self.save_queue(item.parent())
-                # label_queue = []
-                # content_queue = []
-                # for i in range(item.parent().childCount()):
-                #     if gettype(item.parent().child(i).model_data['object'])=='l':
-                #         label_queue.append(str(item.parent().child(i).model_data['object'].id))
-                #     else:
-                #         content_queue.append(str(item.parent().child(i).model_data['object'].id))
-
-
-
-                # queue = (','.join(label_queue),','.join(content_queue))
-
-                # queue = '|'.join(queue)
-                # pobj.queue = queue
-                # # print(pobj.name,pobj.id,pobj.queue)
-                # pobj.save()
 
     # tree deal
     def indexItem(self,item):
@@ -1072,7 +1195,7 @@ class MyTree(QTreeWidget):
         # print(self.mself.expanddict)
     
     def save_queue(self,item):
-        print('save_queue',end='\r')
+        print('                         save_queue',end='\r')
         if not item:
             return
         obj = item.model_data['object']
@@ -1511,6 +1634,7 @@ class Mainwindow(QMainWindow):
         self.tree = None
         self.textEdit = None
         self.cl_bt_le = None
+        self.actionDict = dict()
         self.pin = Pinyin()
 
         self.load_Expanded()
@@ -1525,11 +1649,11 @@ class Mainwindow(QMainWindow):
 
         self.timer_save_time = None
 
-        # 每30分钟连接服务器一次
-        self.timer_connect = QTimer(self)
-        self.timer_connect.setSingleShot(False)
-        self.timer_connect.timeout.connect(self.connect_db)
-        self.timer_connect.start(1000 * 60 * 5)
+        # # 每30分钟连接服务器一次
+        # self.timer_connect = QTimer(self)
+        # self.timer_connect.setSingleShot(False)
+        # self.timer_connect.timeout.connect(self.connect_db)
+        # self.timer_connect.start(1000 * 60 * 5)
 
 
 
@@ -1550,6 +1674,7 @@ class Mainwindow(QMainWindow):
 
         self.initUI()
         self.addNewFunc()
+        self.hotSwapPreLoading()
 
     # @tryruntime
     def connect_db(self):
@@ -1576,13 +1701,14 @@ class Mainwindow(QMainWindow):
         self.tree.set_mself(self)
         self.tree.set_mysender(self.label_tree_clicked)
         self.textEdit = TextEdit(mself=self)
-        self.le1 = QLineEdit()
+        self.le1 = MyLineEdit()
         self.le1.returnPressed.connect(self.search_models)
 
         # self.cl_bt_bt = QLabel('标签')
         
         cl_bt_hbox = QHBoxLayout()
-        self.cl_bt_le = QLineEdit('内容')
+        self.cl_bt_le = MyLineEdit_2('内容')
+        self.cl_bt_le.set_mself(self)
         self.cl_bt_bt = QPushButton('local')
         self.cl_bt_bt.clicked.connect(self.cl_bt_bt_clicked)
         
@@ -1699,6 +1825,9 @@ class Mainwindow(QMainWindow):
         save.triggered.connect(fun)
 
         self.file.addAction(save)
+
+        shortcut = shortcut.lower().replace(' ','')
+        self.actionDict[shortcut] = save
 
     def save_text(self):
         self.show_labels_pre()
@@ -2210,15 +2339,18 @@ class Mainwindow(QMainWindow):
                         citem.setFont(0,font)
                         self.tree.insertItem(item,0,citem)
 
-    def label_tree_clicked(self,id):
+    def label_tree_clicked(self,id,isaddhistorytext=True):
 
         self.show_labels_pre()
         self.content_layout_current_id = id
+        if isaddhistorytext:
+            self.cl_bt_le.addhistorytext(self.content_layout_current_id)
         self.show_labels()
 
     def search_models(self):
         text = self.le1.text()
         self.labelhistory.addHistory(text)
+        self.le1.addhistorytext()
 
         if text[0] == '#':
             # cobj = models.Content.objects.get(name='know_setting')
@@ -2409,6 +2541,50 @@ class Mainwindow(QMainWindow):
             self.show_labels_pre()
             print(time.ctime(),'完成备份' , end = '\r')
 
+    def setHotSwap(self,res):
+        if len(res) == 1:
+            hotkey = 'alt+a'
+            funstr = res[0]
+        elif len(res) == 2:
+            hotkey = res[0]
+            funstr = res[1]
+        else:
+            print('setHotSwap 错误的参数')
+
+        funstr = funstr.split('.')
+        package = funstr[:-1]
+        funstr = funstr[-1]
+
+        imp = __import__('func.hotswap.' + '.'.join(package))
+        imp = getattr(imp,'hotswap')
+        for pp in package:
+            imp = getattr(imp,pp)
+
+        impp.reload(imp)
+        fun = getattr(imp,funstr)
+        fun = tryfun(fun)
+        
+        imp.self = self
+
+        if hotkey in self.actionDict:
+            self.file.removeAction(self.actionDict.pop(hotkey))
+
+
+
+
+        self.set_shortcut(funstr,hotkey,fun)
+        print('加载了插件',funstr)
+
+    def hotSwapPreLoading(self):
+        cobj = MyModels(Content,None,170)
+        if cobj.name != 'know_setting':
+            raise ValueError('name is %s not know_setting' % cobj.name)
+        
+        res = re.findall(r'\<hotswap\>([\w\W]+)\<hotswapend\>',cobj.text)[0].strip()
+        res = [   s.strip().split('|')      for s in res.split('\n')]
+        for rr in res:
+            self.setHotSwap(rr[1:])
+
     # 旧的
     def search_models_none(self):
         def labels_children(labels):
@@ -2474,6 +2650,14 @@ class QueueDeal(object):
             return '|'.join(queue)
         return '|'
         
+
+def tryfun(fun):
+    def inner():
+        try:
+            fun()
+        except Exception:
+            traceback.print_exc()
+    return inner
 
 
 if __name__ == '__main__':
