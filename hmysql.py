@@ -59,6 +59,8 @@ HGFILE_FIELDS = ('id','name','path','create_date')
 get_labels_by_content = {}
 get_contents_by_label = {}
 ALLDATA_FILENAME = os.path.join(CURRENTURL,'alldata.dat')
+NO_INTERNET = False
+
 # REPLACE = {}
 
 '''
@@ -402,7 +404,12 @@ def getattr_data(di,fields,objid,name):
 def setattr_data(di,fields,objid,name,value):
     di[objid][fields.index(name)] = value
 
-
+def no_internet_decs(fun):
+    def inner(*args,**kw):
+        if NO_INTERNET:
+            return
+        return fun(*args,**kw)
+    return inner
 
 
 class MyModels(object):
@@ -516,39 +523,51 @@ class MyModels(object):
             return super().__setattr__(name,value)
 
     def get_data(self):
-        if not self.all_data:
-            all_data = get_all_data_from_mysql()
-            if os.path.exists(ALLDATA_FILENAME):
-                loacal_all_data = get_all_data_from_local()
-                if get_md5(all_data) != get_md5(loacal_all_data):
+        try:
+            if not self.all_data:
+                all_data = get_all_data_from_mysql()
+                if os.path.exists(ALLDATA_FILENAME):
+                    loacal_all_data = get_all_data_from_local()
+                    if get_md5(all_data) != get_md5(loacal_all_data):
 
-                    get_md5_bj(all_data,loacal_all_data)
-                    print(get_md5(all_data))
-                    print(get_md5(loacal_all_data))
-                    print('数据不一致保存到了', save_all_data(*all_data,True))
-                    # raise ValueError('mysql data different from local data')
-                    # all_data = loacal_all_data
-                    self.mysql_data.append(all_data[0])
-                    self.mysql_data.append(all_data[1])
-                    self.mysql_data.append(all_data[2])
-                    self.mysql_data.append(all_data[3])
+                        get_md5_bj(all_data,loacal_all_data)
+                        print(get_md5(all_data))
+                        print(get_md5(loacal_all_data))
+                        print('数据不一致保存到了', save_all_data(*all_data,True))
+                        # raise ValueError('mysql data different from local data')
+                        # all_data = loacal_all_data
+                        self.mysql_data.append(all_data[0])
+                        self.mysql_data.append(all_data[1])
+                        self.mysql_data.append(all_data[2])
+                        self.mysql_data.append(all_data[3])
 
-                    self.local_data.append(loacal_all_data[0])
-                    self.local_data.append(loacal_all_data[1])
-                    self.local_data.append(loacal_all_data[2])
-                    self.local_data.append(loacal_all_data[3])
+                        self.local_data.append(loacal_all_data[0])
+                        self.local_data.append(loacal_all_data[1])
+                        self.local_data.append(loacal_all_data[2])
+                        self.local_data.append(loacal_all_data[3])
+                    else:
+                        print('数据一致性验证完毕')
                 else:
-                    print('数据一致性验证完毕')
-            else:
-                loacal_all_data = all_data
-                print('未获得本地数据')
+                    loacal_all_data = all_data
+                    print('未获得本地数据')
 
+                self.all_data.append(loacal_all_data[0])
+                self.all_data.append(loacal_all_data[1])
+                self.all_data.append(loacal_all_data[2])
+                self.all_data.append(loacal_all_data[3])
+
+            self.labeldict,self.contentdict,self.get_labels_by_content,self.get_contents_by_label = self.all_data
+        except Exception:
+            print('网络错误，仅可查看')
+            loacal_all_data = get_all_data_from_local()
             self.all_data.append(loacal_all_data[0])
             self.all_data.append(loacal_all_data[1])
             self.all_data.append(loacal_all_data[2])
             self.all_data.append(loacal_all_data[3])
+            self.labeldict,self.contentdict,self.get_labels_by_content,self.get_contents_by_label = self.all_data
+            global NO_INTERNET
+            NO_INTERNET = True
 
-        self.labeldict,self.contentdict,self.get_labels_by_content,self.get_contents_by_label = self.all_data
 
     def check_data(self):
         print('get_mysql_all_data...',end = '\r')
@@ -573,24 +592,28 @@ class MyModels(object):
             loacal_all_data = all_data
             print('未获得本地数据')
 
+    @no_internet_decs
     def add(self,*args,**kw):
         if not self.lastcommand:
             raise ValueError('lastcommand is None,can\'t add')
         addfun = getattr(self,'%s_add' % self.lastcommand)
         return addfun(*args,**kw)
 
+    @no_internet_decs
     def remove(self,*args,**kw):
         if not self.lastcommand:
             raise ValueError('lastcommand is None,can\'t remove')
         removefun = getattr(self,'%s_remove' % self.lastcommand)
         return removefun(*args,**kw)
 
+    @no_internet_decs
     def all(self,*args,**kw):
         if not self.lastcommand:
             raise ValueError('lastcommand is None,can\'t remove')
         allfun = getattr(self,'%s_all' % self.lastcommand)
         return allfun(*args,**kw)
 
+    @no_internet_decs
     def labels_add(self,label):
         def _labels_add(label):
             objid = self.objid
@@ -615,6 +638,7 @@ class MyModels(object):
         re2 = (myModels_labels_add,(label.objid,self.objid))
         return whichrun(self,re1,re2)
 
+    @no_internet_decs
     def labels_remove(self,label):
 
         def _labels_remove(label):
@@ -640,6 +664,7 @@ class MyModels(object):
         re2 = (myModels_labels_remove,(label.objid,self.objid))
         return whichrun(self,re1,re2)
 
+    @no_internet_decs
     def create(self,*args,**kw):
 
         # def model_create(self,*args,**kw):
@@ -654,6 +679,7 @@ class MyModels(object):
 
         return data
 
+    @no_internet_decs
     def get_content395(self):
 
         print('get_content395...',end = '\r')
@@ -662,12 +688,14 @@ class MyModels(object):
         print('get_content395完成',end = '\r')
         return data
 
+    @no_internet_decs
     def time_connect(self):
         print('创建mysql连接中。。',end='\r')
         self.ThreadCreate.que.put('time_connect')
         data = self.ThreadCreate.queres.get()
         print('创建mysql连接完成  ',end='\r')
 
+    @no_internet_decs
     def save(self):
         re1 = (lambda:None,())
         if self.model == Label:
@@ -687,6 +715,11 @@ class MyModels(object):
             else:
                 resset.add(i)
         return resset
+
+    def set_readonly(self):
+        if NO_INTERNET:
+            self.mself.textEdit.setReadOnly(True)
+            self.mself.cl_bt_le.setReadOnly(True)
 
     def labels_all(self,*args,**kw):
         data = self.obj.labels.all(*args,**kw)

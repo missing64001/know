@@ -43,6 +43,7 @@ from func.myexcept import *
 from func.labelhistory import LabelHistory
 from func.know001_follow_know import single_windows, follow_know_windows
 from func.know002_search_again import know002_search_again
+from func.know003_set_content_color import setContentColor
 from func.hotkey import Hotkey
 
 from xpinyin import Pinyin
@@ -164,6 +165,8 @@ class TextEdit(QTextEdit):
 
         self.set_subtextedit()
         self.subtexteditOpen = False
+
+        self.cbtxdict = {}
 
     def __func_arg__(self):
         self.git_cwd = 'all'
@@ -641,7 +644,7 @@ class TextEdit(QTextEdit):
             self.moveCursor(x.EndOfBlock,x.KeepAnchor)
             zzz = self.textCursor().selectedText().strip()
             res = zzz.split('|')
-            super().mouseDoubleClickEvent(event)
+
             title = 'None'
             text = 'None'
             if res[0] == 'content':
@@ -654,8 +657,16 @@ class TextEdit(QTextEdit):
                     title = data[1]
                     text = data[2]
 
+            else:
+                self.setTextCursor(x)
+                self.moveCursor(x.StartOfWord,x.MoveAnchor)
+                self.moveCursor(x.EndOfWord,x.KeepAnchor)
+                title = self.textCursor().selectedText().strip()
+                text = self.cbtxdict.get(title,'未收录')
+
             self.subtextedit.setText(title)
             self.subtextedit2.setText(text)
+            self.setTextCursor(x)
 
     def mouseReleaseEvent(self, event):
         if event.button () == Qt.LeftButton:
@@ -669,6 +680,7 @@ class TextEdit(QTextEdit):
         clipboard = QApplication.clipboard()
         s = clipboard.text().replace('\n','')
         self.insertPlainText(s)
+
 
 class MyLineEdit(QLineEdit):
     def __init__(self,*args,**kw):
@@ -703,6 +715,7 @@ class MyLineEdit(QLineEdit):
             self.historytext.remove(text)
         self.historytext.append(text)
         self.pos = len(self.historytext)-1
+
 
 class MyLineEdit_2(MyLineEdit):
 
@@ -761,6 +774,7 @@ class MyTree(QTreeWidget):
         self.itemDoubleClicked.connect(self.itemDoubleClicked_connect)
         self.label_item_dict = {}
         self.content_item_dict = {}
+        # self.customContextMenuRequested.connect(self.showMenu)
 
     def keyPressEvent(self, event):
         if (event.key() == Qt.Key_Insert):
@@ -822,6 +836,12 @@ class MyTree(QTreeWidget):
             obj.save()
         self.save_queue(item.parent())
 
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if event.button() == Qt.RightButton:
+            if gettype(self.currentItem().model_data['object']) == 'l':
+                self.showMenu(self.pos)
+            
     # tree deal
     def indexItem(self,item):
         pitem = item.parent()
@@ -854,6 +874,21 @@ class MyTree(QTreeWidget):
             return [ pitem.child(i) for i in range(pitem.childCount())]
         else:
             return [ self.topLevelItem(i) for i in range(self.topLevelItemCount())]
+
+    def content_and_label_id_items_dict(self,pitem=None):
+        # 获得某个节点下面的item 生成对应label content id的 dict字典
+        labeldict = dict()
+        contentdict = dict()
+        for item in self.children(pitem):
+            obj = item.model_data['object']
+            if gettype(obj) == 'l':
+                labeldict[obj.id] = item
+                sublabeldict,subcontentdict = self.content_and_label_id_items_dict(item)
+                labeldict.update(sublabeldict)
+                contentdict.update(subcontentdict)
+            elif gettype(obj) == 'c':
+                contentdict[obj.id] = item
+        return labeldict,contentdict
 
     def h_sort(self):
         def _sort(item):
@@ -1230,6 +1265,39 @@ class MyTree(QTreeWidget):
             }
             item.typelc = 'c'
             self.insertTopLevelItem(0,item)
+
+    def showMenu(self, pos):
+        self.contextMenu = QMenu(self)
+        t = self.contextMenu.addAction('save to txt')
+        t.triggered.connect(self.saveToTxt)
+        self.contextMenu.exec_(QCursor.pos()) #在鼠标位置显示
+
+    def saveToTxt(self):
+        def _savebylabel(item,path,istr=''):
+            name = item.model_data['object'].name
+            subpath = os.path.join(path,istr+name)
+            if not os.path.exists(subpath):
+                os.makedirs(subpath)
+            for i,subitem in enumerate(self.children(item),1):
+                subobj = subitem.model_data['object']
+                istr = '%04d ' % i
+                if gettype(subobj) == 'l':
+                    _savebylabel(subitem,subpath,istr)
+                elif gettype(subobj) == 'c':
+                    subname = subobj.name
+                    text = subobj.text
+                    filename = os.path.join(subpath,istr + subname + '.txt')
+                    with open(filename,'w',encoding='utf-8') as f:
+                        f.write(text)
+        try:
+            item = self.currentItem()
+            obj = item.model_data['object']
+            _savebylabel(item,r'F:\my\data')
+            print(item.model_data['object'].name,'保存完成')
+        except Exception:
+            traceback.print_exc()
+
+
 
     # 旧的 --------------------------------------------------
     def setitem(self,labels=None,contents=None):
@@ -1661,6 +1729,7 @@ class Mainwindow(QMainWindow):
 
         global models
         models = MyModels()
+        self.models = models
 
         self.get_labels_by_content = models.get_labels_by_content
         self.get_contents_by_label = models.get_contents_by_label
@@ -1673,6 +1742,7 @@ class Mainwindow(QMainWindow):
         t1.start()
 
         self.initUI()
+        self.models.set_readonly()
         self.addNewFunc()
         self.hotSwapPreLoading()
 
@@ -1799,7 +1869,6 @@ class Mainwindow(QMainWindow):
 
         # 设置 le1的上下文菜单
         self.le1.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.le1.customContextMenuRequested.connect(self.showLe1Menu)
         self.labelhistory = LabelHistory()
 
 
@@ -2460,52 +2529,6 @@ class Mainwindow(QMainWindow):
             return content_id_set_by_text,label_id_set
 
 
-
-        # 不需要了
-        # def set_all_data():
-        #     self.get_labels_by_content = {}
-        #     self.get_contents_by_label = {}
-        #     self.labeldict = {}
-        #     self.contentdict = {}
-
-
-        #     def set_content_labels():
-        #         cursor = connection.cursor()
-        #         sql = 'select content_id,label_id from data_content_labels;'
-        #         cursor.execute(sql)
-        #         rows = cursor.fetchall()
-
-        #         for row in rows:
-        #             labels_set = self.get_labels_by_content.get(row[0])
-        #             if not labels_set:
-        #                 self.get_labels_by_content[row[0]] = {row[1]}
-        #             else:
-        #                 labels_set.add(row[1])
-
-        #             contents_set = self.get_contents_by_label.get(row[1])
-        #             if not contents_set:
-        #                 self.get_contents_by_label[row[1]] = {row[0]}
-        #             else:
-        #                 contents_set.add(row[0])
-
-        #     labelall = models.Label.objects.all()
-        #     contentall = models.Content.objects.all()
-            
-
-        #     for label in labelall:
-        #         self.labeldict[label.id] = label
-            
-
-        #     for content in contentall:
-        #         self.contentdict[content.id] = content
-
-            
-        #     set_content_labels()
-
-        # set_all_data()
-
-
-
         textlst = self.le1.text().split(' ')
         # pprint(self.get_contents_by_label)
         content_id_set_by_text,label_id_set = get_contents_by_textlst(textlst)
@@ -2514,7 +2537,13 @@ class Mainwindow(QMainWindow):
         self.tree.set_label_treeitems(label_id_set,self)
         self.tree.setcontent(label_id_set,content_id_set_by_text,self)
         self.tree.h_sort()
+        
 
+        # 设置content颜色
+        setContentColor(self,models)
+
+
+        # 日历排序
         self.hc.h_sort_by_tree(self.tree)
         # self.tree.setcontent(set(),content_id_set_by_true_text,self,False)
 
@@ -2573,7 +2602,7 @@ class Mainwindow(QMainWindow):
 
 
         self.set_shortcut(funstr,hotkey,fun)
-        print('加载了插件',funstr)
+        print('加载了插件',funstr,'快捷键为',hotkey)
 
     def hotSwapPreLoading(self):
         cobj = MyModels(Content,None,170)
