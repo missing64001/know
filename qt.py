@@ -126,11 +126,11 @@ class PushButton(QPushButton):
         obj = self.model_data['object']
         pid = obj.pid
 
-        strlst = [obj.name]
+        strlst = [obj.name + '  %s' % obj.id]
         while pid != 1:
             la = MyModels(Label,None,pid)
             pid = la.pid
-            strlst.append(la.name)
+            strlst.append(la.name + '  %s' % la.id)
 
         self.contextMenu = QMenu(self)
 
@@ -144,7 +144,9 @@ class PushButton(QPushButton):
 
     def Event(self):
         # QMessageBox.information(self, "提示：",'      您选择了'+self.sender().text())
-        self._zself.le1.setText(self.sender().text())
+        text = self.sender().text()
+        text = text.split(' ')[0]
+        self._zself.le1.setText(text)
         self._zself.search_models()
         # print(self.model_data)
 
@@ -658,10 +660,12 @@ class TextEdit(QTextEdit):
                     text = data[2]
 
             else:
-                self.setTextCursor(x)
-                self.moveCursor(x.StartOfWord,x.MoveAnchor)
-                self.moveCursor(x.EndOfWord,x.KeepAnchor)
                 title = self.textCursor().selectedText().strip()
+                if not title.strip():
+                    self.setTextCursor(x)
+                    self.moveCursor(x.StartOfWord,x.MoveAnchor)
+                    self.moveCursor(x.EndOfWord,x.KeepAnchor)
+                    title = self.textCursor().selectedText().strip()
                 text = self.cbtxdict.get(title,'未收录')
 
             self.subtextedit.setText(title)
@@ -839,8 +843,7 @@ class MyTree(QTreeWidget):
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         if event.button() == Qt.RightButton:
-            if gettype(self.currentItem().model_data['object']) == 'l':
-                self.showMenu(self.pos)
+            self.showMenu(self.pos)
             
     # tree deal
     def indexItem(self,item):
@@ -1267,10 +1270,72 @@ class MyTree(QTreeWidget):
             self.insertTopLevelItem(0,item)
 
     def showMenu(self, pos):
-        self.contextMenu = QMenu(self)
-        t = self.contextMenu.addAction('save to txt')
-        t.triggered.connect(self.saveToTxt)
-        self.contextMenu.exec_(QCursor.pos()) #在鼠标位置显示
+
+        if gettype(self.currentItem().model_data['object']) == 'l':
+            self.contextMenu = QMenu(self)
+            t = self.contextMenu.addAction('save to txt')
+            t.triggered.connect(self.saveToTxt)
+            self.contextMenu.exec_(QCursor.pos()) #在鼠标位置显示
+        else:
+            self.contextMenu = QMenu(self)
+
+            cobj = MyModels(Content,None,170)
+            if cobj.name != 'know_setting':
+                raise ValueError('name is %s not know_setting' % cobj.name)
+            res = re.findall(r'\<color\>([\w\W]+)\<colorend\>',cobj.text)[0].split('\n')
+            colorlabelids = [int(r.strip().split('|')[0]) for r in res if r]
+
+
+            t = self.contextMenu.addAction('无  -1')
+            t.triggered.connect(self.changeColor)
+            for id_ in colorlabelids:
+                lobj = MyModels(Label,None,id_)
+                t = self.contextMenu.addAction('%s  %s' % (lobj.name,id_))
+                t.triggered.connect(self.changeColor)
+
+            self.contextMenu.exec_(QCursor.pos()) #在鼠标位置显示
+
+    def changeColor(self):
+        # QMessageBox.information(self, "提示：",'      您选择了'+self.sender().text())
+        text = self.sender().text()
+        colorid_ = int(text.split()[-1])
+
+        cobj = MyModels(Content,None,170)
+        if cobj.name != 'know_setting':
+            raise ValueError('name is %s not know_setting' % cobj.name)
+        res = re.findall(r'\<color\>([\w\W]+)\<colorend\>',cobj.text)[0].split('\n')
+        colorlabels = {int(r.strip().split('|')[0])  : r.strip().split('|')[1] for r in res if r}
+        colorlabels[-1] = 'ffffff'
+
+
+        items = self.selectedItems()
+        iscontinue = False
+        for item in items:
+            cobj = item.model_data['object']
+            labels = models.get_labels_by_content.get(cobj.id)
+
+            if colorid_ == -1:
+                adds = []
+            else:
+                adds = [colorid_]
+            dels = []
+            for laid in labels:
+                if laid == colorid_:
+                    iscontinue = True
+                elif laid in colorlabels:
+                    dels.append(laid)
+            if iscontinue:
+                iscontinue = False
+                continue
+
+            for add_ in adds:
+                cobj.labels.add(MyModels(Label,None,add_))
+            for del_ in dels:
+                cobj.labels.remove(MyModels(Label,None,del_))
+
+            item.setBackground(0,QBrush(QColor("#"+colorlabels[colorid_])))
+
+        self.mself.label_tree_clicked(self.mself.content_layout_current_id)
 
     def saveToTxt(self):
         def _savebylabel(item,path,istr=''):
