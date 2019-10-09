@@ -691,7 +691,20 @@ class MyLineEdit(QLineEdit):
         self.historytext = []
         self.pos = 0
         super().__init__(*args,**kw)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.showMenu)
+        
         # self.returnPressed.connect(self.addhistorytext)
+
+    def showMenu(self):
+        self.contextMenu = QMenu(self)
+        for text in self.historytext:
+            t = self.contextMenu.addAction(text)
+            t.triggered.connect(self.changeC)
+        self.contextMenu.exec_(QCursor.pos())
+
+    def changeC(self):
+        self.mself.search_models()
 
     def keyPressEvent(self, event):
         if event.key() == 16777235 and QApplication.keyboardModifiers()==Qt.ControlModifier:
@@ -720,8 +733,24 @@ class MyLineEdit(QLineEdit):
         self.historytext.append(text)
         self.pos = len(self.historytext)-1
 
+    def set_mself(self,mself):
+        self.mself = mself
+
 
 class MyLineEdit_2(MyLineEdit):
+
+    def showMenu(self):
+        self.contextMenu = QMenu(self)
+        for id_ in self.historytext:
+            lobj = MyModels(Content,None,id_)
+            t = self.contextMenu.addAction('%s  %s' % (lobj.name,id_))
+            t.triggered.connect(self.changeC)
+        self.contextMenu.exec_(QCursor.pos())
+
+    def changeC(self):
+        text = self.sender().text()
+        cid_ = int(text.split()[-1])
+        self.mself.label_tree_clicked(cid_)
 
     def keyPressEvent(self, event):
         if event.key() == 16777235 and QApplication.keyboardModifiers()==Qt.ControlModifier:
@@ -748,9 +777,6 @@ class MyLineEdit_2(MyLineEdit):
             self.historytext.remove(id_)
         self.historytext.append(id_)
         self.pos = len(self.historytext)-1
-
-    def set_mself(self,mself):
-        self.mself = mself
         
 
 class TreeWidgetItem(QTreeWidgetItem):
@@ -1836,7 +1862,8 @@ class Mainwindow(QMainWindow):
         self.tree.set_mself(self)
         self.tree.set_mysender(self.label_tree_clicked)
         self.textEdit = TextEdit(mself=self)
-        self.le1 = MyLineEdit()
+        self.le1 = MyLineEdit(self)
+        self.le1.set_mself(self)
         self.le1.returnPressed.connect(self.search_models)
 
         # self.cl_bt_bt = QLabel('标签')
@@ -1933,7 +1960,6 @@ class Mainwindow(QMainWindow):
 
 
         # 设置 le1的上下文菜单
-        self.le1.setContextMenuPolicy(Qt.CustomContextMenu)
         self.labelhistory = LabelHistory()
 
 
