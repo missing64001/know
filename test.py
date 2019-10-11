@@ -1,8 +1,62 @@
 from pprint import pprint
 
+class A(object):
+    def __new__(cls,*args,**kw):
+        
+        cls.aa()
+        return object.__new__(cls)
+
+    def __init__(self,cc=1):
+        print(cc)
+
+    @classmethod
+    def aa(cls):
+        print('aa1')
+
+    def bb(self):
+        self.aa()
+
+a= A(1)
+b = A(3)
+
+exit()
 
 
 
+
+
+
+
+
+import random
+a = random.random()
+b = 1
+
+print(type(a) == int)
+print(type(a) == float)
+
+exit()
+
+import random
+a = random.random()
+b = '%s' % a
+b = float(b)
+print(a== b)
+print(b)
+print(a)
+exit()
+class Variable_int(int):
+    def __new__(cls, i):
+
+        return super().__new__(cls,i)
+
+a = Variable_int(33)
+print(a)
+print(type(a))
+b = a.__new__(Variable_int,5)
+print(a)
+print(b)
+exit()
 
 from PyQt5.QtWidgets import QWidget,QApplication,QToolTip,QTextEdit,QTreeWidget
 import sys

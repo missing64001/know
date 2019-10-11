@@ -51,7 +51,7 @@ from pymysql.err import OperationalError as pe_OperationalError
 from socket import timeout
 
 from django.db.models.query import QuerySet
-
+import random
 
 LABEL_FIELDS = ('id','name','pid','queue','grade','create_date')
 CONTENT_FIELDS = ('id','name','text','create_date')
@@ -67,28 +67,52 @@ NO_INTERNET = False
     函数内部的函数不能通过pickle进行传递 所以多线程的函数需要进行外部定义
 '''
 
+
+def myModels_id_trans(id_,musttrans=True):
+    if type(id_) == int:
+        return id_
+    elif type(id_) == float:
+        i = 0
+        while True:
+            di = get_create_id_dict()
+            i += 1
+            if i == 5:
+                di[id_]
+            try:
+                return di[id_]
+            except Exception:
+                pass
+            if not musttrans:
+                return id_
+            time.sleep(1)
+    else:
+        ValueError('错误的数据类型 %s %s' % (id_,type(id_)))
+
 def setattr_temp(model,name,value):
+    # 貌似已经不使用了
     time.sleep(3)
     obj = model.objects.get(id=self.objid)
     return setattr(obj,name,value)
 
 def myModels_labels_add(lid,oid):
+    lid = myModels_id_trans(lid)
+    oid = myModels_id_trans(oid)
+
     obj = Content.objects.get(id=oid)
     lobj = Label.objects.get(id=lid)
     obj.labels.add(lobj)
 
 def myModels_labels_remove(lid,oid):
+    lid = myModels_id_trans(lid)
+    oid = myModels_id_trans(oid)
+
     obj = Content.objects.get(id=oid)
     lobj = Label.objects.get(id=lid)
     obj.labels.remove(lobj)
 
-
-
-
-
-
-
 def objsave(model,data):
+    data[0] = myModels_id_trans(data[0])
+
     obj = model.objects.get(id=data[0])
     if model == Label:
         obj.name = data[LABEL_FIELDS.index('name')]
@@ -101,6 +125,18 @@ def objsave(model,data):
     else:
         raise ValueError(str(model) + '错误的参数类型')
     obj.save()
+
+def getattr_data(di,fields,objid,name):
+    objid = myModels_id_trans(objid,False)
+    return di[objid][fields.index(name)]
+
+def setattr_data(di,fields,objid,name,value):
+    objid = myModels_id_trans(objid,False)
+    di[objid][fields.index(name)] = value
+
+def myModels_create(model,id_,kw):
+    obj = model.objects.create(**kw)
+    return 'createdata',id_,obj
 
 
 
@@ -289,6 +325,7 @@ class ConnThread_for_create(QThread):
 
 # 选择哪个运行 后期可以实现 多线程发送
 def whichrun(self,f1,f2,mustrun=True):
+    # 有kw 参考 create
     if len(f1) == 2:
         f1 = (*f1,{})
 
@@ -318,7 +355,16 @@ def run(conn1):
             #         raise ValueError('f2的参数出错 %s' % str(f2))
 
             re2 = f2[0](*f2[1],**f2[2])
+
+            if re2 and len(re2) == 3 and re2[0] == 'createdata':
+                conn1.send(re2)
+
             print('运行完成   ',end='\r')
+
+
+
+
+
         # except OperationalError as e:
         except Exception as e:
 
@@ -337,11 +383,13 @@ def run(conn1):
             with open(filename,'wb') as f:
                 pickle.dump(lst,f)
                 # pickle.dump(REPLACE,f)
-            
+            print(lst)
             print('3秒后重新启动mysql处理')
             time.sleep(3)
             print('重新启动mysql')
+            # 传给了qt -> ConnThread -> 'err'
             conn1.send('err')
+
             conn1.close()
             RUNN_ALIVE = False
             break
@@ -398,11 +446,7 @@ def runn(conn1,conn2,lst):
 
 
 
-def getattr_data(di,fields,objid,name):
-    return di[objid][fields.index(name)]
 
-def setattr_data(di,fields,objid,name,value):
-    di[objid][fields.index(name)] = value
 
 def no_internet_decs(fun):
     def inner(*args,**kw):
@@ -411,12 +455,32 @@ def no_internet_decs(fun):
         return fun(*args,**kw)
     return inner
 
+# class Variable_int(int):
+#     def __init__(self, i):
+#         self.i = i
+#         super().__init__(i)
+        
+def get_create_id_dict():
+    filename = 'gl/record_create_id.txt.bak'
+    with open(filename,'r',encoding='utf-8') as f:
+        data = f.read()
+    data = data.split('\n')
+    # data = [ float(da.split(',')[0]),int(da.split(',')[1]) for da in data if da]
+    data = [ (float(da.split(',')[0]),int(da.split(',')[1])) for da in data if da]
+    return dict(data)
 
 class MyModels(object):
     all_data = []
     mysql_data = []
     local_data = []
     ThreadCreate = ConnThread_for_create()
+    
+    def __new__(cls,*args,**kw):
+        if not hasattr(cls,'CREATIDDICT'):
+            cls.CREATIDDICT = get_create_id_dict()
+        if not hasattr(cls,'HGFILEMAXID'):
+            cls.HGFILEMAXID = cls.get_hgfilemaxid()
+        return object.__new__(cls)
 
     def __init__(self,model=None,obj=None,objid=None):
         self.model = model
@@ -521,6 +585,13 @@ class MyModels(object):
 
         else:
             return super().__setattr__(name,value)
+
+    @classmethod
+    def get_hgfilemaxid(cls):
+        path = os.path.join(CURRENTURL,'kqj','data','static','pic')
+        files = os.listdir(path)
+        files = [   int(file.split('.')[0])     for file in files if len(file.split('.')) == 2]
+        return max(files)
 
     def get_data(self):
         try:
@@ -666,18 +737,38 @@ class MyModels(object):
 
     @no_internet_decs
     def create(self,*args,**kw):
+        while True:
+            id_ = random.random()
+            if id_ not in self.CREATIDDICT:
+                break
+        # 以后赋值给真实id
+        self.CREATIDDICT[id_] = None
 
-        # def model_create(self,*args,**kw):
+        def _create(id_,*args,**kw):
+            data = trans_dict_create_data(kw,id_,self.model)
+            if self.model == models.Label:
+                self.labeldict[data[0]] = data
+                res = MyModels(self.model,None,data[0])
+            elif self.model == models.Content:
+                self.contentdict[data[0]] = data
+                res = MyModels(self.model,None,data[0])
+            elif self.model == models.HGFile:
+                res = data[0]
+            return res
 
 
-        # return model_create(self,*args,**kw)
+        # print('新建item中...',end = '\r')
+        # self.ThreadCreate.que.put((self.model,(self.model.objects.create,args,kw)))
+        # data = self.ThreadCreate.queres.get()
+        # print('新建item完成',end = '\r')
 
-        print('新建item中...',end = '\r')
-        self.ThreadCreate.que.put((self.model,(self.model.objects.create,args,kw)))
-        data = self.ThreadCreate.queres.get()
-        print('新建item完成',end = '\r')
+        # return data
 
-        return data
+
+
+        re1 = (_create,(id_,args),kw)
+        re2 = (myModels_create,(self.model,id_,kw))
+        return whichrun(self,re1,re2)
 
     @no_internet_decs
     def get_content395(self):
@@ -698,6 +789,7 @@ class MyModels(object):
     @no_internet_decs
     def save(self):
         re1 = (lambda:None,())
+        self.objid = myModels_id_trans(self.objid,False)
         if self.model == Label:
             re2 = (objsave,(Label,self.labeldict[self.objid]))
         elif self.model == Content:
@@ -815,6 +907,15 @@ def get_model_all_data(obj):
     for name in field_names:
         lst.append(getattr(obj,name))
     return lst
+
+def trans_dict_create_data(di,id_,model=None):
+
+    if model == models.Content:
+        return [id_,di['name'],di['text'],datetime.datetime.now()]
+    elif model == models.Label:
+        return [id_,di['name'],di['pid'],'',di['grade'],datetime.datetime.now()]
+    else:
+        return [id_]
 
 
 def get_md5(lst):
@@ -1068,8 +1169,24 @@ def set_local_data_to_mysql():
 
 # objsave = 3
 if __name__ == '__main__':
-    main()
-    # set_local_data_to_mysql()
+    # id_ = random.random()
+    # gl = (Content,id_,{'name':'new','text':'sdggg'})
+    # lst = [gl]
+
+
+    filename = os.path.join(CURRENTURL,'gl','errbak.dat')
+    # with open(filename,'wb') as f:
+    #     pickle.dump(lst,f)
+
+
+    with open(filename,'rb') as f:
+        data = pickle.load(f)
+
+    print(data)
+    exit()
+    MyModels()
+    a = MyModels(Content,None,170)
+    print(a)
 else:
     # mymodels = MyModels()
     pass

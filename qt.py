@@ -5,7 +5,7 @@ import imp as impp
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFrame,QSplitter, QStyleFactory, QApplication
 from PyQt5.QtWidgets import QTreeWidget, QTextEdit, QMainWindow, QTreeWidgetItem, QLineEdit,QPushButton, QLabel,QMenu
 from PyQt5.QtWidgets import QDialog, QShortcut, QAbstractItemView, QAction ,QMessageBox
-from PyQt5.QtCore import Qt, QTimer, QRegExp, QThread
+from PyQt5.QtCore import Qt, QTimer, QRegExp, QThread, pyqtSignal
 from PyQt5.QtGui import QKeySequence, QIcon, QBrush, QColor, QFont, QTextDocument, QTextCharFormat ,QTextDocumentFragment ,QTextOption ,QClipboard,QCursor
 
 
@@ -24,6 +24,7 @@ elif bios[0] == 2:
 from pprint import pprint
 import sip
 from hmysql import Q,timezone,      LABEL_FIELDS,CONTENT_FIELDS,HGFILE_FIELDS,MyModels,MyQuery,save_all_data,      Label,Content ,runn
+from hmysql import get_create_id_dict
 import time
 from django.db import connection
 from django.db import models
@@ -71,6 +72,9 @@ def gettype(obj):
 #-------------------重写formysql-------------------
 
 class ConnThread(QThread):
+
+    signal_time = pyqtSignal(str)
+
     def __init__(self,mself):
         super().__init__()
         self.mself = mself
@@ -102,6 +106,53 @@ class ConnThread(QThread):
                         # REPLACE = pickle.load(f)
                     os.remove(filename)
                     break
+                elif res and len(res) == 3 and res[0] == 'createdata':
+                    _,id_,obj = res
+
+                    filename = 'gl/record_create_id.txt.bak'
+                    with open(filename,'a',encoding='utf-8') as f:
+                        f.write('%s,%s\n' % (id_,obj.id))
+                    self.mself.models.CREATIDDICT[id_] = obj.id
+
+                    # 替换数据
+                    self.mself.models.labeldict
+                    if id_ in self.mself.models.labeldict:
+                        da = self.mself.models.labeldict.pop(id_)
+                        da[0] = obj.id
+                        da[-1] = obj.create_date
+                        self.mself.models.labeldict[obj.id] = da
+                    if id_ in self.mself.models.contentdict:
+                        da = self.mself.models.contentdict.pop(id_)
+                        da[0] = obj.id
+                        da[-1] = obj.create_date
+                        self.mself.models.contentdict[obj.id] = da
+
+                    if id_ in self.mself.models.get_labels_by_content:
+                        da = self.mself.models.get_labels_by_content.pop(id_)
+                        self.mself.models.get_labels_by_content[obj.id] = da
+
+                    if id_ in self.mself.models.get_contents_by_label:
+                        da = self.mself.models.get_contents_by_label.pop(id_)
+                        self.mself.models.get_contents_by_label[obj.id] = da
+
+                    for da in self.mself.models.get_labels_by_content.values():
+                        if id_ in da:
+
+                            da.remove(id_)
+                            daadd(obj.id)
+
+                    for da in self.mself.models.get_contents_by_label.values():
+                        if id_ in da:
+
+                            da.remove(id_)
+                            da.add(obj.id)
+
+
+
+
+                    self.signal_time.emit('refresh') # 发送信号
+
+
 
 
             self.mself.conn.close()
@@ -154,6 +205,8 @@ class PushButton(QPushButton):
         self._zself = zself
 
 class TextEdit(QTextEdit):
+
+
     def __init__(self, *arg,mself=None, **kw):
         super().__init__(*arg, **kw)
         self.mself = mself
@@ -167,8 +220,10 @@ class TextEdit(QTextEdit):
 
         self.set_subtextedit()
         self.subtexteditOpen = False
-
+        self.models = MyModels()
         self.cbtxdict = {}
+
+
 
     def __func_arg__(self):
         self.git_cwd = 'all'
@@ -184,14 +239,21 @@ class TextEdit(QTextEdit):
         os.path.join(CURRENTURL,'kqj','data','static','pic')
         if source.hasImage():
             xx = source.imageData()
-            hgfileid = models.HGFile.objects.create(name='qt')
+            # hgfileid = models.HGFile.objects.create(name='qt')
+            
+
+            self.models.HGFILEMAXID += 1
+            hgfileid = self.models.HGFILEMAXID
 
             path = os.path.join('static','pic',str(hgfileid)+'.png')
 
             # hgfile.path = path
 
-            zz = xx.save(os.path.join(CURRENTURL,'kqj','data',path))
             fname = os.path.join(CURRENTURL,'kqj','data',path)
+            if os.path.exists(fname):
+                print(fname,'已经存在')
+                return
+            zz = xx.save(fname)
             
             fragment = QTextDocumentFragment.fromHtml("<img src='%s'>" % fname)
             self.textCursor().insertFragment(fragment);
@@ -944,7 +1006,10 @@ class MyTree(QTreeWidget):
 
 
             for j in reversed(label_queue):
-                j = int(j)
+                try:
+                    j = int(j)
+                except ValueError:
+                    j = float(j)
                 citem = label_id_dict.get(j)
                 if not citem:
                     continue
@@ -952,7 +1017,10 @@ class MyTree(QTreeWidget):
                 item.insertChild(0,citem)
 
             for j in content_queue:
-                j = int(j)
+                try:
+                    j = int(j)
+                except ValueError:
+                    j = float(j)
                 citem = content_id_dict.get(j)
                 if not citem:
                     continue
@@ -1707,7 +1775,10 @@ class LabelTree(QTreeWidget):
             else:
                 queue = []
             for j in reversed(queue):
-                j = int(j)
+                try:
+                    j = int(j)
+                except ValueError:
+                    j = float(j)
                 citem = iddict.get(j)
                 if not citem:
                     continue
@@ -1793,6 +1864,7 @@ class Mainwindow(QMainWindow):
         self.tree = None
         self.textEdit = None
         self.cl_bt_le = None
+        self.dia = None
         self.actionDict = dict()
         self.pin = Pinyin()
 
@@ -1831,6 +1903,7 @@ class Mainwindow(QMainWindow):
 
         t1 = ConnThread(self)
         t1.start()
+        t1.signal_time.connect(self.refresh)
 
         self.initUI()
         self.models.set_readonly()
@@ -2103,8 +2176,49 @@ class Mainwindow(QMainWindow):
         pyperclip.copy(text)
 
     def exec_test(self):
-        # return myexec()
-        self.connect_db()
+        return myexec()
+        class obj(object):
+            create_date = 1
+            id = 0.2176
+
+        id_ = 2176
+                
+        if id_ in self.models.labeldict:
+            da = self.models.labeldict.pop(id_)
+            da[0] = obj.id
+            da[-1] = obj.create_date
+            self.models.labeldict[obj.id] = da
+            print('替换1')
+        if id_ in self.models.contentdict:
+            da = self.models.contentdict.pop(id_)
+            da[0] = obj.id
+            da[-1] = obj.create_date
+            self.models.contentdict[obj.id] = da
+            print('替换2')
+
+        if id_ in self.models.get_labels_by_content:
+            da = self.models.get_labels_by_content.pop(id_)
+            self.models.get_labels_by_content[obj.id] = da
+            print('替换3')
+
+        if id_ in self.models.get_contents_by_label:
+            da = self.models.get_contents_by_label.pop(id_)
+            self.models.get_contents_by_label[obj.id] = da
+            print('替换4')
+
+        for da in self.models.get_labels_by_content.values():
+            if id_ in da:
+                print('替换5')
+                da.remove(id_)
+                daadd(obj.id)
+
+        for da in self.models.get_contents_by_label.values():
+            if id_ in da:
+                print('替换6')
+                da.remove(id_)
+                da.add(obj.id)
+
+
 
     def show_labels_pre(self):
         
@@ -2367,6 +2481,7 @@ class Mainwindow(QMainWindow):
 
         # self.dia.show()
         self.dia.exec()
+        self.dia = None
         # ql.exec_()
 
     def dia_ok_bt_clicked(self):
@@ -2705,6 +2820,15 @@ class Mainwindow(QMainWindow):
         for rr in res:
             self.setHotSwap(rr[1:])
 
+    def refresh(self,s):
+        if s == 'refresh':
+            self.search_models()
+            self.content_layout_current_id = self.models.CREATIDDICT.get(self.content_layout_current_id,self.content_layout_current_id)
+            self.label_tree_clicked(self.content_layout_current_id)
+
+            self.ltree.get_Labels()
+            self.ltree.h_sort()
+
     # 旧的
     def search_models_none(self):
         def labels_children(labels):
@@ -2750,18 +2874,27 @@ class Mainwindow(QMainWindow):
 
         self.tree.setitem(labelobjs,cidset) #labelobjs
 
+
+
 class QueueDeal(object):
     """docstring for QueueDeal"""
     def __init__(self, queue):
         self.queue = queue
+        models = MyModels()
+        create_id_dict = models.CREATIDDICT
+        for key,da in create_id_dict.items():
+            if da:
+                self.queue.replace(str(key),str(da))
         self.set_tqueue()
 
     def set_tqueue(self):
+
         if not self.queue:
             self.queue = [[],[]]
             return
         self.queue = self.queue.split('|')
         self.queue = [      q.split(',') if q else []    for q in self.queue]
+
 
     def queue2str(self):
         queue = self.queue
@@ -2783,99 +2916,3 @@ def tryfun(fun):
 if __name__ == '__main__':
     obj = models.Content
     print(obj)
-
-    # labelall = models.Label.objects.all()
-    # contentall = models.Content.objects.all()
-    # labelall = list(labelall)
-    # for x in contentall.labels.all():
-    #     print(x)
-
-
-
-
-
-
-    # labeldict = {}
-    # for label in labelall:
-    #     labeldict[label.id] = label
-
-    # def get_contents_by_textlst(text):
-    #     content_id_set = set()
-    #     label_id_set = set()
-    #     for i in labeldict:
-    #         label = labeldict[i]
-    #         if text in label.name:
-    #             label_id_set.add(label.id)
-    #     get_label_children(label_id_set)
-    #     return label_id_set
-
-    # def get_label_children(label_id_set):
-    #     llen = len(label_id_set)
-    #     for i in labeldict:
-    #         label = labeldict[i]
-    #         if label.pid in label_id_set:
-    #             label_id_set.add(label.id)
-    #     if llen != len(label_id_set):
-    #         get_label_children(label_id_set)
-    # label_id_set = get_contents_by_textlst('eva')
-    # for i in label_id_set:
-    #     print(labeldict[i].name)
-
-
-    # def bbb():
-    #     # a = sys._getframe()
-    #     aaa()
-    # def aaa():
-    #     a = sys._getframe().f_back.f_back.f_lineno
-    #     print(a)
-    #     print(sys._getframe().f_trace )
-
-    # print(sys._getframe())
-    # # print(type(sys._getframe().f_lasti))
-    # c = sys._getframe()
-    # a = c
-    # print(a.f_lasti)
-    # print(a.f_lineno)
-    # bbb()
-    
-
-    # def get_variable_name(x)->str:
-    #     for k,v in locals().items():
-    #         if v is x:
-    #             return k
-
-    # def print_var(x)->None:
-    #     print(get_variable_name(x),'=',x)
-
-    # a = 1
-    # print_var(a)
-
-
-    # try:
-    #     aacc
-    # except Exception as e:
-    #     print(11)
-    #     pass
-    # print(sys._getframe().f_trace )
-
-
-
-
-    # aa = models.Label.objects.filter(id=1)[0]
-    # print(aa)
-    # print(aa.name)
-    # aa.name ='333'
-    # aa.save()
-
-    # bb = models.Label.objects.filter(name='333')[0]
-    # print(bb.name)
-
-    # print(aa == bb)
-
-
-
-
-    # app = QApplication(sys.argv)
-    # ex = Example()
-    # sys.exit(app.exec_())
-
