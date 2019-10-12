@@ -944,7 +944,11 @@ class MyTree(QTreeWidget):
 
 
             for j in reversed(label_queue):
-                j = int(j)
+                try:
+                    j = int(j)
+                except ValueError:
+                    print(j)
+                    continue
                 citem = label_id_dict.get(j)
                 if not citem:
                     continue
@@ -952,7 +956,11 @@ class MyTree(QTreeWidget):
                 item.insertChild(0,citem)
 
             for j in content_queue:
-                j = int(j)
+                try:
+                    j = int(j)
+                except ValueError:
+                    print(j)
+                    continue
                 citem = content_id_dict.get(j)
                 if not citem:
                     continue
@@ -1707,7 +1715,11 @@ class LabelTree(QTreeWidget):
             else:
                 queue = []
             for j in reversed(queue):
-                j = int(j)
+                try:
+                    j = int(j)
+                except ValueError:
+                    print(j)
+                    continue
                 citem = iddict.get(j)
                 if not citem:
                     continue
