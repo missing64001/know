@@ -1,8 +1,12 @@
 from pprint import pprint
 
-
-
-
+import datetime
+import pytz
+utc_tz = pytz.timezone('UTC')
+create_date =datetime.datetime.now(tz=utc_tz)
+# create_date = datetime.datetime.utcnow()
+print([create_date])
+exit()
 
 from PyQt5.QtWidgets import QWidget,QApplication,QToolTip,QTextEdit,QTreeWidget
 import sys

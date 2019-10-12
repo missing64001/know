@@ -45,6 +45,7 @@ import queue
 from functools import wraps
 import random
 import datetime
+import pytz
 from multiprocessing import Process,Pipe
 from django.db.utils import OperationalError
 from pymysql.err import OperationalError as pe_OperationalError
@@ -82,9 +83,11 @@ def myModels_labels_remove(lid,oid):
     lobj = Label.objects.get(id=lid)
     obj.labels.remove(lobj)
 
-
-
-
+def myModels_create(model,kw):
+    if not model.objects.filter(id=kw['id']):
+        model.objects.create(**kw)
+    else:
+        raise ValueError('重复的id',kw)
 
 
 
@@ -316,7 +319,6 @@ def run(conn1):
             # for i in f2[1]:
             #     if type(i) == int and i >= 999000000000 and f2[0] != model_create:
             #         raise ValueError('f2的参数出错 %s' % str(f2))
-
             re2 = f2[0](*f2[1],**f2[2])
             print('运行完成   ',end='\r')
         # except OperationalError as e:
@@ -417,6 +419,11 @@ class MyModels(object):
     mysql_data = []
     local_data = []
     ThreadCreate = ConnThread_for_create()
+    
+    def __new__(cls,*args,**kw):
+        if not hasattr(cls,'HGFILEMAXID'):
+            cls.HGFILEMAXID = cls.get_hgfilemaxid()
+        return object.__new__(cls)
 
     def __init__(self,model=None,obj=None,objid=None):
         self.model = model
@@ -522,6 +529,13 @@ class MyModels(object):
         else:
             return super().__setattr__(name,value)
 
+    @classmethod
+    def get_hgfilemaxid(cls):
+        path = os.path.join(CURRENTURL,'kqj','data','static','pic')
+        files = os.listdir(path)
+        files = [   int(file.split('.')[0])     for file in files if len(file.split('.')) == 2]
+        return max(files)
+
     def get_data(self):
         try:
             if not self.all_data:
@@ -581,7 +595,13 @@ class MyModels(object):
             loacal_all_data = get_all_data_from_local()
             if get_md5(all_data) != get_md5(loacal_all_data):
 
-                get_md5_bj(all_data,loacal_all_data)
+                res = get_md5_bj(all_data,loacal_all_data)
+                for rr in res:
+                    if rr:
+                        break
+                else:
+                    print('数据一致性验证完毕')
+                    return True
                 print(get_md5(all_data))
                 print(get_md5(loacal_all_data))
                 print('数据不一致保存到了')
@@ -666,18 +686,41 @@ class MyModels(object):
 
     @no_internet_decs
     def create(self,*args,**kw):
+        utc_tz = pytz.timezone('UTC')
+        create_date =datetime.datetime.now(tz=utc_tz)
+        if self.model == models.Label:
+            id_ = max(self.labeldict) + 1
+        elif self.model == models.Content:
+            id_ = max(self.contentdict) + 1
+        kw['create_date'] = create_date
+        kw['id'] = id_
+        def _create(*args,**kw):
+            data = self.get_create_data(kw)
+            if self.model == models.Label:
+                self.labeldict[data[0]] = data
+                res = MyModels(self.model,None,data[0])
+            elif self.model == models.Content:
+                self.contentdict[data[0]] = data
+                res = MyModels(self.model,None,data[0])
+            return res
 
-        # def model_create(self,*args,**kw):
 
+        re1 = (_create,(args,),kw)
+        re2 = (myModels_create,(self.model,kw))
+        return whichrun(self,re1,re2)
 
-        # return model_create(self,*args,**kw)
+        # print('新建item中...',end = '\r')
+        # self.ThreadCreate.que.put((self.model,(self.model.objects.create,args,kw)))
+        # data = self.ThreadCreate.queres.get()
+        # print('新建item完成',end = '\r')
 
-        print('新建item中...',end = '\r')
-        self.ThreadCreate.que.put((self.model,(self.model.objects.create,args,kw)))
-        data = self.ThreadCreate.queres.get()
-        print('新建item完成',end = '\r')
+        # return data
 
-        return data
+    def get_create_data(self,di):
+        if self.model == models.Content:
+            return [di['id'],di['name'],di['text'],di['create_date']]
+        elif self.model == models.Label:
+            return [di['id'],di['name'],di['pid'],'',di['grade'],di['create_date']]
 
     @no_internet_decs
     def get_content395(self):
@@ -817,6 +860,7 @@ def get_model_all_data(obj):
     return lst
 
 
+
 def get_md5(lst):
     m2 = hashlib.md5()
     for l in lst:
@@ -901,6 +945,7 @@ def get_md5_bj(lst1,lst2):
         pprint(res)
     except:
         'pprint 有字符不能显示'
+    return res
 
 def randomstr(n):
     src = str(time.time())

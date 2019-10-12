@@ -184,7 +184,9 @@ class TextEdit(QTextEdit):
         os.path.join(CURRENTURL,'kqj','data','static','pic')
         if source.hasImage():
             xx = source.imageData()
-            hgfileid = models.HGFile.objects.create(name='qt')
+
+            self.models.HGFILEMAXID += 1
+            hgfileid = self.models.HGFILEMAXID
 
             path = os.path.join('static','pic',str(hgfileid)+'.png')
 
