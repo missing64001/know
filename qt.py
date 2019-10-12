@@ -2825,10 +2825,11 @@ class Mainwindow(QMainWindow):
             self.search_models()
             self.content_layout_current_id = self.models.CREATIDDICT.get(self.content_layout_current_id,self.content_layout_current_id)
             self.label_tree_clicked(self.content_layout_current_id)
-
-            self.ltree.get_Labels()
-            self.ltree.h_sort()
-
+            try:
+                self.ltree.get_Labels()
+                self.ltree.h_sort()
+            except:
+                pass
     # 旧的
     def search_models_none(self):
         def labels_children(labels):
