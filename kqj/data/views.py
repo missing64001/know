@@ -50,11 +50,16 @@ def getdata_view(request):
         cobj = Content.objects.get(id=cid)
         res = cobj.text
     elif txt:
-        cobj = Content.objects.get(id=395)
-        time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
-        cobj.text = cobj.text + '\n%s\n%s' % (time_now_str,txt)
-        cobj.save()
-        res = 'txt'
+        if txt == 'cbtx':
+            res = setCBTXDict()
+            res = 'cbtx'+ json.dumps(res)
+            print('cbtx的数量',len(res))
+        else:
+            cobj = Content.objects.get(id=395)
+            time_now_str = time.strftime('%Y%m%d %H:%M:%S',time.localtime(time.time()))
+            cobj.text = cobj.text + '\n%s\n%s' % (time_now_str,txt)
+            cobj.save()
+            res = 'txt'
 
     return HttpResponse(res)
 
@@ -197,6 +202,23 @@ def asset_view(request):
     return render(request,'asset.html',{'assets':assets})
 
 
+
+def setCBTXDict():
+    cbtxdict = dict()
+    pid = 468
+    cobj = Content.objects.filter(labels__pid=468)
+    for obj in cobj:
+        data = obj.text.strip().split('\n')
+        for da in data:
+            if not da:
+                pass
+            elif da[0] == ' ':
+                cbtxdict[title] = cbtxdict.get(title,'') + da + '\n'
+            else:
+                title = da.strip()
+    return cbtxdict
+
+
 def get_user_group(request,groupname=None):
 
     try:
@@ -220,3 +242,4 @@ def get_user_group(request,groupname=None):
         else:
             mygname = None
     return mygname == groupname
+

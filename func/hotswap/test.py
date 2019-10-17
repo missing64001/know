@@ -1,10 +1,11 @@
-import traceback
-
-def test():
-    # print(self)
-    print(111)
-    print(222)
-    sdfdsf
+import datetime
+import time
 
 
-    
+
+times = datetime.datetime.fromtimestamp(1571015700.0)
+
+
+time_now_str = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+
+print(time_now_str)

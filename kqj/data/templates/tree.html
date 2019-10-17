@@ -28,6 +28,7 @@
         input,textarea,a,button{
             font-size: 3rem;
             margin:1rem;
+            font-family:'黑体';
         }
         textarea{
             width: 97%;
@@ -88,12 +89,15 @@
 
         </ul>
     </div>
-    <textarea class="item" readonly></textarea>
+    <textarea class="item" readonly oncopy="translation()" >111111111111</textarea>
     
 
     <button type="button" onclick="sendtxt()">提交</button>
-    <textarea class="sendtxt"></textarea>
+    <button type="button" onclick="audioplay()">播放</button>
 
+    <audio src="https://fanyi.baidu.com/gettts?lan=uk&text=some&spd=3&source=web" controls="controls" preload class="music" id='music' hidden></audio>
+    <textarea class="sendtxt"></textarea>
+    <!-- <embed src="https://fanyi.baidu.com/gettts?lan=uk&text=some&spd=3&source=web"></embed> -->
 
     
    <script type="text/javascript">

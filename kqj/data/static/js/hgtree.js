@@ -53,6 +53,13 @@ function run_ajax(ldata) {
                 alert('提交成功')
             }
             
+            else{
+                if (data.substring(0,4) == 'cbtx'){
+                    window.cbtxdata = JSON.parse(data.substring(4));
+                    alert('词霸天下数据下载成功')
+                }
+            }
+            
 
 
         },
@@ -117,9 +124,37 @@ function itemclick(tt) {
 }
 
 
+
 function sendtxt() {
     var txt = $('textarea.sendtxt').val()
     if (txt){
         run_ajax({"txt":txt})
     }
+}
+
+
+function translation(e) {
+    var txt_cr = document.getSelection().toString();
+    var audio = $('audio.music');
+    audio.attr('src',"https://fanyi.baidu.com/gettts?lan=uk&text="+txt_cr+"&spd=3&source=web")
+    var audio = document.getElementById('music');
+    if(audio!==null){ 
+        if(audio.paused){ 
+        audio.play();// 播放 
+        }else{
+        audio.pause();// 暂停
+        }
+    } 
+    $('textarea.sendtxt').val(window.cbtxdata[txt_cr])
+}
+
+function audioplay(){
+    var audio = document.getElementById('music');
+    if(audio!==null){ 
+        if(audio.paused){ 
+        audio.play();// 播放 
+        }else{
+        audio.pause();// 暂停
+        }
+    } 
 }

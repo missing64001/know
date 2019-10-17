@@ -18,7 +18,7 @@ def setCBTXDict():
     for labelid in allpid:
         contents = self.models.get_contents_by_label.get(labelid,set())
         allcontents |= contents
-    for i,contentid in enumerate(list(allcontents)[2:]):
+    for i,contentid in enumerate(list(allcontents)):  # [2:] 为什么要加这个？
         data = self.models.contentdict[contentid][2]
         data = data.strip().split('\n')
         for da in data:

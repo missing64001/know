@@ -1113,7 +1113,20 @@ def set_local_data_to_mysql():
 
 # objsave = 3
 if __name__ == '__main__':
-    main()
+    pid = 468
+    cbtxdict = dict()
+    cobj = Content.objects.filter(labels__pid=468)
+    for obj in cobj:
+        data = obj.text.strip().split('\n')
+        for da in data:
+            if not da:
+                pass
+            elif da[0] == ' ':
+                cbtxdict[title] = cbtxdict.get(title,'') + da + '\n'
+            else:
+                title = da.strip()
+
+    print(cbtxdict)
     # set_local_data_to_mysql()
 else:
     # mymodels = MyModels()
