@@ -544,21 +544,24 @@ class MyModels(object):
                     loacal_all_data = get_all_data_from_local()
                     if get_md5(all_data) != get_md5(loacal_all_data):
 
-                        get_md5_bj(all_data,loacal_all_data)
-                        print(get_md5(all_data))
-                        print(get_md5(loacal_all_data))
-                        print('数据不一致保存到了', save_all_data(*all_data,True))
-                        # raise ValueError('mysql data different from local data')
-                        # all_data = loacal_all_data
-                        self.mysql_data.append(all_data[0])
-                        self.mysql_data.append(all_data[1])
-                        self.mysql_data.append(all_data[2])
-                        self.mysql_data.append(all_data[3])
+                        res = get_md5_bj(all_data,loacal_all_data)
+                        if res == 'data_same':
+                            print('数据一致性验证完毕')
+                        else:
+                            print(get_md5(all_data))
+                            print(get_md5(loacal_all_data))
+                            print('数据不一致保存到了', save_all_data(*all_data,True))
+                            # raise ValueError('mysql data different from local data')
+                            # all_data = loacal_all_data
+                            self.mysql_data.append(all_data[0])
+                            self.mysql_data.append(all_data[1])
+                            self.mysql_data.append(all_data[2])
+                            self.mysql_data.append(all_data[3])
 
-                        self.local_data.append(loacal_all_data[0])
-                        self.local_data.append(loacal_all_data[1])
-                        self.local_data.append(loacal_all_data[2])
-                        self.local_data.append(loacal_all_data[3])
+                            self.local_data.append(loacal_all_data[0])
+                            self.local_data.append(loacal_all_data[1])
+                            self.local_data.append(loacal_all_data[2])
+                            self.local_data.append(loacal_all_data[3])
                     else:
                         print('数据一致性验证完毕')
                 else:
@@ -594,14 +597,18 @@ class MyModels(object):
         if os.path.exists(ALLDATA_FILENAME):
             loacal_all_data = get_all_data_from_local()
             if get_md5(all_data) != get_md5(loacal_all_data):
-
                 res = get_md5_bj(all_data,loacal_all_data)
-                for rr in res:
-                    if rr:
-                        break
-                else:
+                if res == 'data_same':
                     print('数据一致性验证完毕')
                     return True
+
+                
+                # for rr in res:
+                #     if rr:
+                #         break
+                # else:
+                #     print('数据一致性验证完毕')
+                #     return True
                 print(get_md5(all_data))
                 print(get_md5(loacal_all_data))
                 print('数据不一致保存到了')
@@ -932,6 +939,8 @@ def get_md5_bj(lst1,lst2):
 
         for s in setl3:
             if l1[s] != l2[s]:
+                if i == 1 and s == 395:
+                    continue
                 r.append([[s,l1[s]],[s,l2[s]]])
                 if i == 2:
                     show_id[1].add(s)
@@ -941,10 +950,17 @@ def get_md5_bj(lst1,lst2):
                     show_id[1].update(l1[s])
 
         res.append(r)
+    for rr in res:
+        if rr:
+            break
+    else:
+        res = 'data_same'
+
     try:
         pprint(res)
     except:
         'pprint 有字符不能显示'
+
     return res
 
 def randomstr(n):
