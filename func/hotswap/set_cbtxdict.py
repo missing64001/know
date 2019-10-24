@@ -28,7 +28,7 @@ def setCBTXDict():
                 self.textEdit.cbtxdict[title] = self.textEdit.cbtxdict.get(title,'') + da + '\n'
             else:
                 title = da.strip()
-    print('词霸天下 单词设置完成' , end ='\r')
+    print('词霸天下 单词设置完成 单词个数:%s' % len(self.textEdit.cbtxdict) , end ='\r')
 
 # setCBTXDict()
 
