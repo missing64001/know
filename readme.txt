@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmissing64001%2Fknow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmissing64001%2Fknow?ref=badge_shield)
+
 
 
 
@@ -13,3 +15,7 @@
 20181028 11:35:29
     标签排序有些问题
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmissing64001%2Fknow.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmissing64001%2Fknow?ref=badge_large)
